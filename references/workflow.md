@@ -138,6 +138,38 @@ grep 'Overfull\|Underfull\|Float too large' 论文.log
 
 修复 → 重编译 ×2，直到日志干净。
 
+### Step 5.5：打包支撑材料（提交前必做）
+
+```powershell
+# 1) 打包 求解/ 目录（源程序+数据+图）
+Compress-Archive -Path 求解\* -DestinationPath 支撑材料.rar -Force
+
+# 2) 用了 AI 就追加 AI工具使用详情.pdf
+if (Test-Path "支撑材料\AI工具使用详情.pdf") {
+  Compress-Archive -Path "支撑材料\AI工具使用详情.pdf" -DestinationPath 支撑材料.rar -Update
+}
+
+# 3) 检查 ≤ 20MB
+$sizeMB = [math]::Round((Get-Item 支撑材料.rar).Length / 1MB, 2)
+if ($sizeMB -gt 20) { Write-Error "超过 20MB 限制" }
+```
+
+**2026 规范第十一条硬性要求**：
+- 后缀 `.rar` 或 `.zip`，大小 ≤ 20MB
+- 内容：所有可运行源程序 + 自主查阅数据 + 中间图表
+- **不放**：承诺书、编号页、参赛队/学校信息
+- 用了 AI：必须含 `AI工具使用详情.pdf`
+- 没支撑材料：附录注明"本论文没有支撑材料"，不打包
+
+### 最终提交物清单
+
+| 文件 | 来源 | 规范依据 |
+|------|------|----------|
+| `论文/论文.pdf` | Step 4 编译 | 第二/三/四/...条 |
+| `论文/电子版.pdf` | Step 4 编译 | 第十条 |
+| `支撑材料.rar` | Step 5.5 打包 | 第十一条 |
+| `支撑材料/AI工具使用详情.pdf` | 人工填写 | AI 规定第 4 条 |
+
 ---
 
 ## 论文核心规则

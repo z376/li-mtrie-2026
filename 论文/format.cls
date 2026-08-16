@@ -177,11 +177,19 @@ Just choose `xelatex', no `pdflatex' or `latex' and so on.}
 
 
 
-% 设置字体（替换宋体为思源宋体）
-\setmainfont{Times New Roman}
-\setsansfont{Arial}
-\setCJKfamilyfont{kai}[AutoFakeBold]{simkai.ttf}
-\newcommand*{\kai}{\CJKfamily{kai}}
+% 设置字体（思源宋体 + Latin Modern 跨平台，2026 规范第八条「字号/字体/行距/颜色等不做统一要求」）
+% Latin Modern Roman/Sans 是 LaTeX 自带字体，跨平台，无需外部 ttf/otf
+\setmainfont{Latin Modern Roman}
+\setsansfont{Latin Modern Sans}
+\setmonofont{Latin Modern Mono}
+
+%% 楷体：用 ctex 自带的 \kaishu（不需要 simkai.ttf，跨平台 OK）
+%% 旧版这里定义过 \kai 引用 simkai.ttf（Windows 系统字体），跨平台编译会失败。
+%% 现 \kai 改用 ctex 自带的 \kaishu 实现，跨平台无需外部字体。
+%% 如果想用真楷体，注释下面两行，改用思源楷体（需额外下载 SourceHanKaiCN-*.otf）：
+%%   \setCJKfamilyfont{kai}[AutoFakeBold]{Path = ./fonts/, UprightFont = SourceHanKaiCN-Regular.otf}{SourceHanKaiCN}
+%%   \renewcommand*{\kai}{\CJKfamily{kai}}
+\newcommand*{\kai}{\kaishu}
 
 
 
@@ -458,10 +466,13 @@ BoldFont = SourceHanSerifCN-Bold.otf
 \newpage
 \null
 \setcounter{page}{1}
+%% 2026 规范第三条：第 3 页为"摘要专用页"，"摘要内容（含标题和关键词）"
+%% → 标题 (@title) 属于摘要页内容的一部分，与摘要正文+关键词同页，合法
 {\centering \zihao{3}\bfseries \@title\par}
 \vskip1ex
 \else
 \setcounter{page}{1}
+%% electronic 模式：电子版第 1 页 = 摘要专用页，同样含标题+摘要+关键词
 {\centering \zihao{3}\bfseries \@title\par}
 \vskip1ex
 \fi

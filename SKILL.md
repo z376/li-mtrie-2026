@@ -111,6 +111,42 @@ grep 'Overfull\|Underfull\|Float too large' 论文.log
 
 修复 → 重编译 ×2，直到日志干净。
 
+### Step 5.5：打包支撑材料（2026 规范第十一条）
+
+论文版和电子版都编出来后，要单独打包支撑材料：
+
+```powershell
+# 1) 把整个 求解/ 目录（除中间产物）打包成 支撑材料.rar
+#    用 Windows 自带的 Compress-Archive（PowerShell 5.0+）
+Compress-Archive -Path 求解\* -DestinationPath 支撑材料.rar -Force
+
+#    如果装了 WinRAR，更推荐用 WinRAR 压缩（规范第十一条要求 WinRAR）：
+#    & "C:\Program Files\WinRAR\WinRAR.exe" a -r -afzip 支撑材料.rar 求解\
+
+# 2) 用了 AI 的话，把 AI工具使用详情.pdf 放进压缩包
+if (Test-Path "支撑材料\AI工具使用详情.pdf") {
+  Compress-Archive -Path "支撑材料\AI工具使用详情.pdf" -DestinationPath 支撑材料.rar -Update
+}
+
+# 3) 检查大小（必须 ≤ 20MB，否则报错）
+$sizeMB = [math]::Round((Get-Item 支撑材料.rar).Length / 1MB, 2)
+Write-Host "支撑材料.rar: $sizeMB MB"
+if ($sizeMB -gt 20) { Write-Error "超过 20MB 限制！" }
+```
+
+**2026 规范第十一条**：
+- 后缀：`.rar` 或 `.zip`
+- 大小：≤ 20MB
+- 内容：建模所用到的所有可运行源程序、自主查阅的数据资料（赛题原始数据除外）、较大篇幅中间结果图表
+- **不放**：承诺书、编号专用页、参赛队/学校/赛区信息
+- 用了 AI：必须含 `AI工具使用详情.pdf`
+- 没支撑材料：在附录注明"本论文没有支撑材料"，不打包
+
+**最终提交物**：
+1. `论文/论文.pdf` — 纸质版（含承诺书+编号页）
+2. `论文/电子版.pdf` — 电子版（≤ 20MB，不放承诺书/编号页）
+3. `支撑材料.rar` — 支撑材料包
+
 ## Output contract
 
 每个竞赛任务交付：
