@@ -1,0 +1,72 @@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{具体分析}
+
+问题一要求识别零售销售额的关键影响因素并量化贡献程度，属于多因素归因分析问题。本问采用Pearson相关系数、Spearman秩相关系数与随机森林特征重要性相结合的方法进行求解。
+
+首先对原始数据进行清洗和标准化预处理，接着分别计算各特征与销售额的Pearson相关系数和Spearman秩相关系数，然后训练随机森林回归模型提取非线性特征重要性，最后综合三种方法的评价结果得出最终的影响因素排序。
+
+具体分析流程如图\ref{fig:analysis1_flow}所示。
+
+\begin{figure}[ht]
+  \begin{center}
+    \begin{tikzpicture}[x=1cm, y=0.7cm]
+      \node[box] (n11) at (0, 0) {数据预处理};
+      \node[box] (n12) at (5, 0) {特征提取};
+      \node[box] (n13) at (10, 0) {相关计算};
+      \node[box] (n22) at (5, -3) {重要性排名};
+      \node[box] (n21) at (0, -3) {RF模型训练};
+      \node[box] (n23) at (10, -3) {Spearman};
+      \node[box] (n31) at (0, -6) {综合排序};
+      \node[box] (n32) at (5, -6) {结果分析};
+      \node[box] (n33) at (10, -6) {得出结论};
+      \draw[arrow] (n11) -- (n12);
+      \draw[arrow] (n12) -- (n13);
+      \draw[arrow] (n23) -- (n22);
+      \draw[arrow] (n22) -- (n21);
+      \draw[arrow] (n13) -- ++(0,-1.0) -| (n23);
+      \draw[arrow] (n21) -- (n31);
+      \draw[arrow] (n31) -- (n32);
+      \draw[arrow] (n32) -- (n33);
+    \end{tikzpicture}
+    \caption{问题一分析流程图}
+    \label{fig:analysis1_flow}
+  \end{center}
+\end{figure}
+
+\subsubsection{模型准备}
+
+原始数据集包含730天的经营数据，共计14个字段，包括日期、销售额以及客流量、促销力度、客单价、线上占比等经营指标。经检查，数据无缺失值和异常值。
+
+为确保不同量纲特征的可比性，对连续型变量采用Min-Max归一化处理：
+
+\begin{equation}
+x' = \frac{x - x_{\min}}{x_{\max} - x_{\min}}
+\end{equation}
+其中，$x_{\min}$、$x_{\max}$分别为最小值和最大值。
+
+该问题本质上是一个多因素归因问题。常用的归因分析方法包括Pearson相关系数（衡量线性关系）、Spearman秩相关系数（衡量单调关系）和随机森林特征重要性（可捕捉非线性交互效应）。本节从线性捕捉能力、非线性捕捉能力和可解释性三方面进行评估。
+
+\begin{longtable}{>{\centering\arraybackslash}p{0.14\textwidth}>{\centering\arraybackslash}p{0.18\textwidth}>{\centering\arraybackslash}p{0.18\textwidth}>{\centering\arraybackslash}p{0.17\textwidth}>{\centering\arraybackslash}p{0.17\textwidth}}
+  \caption{影响因素分析方法对比}
+  \label{tab:算法对比1} \\
+  \toprule
+  方法 & 线性检测 & 非线性检测 & 可解释性 & 计算效率 \\
+  \midrule
+  \endfirsthead
+  \caption{影响因素分析方法对比（续）} \\
+  \toprule
+  方法 & 线性检测 & 非线性检测 & 可解释性 & 计算效率 \\
+  \midrule
+  \endhead
+  \bottomrule
+  \endfoot
+  Pearson相关 & 优 & 差 & 优 & 优 \\
+  随机森林（RF） & 良 & 优 & 良 & 良 \\
+  Spearman相关 & 良 & 良 & 优 & 优 \\
+  Lasso回归 & 良 & 中 & 优 & 优 \\
+\end{longtable}
+
+通过对比可以看出，Pearson相关在可解释性和线性检测方面表现优异，随机森林在非线性关系捕捉方面独树一帜。综合考量，本文采用三种方法的组合策略，从线性、非线性和单调性三个维度进行交叉验证以获得可靠的影响因素排名。
+
+综上所述，本节完成了数据预处理和分析方法选型，接下来将进行影响因素的综合评估。

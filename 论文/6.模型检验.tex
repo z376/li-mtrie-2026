@@ -1,0 +1,58 @@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{模型检验与分析}
+
+为验证本文构建的模型的有效性和稳健性，进行以下检验。
+
+\subsection{误差分析}
+
+采用5折时序交叉验证对GBR预测模型进行评估，结果如表\ref{tab:error}所示。
+
+\begin{longtable}{>{\centering\arraybackslash}p{0.18\textwidth}>{\centering\arraybackslash}p{0.24\textwidth}>{\centering\arraybackslash}p{0.24\textwidth}>{\centering\arraybackslash}p{0.22\textwidth}}
+  \caption{模型误差分析结果}
+  \label{tab:error} \\
+  \toprule
+  指标 & 交叉验证均值 & 测试集值 & 说明 \\
+  \midrule
+  \endfirsthead
+  \caption{模型误差分析结果（续）} \\
+  \toprule
+  指标 & 交叉验证均值 & 测试集值 & 说明 \\
+  \midrule
+  \endhead
+  \bottomrule
+  \endfoot
+  $R^2$ & $0.615\pm0.205$ & 0.766 & 决定系数 \\
+  RMSE & $3.26\pm0.96$ & 2.67 & 均方根误差（万元） \\
+  MAE & $2.43\pm0.46$ & 2.24 & 平均绝对误差（万元） \\
+  MAPE(\%) & $7.64\pm1.34$ & 7.75 & 平均绝对百分比误差 \\
+\end{longtable}
+
+如表\ref{tab:error}所示，交叉验证MAPE均值为$7.64\%$，标准差仅$1.34\%$，表明模型在不同数据划分下均保持稳定的预测精度。测试集MAPE为$7.75\%$，与交叉验证均值高度一致，说明模型未出现过拟合现象。
+
+\subsection{灵敏度分析}
+
+为检验模型对关键参数的敏感程度，对GBR的三个核心超参数进行扰动分析，结果如表\ref{tab:sensitivity}所示。
+
+\begin{longtable}{>{\centering\arraybackslash}p{0.24\textwidth}>{\centering\arraybackslash}p{0.36\textwidth}>{\centering\arraybackslash}p{0.32\textwidth}}
+  \caption{灵敏度分析结果}
+  \label{tab:sensitivity} \\
+  \toprule
+  参数 & 扰动范围 & $R^2$波动范围 \\
+  \midrule
+  \endfirsthead
+  \caption{灵敏度分析结果（续）} \\
+  \toprule
+  参数 & 扰动范围 & $R^2$波动范围 \\
+  \midrule
+  \endhead
+  \bottomrule
+  \endfoot
+  $n\_estimators$ & 120$\sim$280 & 0.787$\sim$0.789 \\
+  $max\_depth$ & 2$\sim$5 & 0.785$\sim$0.806 \\
+  $learning\_rate$ & 0.03$\sim$0.07 & 0.784$\sim$0.791 \\
+\end{longtable}
+
+由表\ref{tab:sensitivity}可知，三个参数在$\pm40\%$大范围变化时，$R^2$的最大波动幅度仅为$0.022$，表明模型对参数选择不敏感，具有较强的稳健性。
+
+综合误差分析和灵敏度分析的结果，本文构建的GBR预测模型在预测精度（MAPE$<8\%$）和稳健性（参数扰动$R^2$变化$<0.02$）方面均表现良好，满足实际应用要求。

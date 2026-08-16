@@ -1,0 +1,74 @@
+
+\subsubsection{模型建立}
+针对问题一，从线性相关、单调相关和非线性重要性三个维度建立多因素归因评估模型。
+
+\textbf{步骤1：Pearson线性相关性建模}
+计算每个特征变量与销售额之间的Pearson相关系数：
+\begin{equation}
+r_i = \frac{\sum_{j=1}^{n}(X_{ij}-\bar{X}_i)(Y_j-\bar{Y})}{\sqrt{\sum_{j=1}^{n}(X_{ij}-\bar{X}_i)^2}\sqrt{\sum_{j=1}^{n}(Y_j-\bar{Y})^2}}
+\end{equation}
+其中，$\bar{X}_i$为第$i$个特征的样本均值，$\bar{Y}$为销售额的均值，$r_i\in[-1,1]$衡量线性相关程度。
+
+\textbf{步骤2：Spearman单调相关性建模}
+为捕捉非线性单调关系，计算Spearman秩相关系数：
+\begin{equation}
+\rho_i = 1 - \frac{6\sum_{j=1}^{n}d_{ij}^2}{n(n^2-1)}
+\end{equation}
+其中，$d_{ij}$为第$j$个样本在第$i$个特征上的秩与销售额秩的差值。
+
+\textbf{步骤3：随机森林非线性重要性建模}
+随机森林通过构建$T$棵决策树取平均进行回归：
+\begin{equation}
+\hat{Y} = \frac{1}{T}\sum_{t=1}^{T}h_t(X)
+\end{equation}
+特征$X_i$的重要性基于该特征在所有树节点分裂中的均方误差减少量：
+\begin{equation}
+\text{Imp}(X_i) = \frac{1}{T}\sum_{t=1}^{T}\sum_{s\in S_t(X_i)}\frac{n_s}{n}\Delta\text{MSE}_s
+\end{equation}
+
+\textbf{步骤4：综合评分模型}
+构建加权综合得分：
+\begin{equation}
+\text{Score}(X_i) = w_1\frac{|r_i|}{\max_j|r_j|} + w_2\frac{|\rho_i|}{\max_j|\rho_j|} + w_3\frac{\text{Imp}(X_i)}{\max_j\text{Imp}(X_j)}
+\end{equation}
+其中权重取$w_1=0.3$、$w_2=0.3$、$w_3=0.4$。得分越高表明该特征对销售额的影响越显著。
+
+\subsubsection{模型求解}
+基于零售企业经营数据（730天，11个特征维度）进行求解。结果如表\ref{tab:结果1}所示。
+
+\begin{longtable}{>{\centering\arraybackslash}p{0.20\textwidth}>{\centering\arraybackslash}p{0.22\textwidth}>{\centering\arraybackslash}p{0.22\textwidth}>{\centering\arraybackslash}p{0.24\textwidth}}
+  \caption{影响因素综合评估结果}
+  \label{tab:结果1} \\
+  \toprule
+  特征 & Pearson $r$ & Spearman $\rho$ & RF重要性 \\
+  \midrule
+  \endfirsthead
+  \caption{影响因素综合评估结果（续）} \\
+  \toprule
+  特征 & Pearson $r$ & Spearman $\rho$ & RF重要性 \\
+  \midrule
+  \endhead
+  \bottomrule
+  \endfoot
+  客流量 & +0.897 & +0.718 & 0.857 \\
+  是否周末 & +0.655 & +0.682 & 0.001 \\
+  星期 & +0.520 & +0.537 & 0.005 \\
+  员工数 & -0.475 & -0.508 & 0.012 \\
+  是否节假日 & +0.599 & +0.394 & 0.001 \\
+  月份 & -0.206 & -0.234 & 0.055 \\
+  客单价 & +0.144 & +0.210 & 0.023 \\
+  促销力度 & +0.094 & +0.095 & 0.007 \\
+  线上占比 & -0.041 & +0.001 & 0.014 \\
+  气温 & -0.003 & +0.023 & 0.020 \\
+\end{longtable}
+
+由表\ref{tab:结果1}可知，客流量与销售额的Pearson相关系数高达$+0.897$，RF重要性达$0.857$，在所有特征中占据绝对主导地位。综合评分排名如图\ref{fig:score1}所示。
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.8\textwidth]{../求解/问题一/图片/综合得分排名.png}
+  \caption{问题一综合影响因素得分排名}
+  \label{fig:score1}
+\end{figure}
+
+如图\ref{fig:score1}所示，客流量以满分$1.000$的综合得分遥遥领先，是零售销售额最核心的驱动因素。零售企业应优先关注客流量的提升和转化。

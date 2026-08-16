@@ -1,0 +1,49 @@
+# ===== LaTeX 编译产物 =====
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.pdf
+
+# ===== Python 编译产物 =====
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+
+# ===== 用户填的题与数据（避免泄漏） =====
+# 如要 push 完整样例就注释掉下面两行
+题目/*
+!题目/.gitkeep
+数据/*
+!数据/.gitkeep
+
+# ===== 求解过程中生成的中间产物（按需保留） =====
+# 求解/问题*/*.py 通常 push
+# 求解/问题*/图片/*.png 通常 push
+# 求解/问题*/结果/*.csv 通常 push
+# 求解/预处理数据.csv  按需
+求解/问题*/*_test.py
+求解/问题*/图片/*placeholder*
+
+# ===== IDE / 系统 =====
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===== 临时 / 备份 =====
+*.bak
+*.tmp
+~$*
+*.log
+nul

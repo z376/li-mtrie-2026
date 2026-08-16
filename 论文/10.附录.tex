@@ -1,0 +1,72 @@
+
+\makeatletter
+\let\@oldaddcontentsline\addcontentsline
+\renewcommand{\addcontentsline}[3]{}
+\section*{附录}
+\let\addcontentsline\@oldaddcontentsline
+\makeatother
+
+%% ===== 2026 规范第五条 + 第十一条附录固定说明 =====
+%% (1) 程序使用说明 — 用了就列文件；没用就写"本论文没有用到程序"
+%% (2) 支撑材料说明 — 用了就列文件；没用就写"本论文没有支撑材料"
+%% 这两段是 2026 规范的强制要求, 缺一段可能被取消评奖资格
+%% 注意：2026 AI 工具使用规定把「AI 工具使用声明」放在参考文献之前（见 9.参考文献.tex），
+%%       「AI 工具使用详情.pdf」放在支撑材料里（不是附录），不要在本文件写 AI 段。
+\subsubsection*{一、程序使用说明}
+
+\textbf{本论文使用了程序。}建模与求解所用到的全部源程序代码见下表，所有程序均完整、可运行，运行环境为 Python 3.12，主要依赖库包括 \texttt{numpy}、\texttt{pandas}、\texttt{scikit-learn}、\texttt{matplotlib} 等。
+
+\begin{longtable}{>{\centering\arraybackslash}p{0.4\textwidth}>{\centering\arraybackslash}p{0.56\textwidth}}
+  \caption{附件说明表}
+  \label{tab:appendix} \\
+  \toprule
+  文件 & 说明 \\
+  \midrule
+  \endfirsthead
+  \caption{附件说明表（续）} \\
+  \toprule
+  文件 & 说明 \\
+  \midrule
+  \endhead
+  \bottomrule
+  \endfoot
+  问题一\_影响因素分析.py & 问题一Pearson/Spearman/RF多因素归因代码 \\
+  问题二\_预测模型.py & 问题二GBR预测模型与时序特征工程代码 \\
+  问题三\_模型评估.py & 问题三交叉验证、网格搜索与灵敏度分析代码 \\
+  问题四\_策略建议.py & 问题四情景分析与策略建议代码 \\
+  预处理数据.csv & 模拟的730天零售经营数据集 \\
+  相关性热力图.png & 问题一所有特征的相关系数矩阵热力图 \\
+  预测vs实际.png & 问题二测试集预测值与实际值对比折线图 \\
+  灵敏度分析.png & 问题三关键参数灵敏度分析曲线 \\
+  情景分析.png & 问题四四种经营情景30天销售额预测对比 \\
+\end{longtable}
+
+%% 如果没用程序，整段替换为："本论文没有用到程序。"
+%% 删掉上面的 \textbf{...} 段和 longtable，换成下面这行即可
+%% \textbf{本论文没有用到程序。}
+
+\subsubsection*{二、支撑材料说明}
+
+\textbf{本论文提供了支撑材料。}支撑材料内容包括建模所用到的所有可运行源程序、自主查阅使用的数据资料（赛题中提供的原始数据除外）以及较大篇幅的中间结果图表等。所有支撑材料已使用 WinRAR 软件压缩为一个文件（后缀为 RAR 或 ZIP），大小未超过 20MB。
+
+\begin{longtable}{>{\centering\arraybackslash}p{0.4\textwidth}>{\centering\arraybackslash}p{0.56\textwidth}}
+  \caption{支撑材料文件清单}
+  \label{tab:supporting} \\
+  \toprule
+  文件 & 说明 \\
+  \midrule
+  \endfirsthead
+  \caption{支撑材料文件清单（续）} \\
+  \toprule
+  文件 & 说明 \\
+  \midrule
+  \endhead
+  \bottomrule
+  \endfoot
+  \texttt{支撑材料.rar} & 含全部源代码、可运行程序、数据集与中间结果图表 \\
+  \texttt{支撑材料/AI工具使用详情.pdf} & 若使用了 AI 工具必填（2026 AI 规定第 4 条） \\
+\end{longtable}
+
+%% 如果没有支撑材料，整段替换为："本论文没有支撑材料。"
+%% 删掉上面的 \textbf{...} 段和 longtable，换成下面这行即可
+%% \textbf{本论文没有支撑材料。}

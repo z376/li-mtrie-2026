@@ -1,0 +1,56 @@
+\PassOptionsToPackage{quiet}{xeCJK}
+%% 2026 规范修订：
+%%   - 论文版（纸质版）= withpreface → 生成 承诺书(第1页) + 编号专用页(第2页) + 摘要页(第3页,页码1) + 正文
+%%   - 电子版 = withoutpreface → 跳过承诺书和编号专用页,第一页直接是摘要页
+%% 编译两份: xelatex 论文.tex  → 论文.pdf (纸质版提交) ; xelatex 电子版.tex  → 电子版.pdf (电子版提交)
+\documentclass[withpreface,bwprint]{format}
+\usepackage{etoolbox}
+\usepackage{ctex}
+\BeforeBeginEnvironment{tabular}{\zihao{-5}}
+\usepackage[framemethod=TikZ]{mdframed}
+\usepackage{url}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{longtable}
+\newcolumntype{C}{>{\centering\arraybackslash}X}
+\newcolumntype{R}{>{\raggedleft\arraybackslash}X}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+
+\renewcommand{\textbf}[1]{{\song\bfseries #1}}
+
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta}
+\tikzset{
+  box/.style={rectangle, draw, minimum width=3.2cm, minimum height=0.9cm, align=center},
+  arrow/.style={thick, -{Stealth}}
+}
+
+\title{零售销售额的预测与数据分析}
+
+\begin{document}
+
+%% \maketitle 触发 withpreface 路径：生成承诺书 → 编号专用页 → 标题页（页码复位为 1）
+\maketitle
+
+\input{0.摘要.tex}
+\thispagestyle{plain}
+
+%% 2026 规范第四条：论文不要目录，第四页起直接是正文，正文 ≤ 30 页
+%% （2024 旧版曾有 \tableofcontents + \newpage，2025 修订稿已删除）
+
+\input{1.引言.tex}
+\input{2.总体分析.tex}
+\input{3.模型假设.tex}
+\input{4.符号说明.tex}
+\input{5.模型的建立与求解.tex}
+\input{6.模型检验.tex}
+\input{7.模型评价.tex}
+\input{8.模型改进推广.tex}
+
+\newpage
+\input{9.参考文献.tex}
+
+\newpage
+\input{10.附录.tex}
+
+\end{document}

@@ -1,0 +1,57 @@
+\PassOptionsToPackage{quiet}{xeCJK}
+%% 2026 规范第十条：电子版论文不放承诺书和编号专用页，第一页必须为摘要专用页
+%% 本文件用 electronic 模式编译：跳过承诺书 + 编号专用页，第一页直接是摘要页（页码从 1 开始）
+%% 编译命令（与论文.tex 一致，只是改入口）:
+%%   xelatex -interaction=nonstopmode 电子版.tex
+%%   xelatex -interaction=nonstopmode 电子版.tex
+%% 输出文件名建议为 电子版.pdf，大小不超过 20MB，不要压缩
+\documentclass[electronic,bwprint]{format}
+\usepackage{etoolbox}
+\usepackage{ctex}
+\BeforeBeginEnvironment{tabular}{\zihao{-5}}
+\usepackage[framemethod=TikZ]{mdframed}
+\usepackage{url}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{longtable}
+\newcolumntype{C}{>{\centering\arraybackslash}X}
+\newcolumntype{R}{>{\raggedleft\arraybackslash}X}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+
+\renewcommand{\textbf}[1]{{\song\bfseries #1}}
+
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta}
+\tikzset{
+  box/.style={rectangle, draw, minimum width=3.2cm, minimum height=0.9cm, align=center},
+  arrow/.style={thick, -{Stealth}}
+}
+
+\title{零售销售额的预测与数据分析}
+
+\begin{document}
+
+%% electronic 模式下 \maketitle 只渲染标题（不生成承诺书和编号页）
+%% 标题页 = 摘要专用页，符合 2026 规范"电子版第一页必须为摘要专用页"
+\maketitle
+
+\input{0.摘要.tex}
+\thispagestyle{plain}
+
+%% 同样不要目录（2026 规范第四条）
+\input{1.引言.tex}
+\input{2.总体分析.tex}
+\input{3.模型假设.tex}
+\input{4.符号说明.tex}
+\input{5.模型的建立与求解.tex}
+\input{6.模型检验.tex}
+\input{7.模型评价.tex}
+\input{8.模型改进推广.tex}
+
+\newpage
+\input{9.参考文献.tex}
+
+\newpage
+\input{10.附录.tex}
+
+\end{document}
