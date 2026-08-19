@@ -244,7 +244,8 @@ li-mtrie/
 ├── references/
 │   ├── workflow.md        # 完整工作流 + 论文硬性规则
 │   ├── paper-spec.md      # 论文 10 章详细规范（基于 4 篇获奖论文）
-│   └── code-template.py   # 求解代码模板
+│   ├── code-template.py   # 求解代码模板（已含图片字体规范）
+│   └── 绘图规范.md        # matplotlib/seaborn/plotly 论文图片字号/线宽/DPI 规范
 ├── 题目/                   # 赛题 PDF/DOCX 入口（用户填）
 ├── 数据/                   # 数据文件入口（用户填）
 ├── 求解/
