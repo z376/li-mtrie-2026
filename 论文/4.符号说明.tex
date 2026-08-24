@@ -1,0 +1,43 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{符号说明}
+\subsection{符号说明}
+
+本文主要符号约定如下：
+
+\begin{longtable}{>{\centering\arraybackslash}p{0.20\textwidth}>{\raggedright\arraybackslash}p{0.74\textwidth}}
+  \caption{符号说明} \\
+  \toprule
+  符号 & 含义 \\
+  \midrule
+  \endfirsthead
+  \caption{符号说明（续）} \\
+  \toprule
+  符号 & 含义 \\
+  \midrule
+  \endhead
+  \bottomrule
+  \endfoot
+  $M_i$ & 第 $i$ 枚来袭导弹，$i \in \{1, 2, 3\}$ \\
+  $FY_j$ & 第 $j$ 架无人机，$j \in \{1, 2, 3, 4, 5\}$ \\
+  $P_M(t)$ & $t$ 时刻导弹位置向量（3 维） \\
+  $P_{FY_j}(t)$ & $t$ 时刻无人机位置向量 \\
+  $P_{drop,j,k}$ & 第 $j$ 架无人机第 $k$ 枚弹的投放点 \\
+  $P_{det,j,k}$ & 第 $j$ 架无人机第 $k$ 枚弹的起爆点 \\
+  $t_{drop,j,k}$ & 第 $j$ 架无人机第 $k$ 枚弹的投放时刻（s） \\
+  $\Delta t_{j,k}$ & 第 $j$ 架无人机第 $k$ 枚弹的起爆延时（s） \\
+  $t_{det,j,k}$ & 第 $j$ 架无人机第 $k$ 枚弹的起爆时刻（s） \\
+  $v_j$ & 第 $j$ 架无人机的飞行速度（m/s） \\
+  $(\theta_j, \phi_j)$ & 第 $j$ 架无人机的飞行方向（球坐标） \\
+  $O_{fake}$ & 假目标位置，$O_{fake} = (0, 0, 0)$ m \\
+  $O_{true}$ & 真目标中心位置，$O_{true} = (0, 200, 0)$ m \\
+  $r_{true}$ & 真目标圆柱半径，$r_{true} = 7$ m \\
+  $h_{true}$ & 真目标圆柱高度，$h_{true} = 10$ m \\
+  $r_{smoke}$ & 烟幕云团半径，$r_{smoke} = 10$ m \\
+  $v_{missile}$ & 导弹飞行速度，$v_{missile} = 300$ m/s \\
+  $v_{sink}$ & 烟幕云团下沉速度，$v_{sink} = 3$ m/s \\
+  $T_{smoke}$ & 烟幕云团有效时长，$T_{smoke} = 20$ s \\
+  $g$ & 重力加速度，$g = 9.8$ m/s² \\
+  $C_{j,k}(t)$ & $t$ 时刻第 $j,k$ 号烟幕云团球心位置 \\
+  $T_{occ}$ & 有效遮蔽总时长（s） \\
+  $T_{occ,i}$ & 对第 $i$ 枚导弹的有效遮蔽时长 \\
+\end{longtable}

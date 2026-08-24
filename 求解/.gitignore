@@ -1,0 +1,10 @@
+# 调试临时文件 (不提交)
+_*.py
+_*.txt
+*.pyc
+__pycache__/
+profile_data_*.txt
+_test_*
+_q*_stdout.txt
+_q*_stderr.txt
+_dbg*

@@ -1,0 +1,179 @@
+%% AI工具使用详情.tex
+%% 2026 国赛 AI 工具使用规定第 4 条
+%% 与论文.tex 共用 format.cls，独立编成支撑材料 PDF
+%% 编译: xelatex -interaction=nonstopmode AI工具使用详情.tex (×2)
+%% 输出: 支撑材料/AI工具使用详情.pdf
+
+\documentclass[bwprint]{format}   % 跟论文/电子版共享 format.cls
+\usepackage{etoolbox}
+\usepackage{ctex}
+\BeforeBeginEnvironment{tabular}{\zihao{-5}}
+\usepackage[framemethod=TikZ]{mdframed}
+\usepackage{url}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{longtable}
+\newcolumntype{C}{>{\centering\arraybackslash}X}
+\newcolumntype{R}{>{\raggedleft\arraybackslash}X}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+
+\renewcommand{\textbf}[1]{{\song\bfseries #1}}
+
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta}
+\tikzset{
+  box/.style={rectangle, draw, minimum width=3.2cm, minimum height=0.9cm, align=center},
+  arrow/.style={thick, -{Stealth}}
+}
+
+%% 标题：会在 PDF 顶部居中显示
+\title{AI 工具使用详情}
+
+\begin{document}
+
+%% 不需要承诺书/编号页/摘要/目录 — 直接进正文
+\maketitle
+\thispagestyle{plain}
+\vspace{-2em}
+
+%% 5 节固定结构（按 2026 AI 规定第 4 条）
+
+\section{一、工具信息}
+
+\begin{longtable}{>{\centering\arraybackslash}p{0.25\textwidth}>{\raggedright\arraybackslash}p{0.70\textwidth}}
+  \toprule
+  项目 & 内容 \\
+  \midrule
+  工具名称 & 填写：例如 DeepSeek、ChatGPT、Mavis \\
+  提供方 & 填写：例如深度求索、OpenAI、MiniMax \\
+  版本/型号 & 填写：例如 DeepSeek-R1-0528、GPT-4o、MiniMax-M3 \\
+  接入方式 & 填写：例如 网页、API、桌面应用 \\
+  使用时间 & 填写：例如 2026-09-05（赛题开赛日） \\
+  \bottomrule
+\end{longtable}
+
+\section{二、使用目的与环节}
+
+本参赛队在以下环节使用了 AI 工具：
+
+\begin{itemize}[itemindent=2em]
+  \item \textbf{题目理解}：协助读题、识别问题数、判定题组与题号
+  \item \textbf{代码编写}：协助编写差分进化算法、视线-球-圆柱求交、matplotlib 绘图脚本
+  \item \textbf{模型选择}：候选模型对比表初稿（最终方案由队内讨论确认）
+  \item \textbf{数据预处理}：辅助识别异常值、列类型、缺失率
+  \item \textbf{结果可视化}：辅助生成论文插图、调整字号/线宽/DPI
+  \item \textbf{文档润色}：辅助 LaTeX 公式排版、参考文献 GB/T 7714 格式整理
+  \item \textbf{查重改写}：辅助问题重述改写、避免与赛题原文重复
+  \item \textbf{合规检查}：辅助按 \texttt{references/合规检查清单.md} 逐项核对
+\end{itemize}
+
+\textbf{说明}：以上为常用 8 个环节，根据实际赛题可删减/增加。
+
+\section{三、主要 prompt 与过程（节选）}
+
+\subsection{3.1 几何建模 prompt（以 2025 A 题烟幕干扰弹为例）}
+
+\textbf{Prompt}：建立烟幕云团（球）与导弹→真目标（圆柱）视线段的几何遮挡判定模型
+
+\textbf{AI 响应}：
+\begin{itemize}
+  \item 视线段-球求交公式：参数化 $P(t) = P_0 + t \cdot d$，$t \in [0, 1]$，解二次方程
+  \item 视线段-圆柱求交公式：投影到 xy 平面 + z 范围约束
+  \item 遮挡判定：球交区间和圆柱交区间有交集
+\end{itemize}
+
+\textbf{采纳/修改}：
+\begin{itemize}
+  \item 采纳：球-视线求交、圆柱-视线求交的解析公式
+  \item 修改：将原版的"绝对距离参数"修正为"归一化参数 $t \in [0,1]$"（发现 bug：旧代码 sz0 用绝对距离但 s0 用归一化，导致结果差 17000 倍）
+  \item 修改：视线目标从假目标 $(0,0,0)$ 修正为真目标 $(0,200,0)$
+\end{itemize}
+
+\subsection{3.2 优化器选择 prompt}
+
+\textbf{Prompt}：对于 5-25 维分段不连续的目标函数（烟幕遮蔽时长），推荐全局优化算法
+
+\textbf{AI 响应}：差分进化（Differential Evolution, DE）
+
+\textbf{采纳}：\checkmark 全部采纳
+
+\subsection{3.3 论文摘要 prompt}
+
+\textbf{Prompt}：为 2025 高教社杯 A 题"烟幕干扰弹的投放策略"写一段约 500 字的摘要，涵盖 5 个子问题
+
+\textbf{AI 响应}：
+\begin{itemize}
+  \item 提供了 5 段式摘要模板（每段 80-100 字）
+  \item 关键词建议
+\end{itemize}
+
+\textbf{采纳/修改}：
+\begin{itemize}
+  \item 采纳：摘要结构
+  \item 修改：补充了 5 个问题的具体数值结果
+  \item 修改：根据 2026 规范第三条删除了英文翻译
+\end{itemize}
+
+\subsection{3.4 你的 prompt 在这里}
+
+\textbf{Prompt}：填写：你的实际 prompt
+
+\textbf{AI 响应}：填写：AI 给出的回复要点（不需要原文）
+
+\textbf{采纳/修改}：填写：哪些用了 / 哪些改了 / 哪些没采纳
+
+\section{四、对 AI 输出的核验情况}
+
+所有 AI 生成的内容均经过人工核验和修改，具体如下：
+
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.30\textwidth}>{\raggedright\arraybackslash}p{0.65\textwidth}}
+  \toprule
+  AI 输出 & 核验方式与修改内容 \\
+  \midrule
+  示例：视线-球求交公式 & 手算验证 + 单元测试；修正归一化参数 bug \\
+  示例：差分进化 bounds 设置 & 多次运行检查；调整 theta/phi 范围以朝真目标方向 \\
+  示例：论文模板 & 人工审阅 + LaTeX 编译；修正章节编号、统一符号格式 \\
+  示例：参考文献 & 人工核对；补充最新文献 \\
+  填写：你的 AI 输出 & 填写：核验方式 + 修改内容 \\
+  \bottomrule
+\end{longtable}
+
+\section{五、风险声明与禁用场景}
+
+\textbf{按 2026 规定第 4 条}，以下核心判断环节\textbf{未}使用 AI：
+
+\begin{itemize}[itemindent=2em]
+  \item 赛题理解与问题拆解
+  \item 模型假设选择
+  \item 模型选择与公式推导
+  \item 最终结论判断
+\end{itemize}
+
+\textbf{可以}用 AI 的环节（但已核验 + 标注）：
+\begin{itemize}[itemindent=2em]
+  \item 代码编写/调试
+  \item 数据可视化
+  \item 文档润色/格式检查
+  \item 参考文献格式整理
+  \item 公式编辑器排版
+\end{itemize}
+
+\textbf{按 2026 规定第 5 条}，本参赛队承诺：
+\begin{itemize}[itemindent=2em]
+  \item 不隐瞒 AI 使用情况
+  \item 所有 AI 输出已人工核验
+  \item 不将核心判断环节交给 AI
+  \item 不侵犯知识产权
+\end{itemize}
+
+如有违反规定的行为，自愿接受\textbf{取消评奖资格}的处理。
+
+\vspace{2em}
+
+\noindent\rule{\textwidth}{0.5pt}
+
+\noindent\textit{参赛队号：\rule{3cm}{0.4pt}\hfill 日期：\rule{3cm}{0.4pt}}
+
+\noindent\textit{参赛队员：\rule{8cm}{0.4pt}\hfill 指导教师：\rule{3cm}{0.4pt}}
+
+\end{document}

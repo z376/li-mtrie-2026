@@ -1,0 +1,78 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{模型的建立与求解}
+\subsection{问题分析与几何建模}
+
+烟幕遮蔽的物理本质是：来袭导弹通过电磁波（红外/雷达）探测真目标，当烟幕云团的几何位置同时满足"视线穿过云团"和"视线到达真目标"时，遮蔽有效。因此，本节首先建立精确的几何求交模型。
+
+\textbf{（1）视线段与球相交判定}
+
+设线段起点 $P_0 \in \mathbb{R}^3$，方向向量 $\mathbf{d} \in \mathbb{R}^3$，球心 $C \in \mathbb{R}^3$，半径 $r$。令 $\mathbf{u} = \mathbf{d} / |\mathbf{d}|$ 为单位方向，$\mathbf{w} = P_0 - C$。沿 $\mathbf{u}$ 方向距 $P_0$ 距离 $s$ 处的点为 $P(s) = P_0 + s \mathbf{u}$，其到球心距离为
+\begin{equation}
+|P(s) - C|^2 = s^2 + 2(\mathbf{w} \cdot \mathbf{u})s + |\mathbf{w}|^2 - r^2
+\end{equation}
+
+令其等于 $r^2$，解得
+\begin{equation}
+s_{0,1} = -\mathbf{w} \cdot \mathbf{u} \pm \sqrt{(\mathbf{w} \cdot \mathbf{u})^2 - |\mathbf{w}|^2 + r^2}
+\end{equation}
+
+若判别式 $(\mathbf{w} \cdot \mathbf{u})^2 - |\mathbf{w}|^2 + r^2 < 0$，则线段与球无交点；否则相交参数区间为 $[s_0, s_1] \cap [0, |\mathbf{d}|]$，归一化到 $t \in [0, 1]$ 表示沿线段的相对位置。
+
+\textbf{（2）视线段与有限高圆柱相交判定}
+
+设圆柱轴线沿 $z$ 方向，圆柱心 $(x_c, y_c, *)$，半径 $r$，高度 $z \in [z_{min}, z_{max}]$。视线参数化为 $P(t) = P_0 + t \mathbf{d}$，$t \in [0, 1]$。
+
+将 $P(t)$ 投影到 $xy$ 平面，记 $P_0^{xy} = (P_{0,x} - x_c, P_{0,y} - y_c)$，$\mathbf{d}^{xy} = (d_x, d_y)$。则
+\begin{equation}
+|P^{xy}(t)|^2 = |\mathbf{d}^{xy}|^2 t^2 + 2(P_0^{xy} \cdot \mathbf{d}^{xy})t + |P_0^{xy}|^2
+\end{equation}
+
+令其等于 $r^2$（取最小根），并在 $z$ 方向约束 $z_{min} \le P_0^z + t d_z \le z_{max}$，最终相交区间为 $t \in [t_0, t_1] \cap [0, 1]$。
+
+\textbf{（3）有效遮蔽的最终判定}
+
+设 $t$ 时刻来袭导弹位置为 $P_M(t)$，烟幕云团球心为 $C_{j,k}(t)$。则有效遮蔽当且仅当：
+\begin{equation}
+[T_{smoke,\min}(P_M, C_{j,k}) \cap T_{cyl}(P_M, O_{true})] \neq \emptyset
+\end{equation}
+即球相交区间与圆柱相交区间有交集，且都在 $[0, 1]$ 内。
+
+\subsubsection{物理运动方程}
+
+\textbf{（1）导弹运动}：从初始位置 $M_0$ 匀速直线飞向假目标 $O_{fake}$，速度 $v_{missile} = 300$ m/s
+\begin{equation}
+P_M(t) = M_0 + \frac{O_{fake} - M_0}{|O_{fake} - M_0|} \cdot v_{missile} \cdot t
+\end{equation}
+
+\textbf{（2）无人机运动}：从初始位置 $FY_{j,0}$ 以速度 $v_j$ 沿单位方向 $\hat{\mathbf{d}}_j$ 等高度（$z = z_{j,init}$）匀速直线飞行
+\begin{equation}
+P_{FY_j}(t) = FY_{j,0} + \hat{\mathbf{d}}_j \cdot v_j \cdot t, \quad \text{其中} \quad \hat{\mathbf{d}}_j = (\sin\phi_j \cos\theta_j, \sin\phi_j \sin\theta_j, \cos\phi_j)
+\end{equation}
+
+\textbf{（3）烟幕弹起爆前运动}：投放后仅受重力
+\begin{equation}
+P_{bomb}(t) = P_{drop,j,k} + (0, 0, -g(t - t_{drop,j,k})^2 / 2), \quad t \in [t_{drop,j,k}, t_{det,j,k}]
+\end{equation}
+
+\textbf{（4）烟幕云团运动}：起爆后从起爆点以 3 m/s 匀速下沉
+\begin{equation}
+C_{j,k}(t) = P_{det,j,k} - (0, 0, v_{sink}(t - t_{det,j,k})), \quad t \in [t_{det,j,k}, t_{det,j,k} + 20]
+\end{equation}
+
+\subsubsection{优化算法选择}
+
+由于目标函数（有效遮蔽时长）具有以下特征：
+\begin{itemize}
+  \item 非凸、多局部极值（视线与球/圆柱的相交判定是分段函数）
+  \item 不连续（轻微参数扰动可能导致遮蔽从"有"变"无"）
+  \item 计算成本高（单次评估需数秒仿真）
+\end{itemize}
+
+因此不适合使用梯度类方法。本文采用\textbf{差分进化}（Differential Evolution, DE）算法：
+\begin{itemize}
+  \item 群体规模 $N_p = 10 \sim 20$
+  \item 最大迭代 $G = 30 \sim 80$
+  \item 缩放因子 $F = 0.5$，交叉率 $CR = 0.7$
+  \item 边界约束：直接投影到可行域
+  \item 适应度：$-T_{occ}$（最大化遮蔽时长等价于最小化负遮蔽时长）
+\end{itemize}

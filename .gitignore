@@ -1,0 +1,71 @@
+# ===== LaTeX 编译产物 =====
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.pdf
+
+# ===== Python 编译产物 =====
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+
+# ===== 用户填的题与数据（避免泄漏）=====
+# 默认排除: 题目/数据 目录里除了 .gitkeep 的所有内容
+# 如要 push 完整样例, 注释掉下面两行
+题目/*
+!题目/.gitkeep
+数据/*
+!数据/.gitkeep
+
+# ===== 求解过程中生成的中间产物（按需保留）=====
+# 求解/问题*/*.py       通常 push
+# 求解/问题*/图片/*.png 通常 push
+# 求解/问题*/结果/*.csv 通常 push
+# 求解/共享/*.py        通常 push (跨问题物理常量)
+求解_C/                  # 旧 C 题测试残留
+_archive/                # 归档目录
+求解/问题*/*_test.py     # 单文件测试
+求解/问题*/图片/*placeholder*
+求解/问题*/结果/result*.xlsx
+求解/问题*/结果/result*.csv
+求解/共享/__pycache__/
+求解/__pycache__/
+# 调试临时文件（不 push）
+求解/_*.py
+求解/_*.txt
+求解/profile_data_output.txt
+求解/共享/*.py            # 旧 D 题测试顶层模块, 已在 共享/ 有副本
+求解/共享/__pycache__/
+# 求解/根目录临时输出 (profile_data 等工具产生的)
+求解/*.txt
+求解/_dbg_*.txt
+求解/_q*_stderr.txt
+求解/_q*_stdout.txt
+求解/_test_*.txt
+求解/_verify_*.txt
+求解/profile_data_*.txt
+
+# ===== IDE / 系统 =====
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===== 临时 / 备份 =====
+*.bak
+*.tmp
+~$*
+*.log
+nul
+li-mtrie-2026-*.zip

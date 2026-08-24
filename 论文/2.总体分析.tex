@@ -1,0 +1,43 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{总体分析}
+\subsection{物理过程分析}
+
+烟幕干扰弹的投放与遮蔽过程涉及多个物理实体和阶段：
+
+\textbf{（1）无人机受领任务阶段（$t = 0$）}：警戒雷达发现来袭导弹，控制中心向无人机指派任务，无人机可瞬时调整飞行方向。
+
+\textbf{（2）飞行阶段（$0 \le t < t_{drop}$）}：无人机以 $v$ m/s 等高度匀速直线飞行。
+
+\textbf{（3）投放阶段（$t = t_{drop}$）}：无人机投放烟幕弹，烟幕弹脱离无人机后仅受重力作用。
+
+\textbf{（4）自由落体阶段（$t_{drop} < t < t_{det}$）}：烟幕弹以 $9.8$ m/s² 重力加速度下落。
+
+\textbf{（5）起爆与云团形成（$t = t_{det}$）}：烟幕弹起爆瞬时形成球状烟幕云团，半径 10 m。
+
+\textbf{（6）下沉与遮蔽阶段（$t_{det} \le t \le t_{det} + 20$ s）}：烟幕云团以 3 m/s 匀速下沉（重力与浮力平衡），20 s 内有效。
+
+\subsection{几何关系分析}
+
+有效遮蔽的几何本质是：在 $t_{det} \le t \le t_{det} + 20$ 区间内，任一时刻 $t$ 满足
+\begin{equation}
+\text{视线段}(P_M(t) \to P_{true}) \cap \text{烟幕球} \neq \emptyset
+\quad \wedge \quad
+\text{视线段}(P_M(t) \to P_{true}) \cap \text{真目标圆柱} \neq \emptyset
+\end{equation}
+其中 $P_M(t)$ 是来袭导弹 $t$ 时刻位置，$P_{true} = (0, 200, 0)$ 是真目标中心。
+
+\subsection{决策空间分析}
+
+以问题 3 为例（FY1 投放 3 弹），决策变量为：
+\begin{itemize}
+  \item FY1 飞行方向 $(\theta, \phi)$：2 维球坐标
+  \item FY1 飞行速度 $v \in [70, 140]$ m/s：1 维
+  \item 每弹投放时刻 $t_{drop,i}$ 和起爆延时 $\Delta t_i$：$2 \times 3 = 6$ 维
+  \item 共 9 维决策空间
+\end{itemize}
+
+问题 5 决策空间最大：5 架 UAV $\times$ 3 个独立参数 $(\theta, \phi, v)$ + 15 弹 $\times 2$ 个时序参数 = 45 维决策空间。
+
+\subsection{求解思路}
+
+由于目标函数是分段连续、含复杂几何判定且具有多局部极值，本文采用差分进化（Differential Evolution, DE）算法进行全局优化。相比梯度类方法，DE 对目标函数的连续性要求低，适合本问题的非凸、多模态特征。

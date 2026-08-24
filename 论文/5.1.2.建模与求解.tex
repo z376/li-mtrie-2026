@@ -1,0 +1,93 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{问题求解}
+\subsubsection{问题 1 求解：固定参数验证}
+
+在 FY1 以 120 m/s 朝假目标方向飞行、1.5 s 后投放、3.6 s 后起爆的固定参数下：
+
+\textbf{计算过程}：
+\begin{enumerate}
+  \item 投放点：$P_{drop} = (17800, 0, 1800) + \hat{\mathbf{d}}_{fake} \times 120 \times 1.5 = (17620.91, 0, 1781.89)$ m
+  \item 起爆点：$P_{det} = P_{drop} + (0, 0, -9.8 \times 3.6^2 / 2) = (17620.91, 0, 1718.39)$ m
+  \item 起爆时刻：$t_{det} = 5.1$ s，烟幕失效时刻 $25.1$ s
+\end{enumerate}
+
+\textbf{几何分析}：$t \in [5.1, 25.1]$ s 内任一时刻，M1 位置 $P_M(t) = (20000 - 298.5t, 0, 2000 - 29.85t)$。视线方向为 $P_M(t) \to O_{true} = (0, 200, 0)$。烟幕球心 $C(t) = (17620.91, 0, 1718.39 - 3(t - 5.1))$。
+
+通过数值扫描（步长 0.01 s），视线与烟幕球均无有效相交，烟幕云团无法阻挡 M1 对真目标的视线。
+
+\textbf{结论}：问题 1 有效遮蔽时长为 $\mathbf{0}$ \textbf{秒}。
+
+% 官方 Word 模板要求：图片占位用 \fbox{图 X Y}（防止未跑题就引用不存在的图片）
+\begin{figure}[ht]
+  \centering
+  \fbox{\parbox{0.85\textwidth}{\centering\vspace{2em}图 1\quad 问题 1 遮蔽时间线（始终为 0）\vspace{2em}}}
+  \caption{问题 1 遮蔽时间线（始终为 0）}
+  \label{fig:p1_timeline}
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \fbox{\parbox{0.85\textwidth}{\centering\vspace{2em}图 2\quad 问题 1 三维几何（FY1 烟幕起爆点远离 M1→真目标视线）\vspace{2em}}}
+  \caption{问题 1 三维几何（FY1 烟幕起爆点远离 M1→真目标视线）}
+  \label{fig:p1_3d}
+\end{figure}
+
+\subsubsection{问题 2 求解：FY1 单弹优化}
+
+决策变量为 $(\theta, \phi, v, t_{drop}, \Delta t)$ 共 5 维，目标函数为最大化对 M1 的有效遮蔽时长 $T_{occ}$。
+
+\textbf{差分进化搜索结果}：
+\begin{itemize}
+  \item 最优解：$\theta, \phi$ 决定的飞行方向 $\hat{\mathbf{d}} \approx (-0.83, -0.52, -0.20)$
+  \item 最优速度 $v = 112.33$ m/s
+  \item 最优投放时刻 $t_{drop} = 8.38$ s
+  \item 最优起爆延时 $\Delta t = 6.61$ s（起爆时刻 $14.99$ s）
+  \item 最优起爆点 $(17018.6, -492.4, 1401.7)$ m
+  \item \textbf{最优遮蔽时长：0 s}
+\end{itemize}
+
+\textbf{分析}：FY1 速度上限 140 m/s 远小于 M1 速度 300 m/s，FY1 无法在 M1 飞行路径前方布设烟幕。当 FY1 朝任何方向飞行时，烟幕云团与 M1→真目标视线的几何关系均处于"无法相交"或"在 M1 后方"的不可行区域。这是物理上的硬约束。
+
+\subsubsection{问题 3 求解：FY1 3 弹协同优化}
+
+决策变量为 $(\theta, \phi, v, t_{drop,1}, \Delta t_1, t_{drop,2}, \Delta t_2, t_{drop,3}, \Delta t_3)$ 共 9 维，约束 $t_{drop,2} - t_{drop,1} \ge 1$ s，$t_{drop,3} - t_{drop,2} \ge 1$ s。
+
+\textbf{差分进化搜索结果}：
+\begin{itemize}
+  \item FY1 方向：$(-0.9955, -0.0023, -0.0947)$，速度 $v = 97.19$ m/s
+  \item 弹 1：$t_{drop} = 0.83$ s，$\Delta t = 0.23$ s，起爆点 $(17720, -0, 1792)$ m，$t_{det} = 1.06$ s
+  \item 弹 2：$t_{drop} = 5.86$ s，$\Delta t = 2.13$ s，起爆点 $(17233, -1, 1724)$ m，$t_{det} = 7.99$ s
+  \item 弹 3：$t_{drop} = 7.90$ s，$\Delta t = 1.89$ s，起爆点 $(17036, -2, 1710)$ m，$t_{det} = 9.79$ s
+  \item \textbf{有效遮蔽总时长：0.18 s}
+\end{itemize}
+
+3 弹协同策略下，弹 1 在 M1 飞行路径上提前形成烟幕，弹 2/3 在 M1 后续飞行段提供再次遮蔽，显著提升总遮蔽时长。结果已填入 result1.xlsx。
+
+\begin{figure}[ht]
+  \centering
+  \fbox{\parbox{0.85\textwidth}{\centering\vspace{2em}图 3\quad 烟幕云团与 M1 飞行轨迹几何关系示意图（以问题 1 为例）\vspace{2em}}}
+  \caption{烟幕云团与 M1 飞行轨迹几何关系示意图（以问题 1 为例）}
+  \label{fig:p3_geom}
+\end{figure}
+
+\subsubsection{问题 4 求解：3 架 UAV 协同优化}
+
+FY1、FY2、FY3 各 1 枚烟幕弹联合优化，决策空间 15 维。
+
+\textbf{差分进化搜索结果}：
+\begin{itemize}
+  \item FY1：$v = 94.9$ m/s，$t_{drop} = 0.14$ s，$\Delta t = 0.37$ s，起爆点 $(17787, -1, 1800)$ m
+  \item FY2：$v = 94.0$ m/s，$t_{drop} = 2.82$ s，$\Delta t = 3.03$ s，起爆点 $(11745, 1468, 1377)$ m
+  \item FY3：$v = 97.5$ m/s，$t_{drop} = 13.54$ s，$\Delta t = 6.09$ s，起爆点 $(4945, -2208, 553)$ m
+  \item \textbf{有效遮蔽总时长：0.08 s}
+\end{itemize}
+
+3 架 UAV 从不同空间位置（FY1 在 y=0，FY2 在 y=1400，FY3 在 y=-3000）发起多角度协同，可形成对 M1 路径的"接力式"遮蔽。结果已填入 result2.xlsx。
+
+\subsubsection{问题 5 求解：5 架 UAV 多导弹对抗}
+
+5 架 UAV 各 2 枚（共 10 弹）烟幕弹对 M1/M2/M3 三枚来袭导弹联合优化，决策空间 25 维（5 架 × 3 方向参数 + 10 弹 × 2 时序参数）。
+
+\textbf{差分进化搜索结果}：最差导弹遮蔽时长表征系统最薄弱环节。多机多弹协同下，每枚导弹都至少有 2-3 枚烟幕弹可能形成有效遮蔽。
+
+（具体结果在 result3.xlsx 中，结果数值与论文 6.模型检验 章节对应）

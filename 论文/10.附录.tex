@@ -1,0 +1,138 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 官方 Word 模板要求：附录按"附录 1/2/3"分块，不带"一、二、三"小节
+% 每块以 \textbf{附录 N：标题} 起头
+
+\section*{附录 1：程序使用说明}
+
+\subsection*{运行环境}
+
+\begin{itemize}
+  \item Python 3.12
+  \item numpy $\ge 1.24$
+  \item scipy $\ge 1.11$
+  \item pandas $\ge 2.0$
+  \item matplotlib $\ge 3.7$
+  \item openpyxl $\ge 3.1$
+\end{itemize}
+
+\subsection*{目录结构}
+
+\texttt{求解/} 目录下的主要文件与子目录如下：
+
+\begin{itemize}
+  \item \texttt{共享/geometry.py} --- 视线-球-圆柱求交、导弹/烟幕运动
+  \item \texttt{共享/simulator.py} --- 单导弹多烟幕仿真
+  \item \texttt{共享/optimizer.py} --- 通用优化器
+  \item \texttt{问题1/问题1\_验证场景.py} --- 问题 1 验证
+  \item \texttt{问题1/问题1\_3D几何.png} --- 问题 1 三维几何图
+  \item \texttt{问题1/问题1\_遮蔽时间线.png} --- 问题 1 遮蔽时间线
+  \item \texttt{问题3/问题3\_三弹优化.py} --- 问题 3 优化
+  \item \texttt{问题3/result1.xlsx} --- 问题 3 结果
+  \item \texttt{问题4/问题4\_三机协同.py} --- 问题 4 优化
+  \item \texttt{问题4/result2.xlsx} --- 问题 4 结果
+  \item \texttt{问题5/问题5\_多机多弹.py} --- 问题 5 优化
+  \item \texttt{问题5/result3.xlsx} --- 问题 5 结果
+  \item \texttt{run\_all.py} --- 一键运行所有问题
+\end{itemize}
+
+\subsection*{运行方法}
+
+\textbf{单独运行某个问题}：
+\begin{verbatim}
+cd 求解_A
+python 问题1/问题1_验证场景.py
+python 问题2/问题2_单弹优化.py
+python 问题3/问题3_三弹优化.py
+python 问题4/问题4_三机协同.py
+python 问题5/问题5_多机多弹.py
+\end{verbatim}
+
+\textbf{一键运行所有问题}：
+\begin{verbatim}
+cd 求解_A
+python run_all.py
+\end{verbatim}
+
+\textbf{单个问题输出}：
+\begin{itemize}
+  \item 问题 1：控制台打印遮蔽时长 + 2 张 PNG 图
+  \item 问题 2：控制台打印最优决策 + 遮蔽时长
+  \item 问题 3：控制台打印 3 弹策略 + result1.xlsx
+  \item 问题 4：控制台打印 3 机策略 + result2.xlsx
+  \item 问题 5：控制台打印 5 机策略 + result3.xlsx
+\end{itemize}
+
+\section*{附录 2：支撑材料说明}
+
+支撑材料包 \texttt{支撑材料.rar} 内容：
+
+\begin{enumerate}
+  \item \texttt{求解/}：所有 Python 源代码
+  \item \texttt{求解/图片/}：所有图表
+  \item \texttt{求解/结果/}：所有 CSV 结果
+  \item \texttt{求解/问题3/result1.xlsx}：问题 3 结果
+  \item \texttt{求解/问题4/result2.xlsx}：问题 4 结果
+  \item \texttt{求解/问题5/result3.xlsx}：问题 5 结果
+  \item \texttt{AI工具使用详情.pdf}：AI 工具使用情况详细说明
+\end{enumerate}
+
+支撑材料大小：约 5 MB（远小于 20 MB 上限）。
+
+\section*{附录 3：核心源代码}
+
+% 官方 Word 模板建议：附录 3 放核心源代码（贴关键文件 / 节选片段），
+% 配合"该代码使用 AI 工具：..."标注。
+
+\subsection*{视线-球相交判定（geometry.py）}
+
+该部分代码使用 AI 工具：Mavis, MiniMax-M3, MiniMax, 2026-08-23
+
+\begin{verbatim}
+def segment_sphere(P0, d, C, r):
+    """线段 P0 + t*d (t∈[0,1]) 与球 |X-C|=r 的相交区间"""
+    d_norm = np.linalg.norm(d)
+    if d_norm < 1e-12:
+        return None
+    u = d / d_norm
+    w = P0 - C
+    a = 1.0
+    b = 2.0 * np.dot(w, u)
+    c = np.dot(w, w) - r * r
+    disc = b * b - 4 * a * c
+    if disc < 0:
+        return None
+    sq = np.sqrt(disc)
+    s0 = (-b - sq) / 2.0
+    s1 = (-b + sq) / 2.0
+    t_min = max(0.0, s0)
+    t_max = min(1.0, s1)
+    if t_min >= t_max:
+        return None
+    return (t_min, t_max)
+\end{verbatim}
+
+\subsection*{差分进化优化（run\_all.py）}
+
+该部分代码使用 AI 工具：Mavis, MiniMax-M3, MiniMax, 2026-08-23
+
+\begin{verbatim}
+from scipy.optimize import differential_evolution
+
+def objective(x):
+    theta, phi, v, t_drop, dt = x
+    dir_unit = decode_direction(theta, phi)
+    drop, det, t_det = compute_bomb_events(FY1, dir_unit, v, t_drop, dt)
+    t_occ = simulate_single_missile(M1, [{'det_point': det, 'det_time': t_det}])[0]
+    return -t_occ
+
+result = differential_evolution(
+    objective, bounds, seed=42,
+    maxiter=40, popsize=10, tol=1e-3
+)
+\end{verbatim}
+
+% 其他可放附录的内容（按官方 Word 模板）：
+% - 某一问题的详细证明或求解过程
+% - 自己在网上找到的数据
+% - 比较大的流程图
+% - 较繁杂的图表或计算结果
