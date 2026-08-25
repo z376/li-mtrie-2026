@@ -1,7 +1,8 @@
 # li-mtrie-2026
 
-> **数学建模竞赛端到端 skill · 2026 规范版**
-> 读题 → 建模 → 求解 → 写论文 → 双版编译，一条龙。
+**数模国赛/美赛 端到端 skill: 5 步状态机 + 10 章论文模板 + 2026 规范 (MIT)**
+
+读题 → 建模 → 求解 → 写论文 → 双版编译，一条龙。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Version v1.4.3](https://img.shields.io/badge/version-v1.4.3-blue.svg)](CHANGELOG.md)
