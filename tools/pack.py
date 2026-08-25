@@ -42,9 +42,10 @@ EXCLUDE_EXTS = {
 }
 EXCLUDE_EXACT = {'nul', 'Thumbs.db', 'desktop.ini', '.DS_Store'}
 
-# 排除根目录的测试/调试文件
+# 排除根目录的测试/调试/隐私文件
 EXCLUDE_ROOT_FILES = {
-    '测试报告.md',         # 本工作区测试产物
+    '测试报告.md',         # 本工作区测试产物 (内部)
+    '开发日志.md',         # 开发 session 记录 (内部, 含决策历史/隐私)
     'pack_skill.py',       # 打包脚本本身
 }
 
