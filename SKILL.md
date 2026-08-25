@@ -8,7 +8,7 @@ description: |
   Do NOT use for: general data analysis, one-off Python scripts, or research questions
   that don't lead to a `论文.pdf` deliverable.
 metadata:
-  version: "1.4.0"
+  version: "1.4.1"
   category: competition-workflow
   scope: user
   source_workspace: D:/MiniMax code/1/数建Skill模板
@@ -166,7 +166,7 @@ python -c "import pandas, numpy, scipy, matplotlib, openpyxl, fitz, pulp; print(
 │  输入: 选定方案                                          │
 │  动作: 每个问题一个 py 文件                              │
 │  输出: 求解/问题X/问题X_xxx.py + 图片/*.png + 结果/*.csv │
-│  绿: 每个问题 Step 2.Gate 8 项全勾 (详 paper-spec.md §4.0)│
+│  绿: 每个问题 Step 2.Gate 8 项全勾 (详 paper-spec.md §2 8 项自检)│
 │  → 全绿跳到 Step 3 (否则卡死, 不进 Step 3)              │
 └──────────────────────────────────────────────────────────┘
                           ↓
@@ -285,7 +285,7 @@ python -c "import pandas, numpy, scipy, matplotlib, openpyxl, fitz, pulp; print(
 
 ### Step 2.Gate：每问跑完必勾（门控检查，全绿才能进 Step 3）
 
-> 8 项整篇一致性自检的**完整清单 + 模板 + 踩坑案例**在 `references/paper-spec.md §4.0`（权威源, 本节不重复列）。
+> 8 项整篇一致性自检的**完整清单 + 模板 + 踩坑案例**在 `references/paper-spec.md §2 8 项自检`（权威源, 本节不重复列）。
 > 每写完一个问题的代码，必须在 `求解/求解计划.md` 末尾的"自检"区逐项回填，**不全绿 = 该问题未完成**。
 
 **📦 跨问题常量强制规范**（C4，详 `references/导入规范.md §8`）：
@@ -341,7 +341,7 @@ python -c "import pandas, numpy, scipy, matplotlib, openpyxl, fitz, pulp; print(
 
 详细 10 章规范见 `references/paper-spec.md`（含全文统一符号表 + 8 项自检）。
 
-写完后**先**做**符号一致性自检**（8 项，详见 `references/paper-spec.md §4.0`），全绿再编译（漏自检 = 编译时符号错乱返工）。
+写完后**先**做**符号一致性自检**（8 项，详见 `references/paper-spec.md §2 8 项自检`），全绿再编译（漏自检 = 编译时符号错乱返工）。
 
 ### Step 4：编译 + 终态（合并自原 Step 5 + Step 5.5）
 
@@ -387,9 +387,13 @@ xelatex -interaction=nonstopmode 电子版.tex
 
 **Step 4.2: 排版优化**（循环直到日志干净）
 
-```bash
-# 看警告
-grep 'Overfull\|Underfull\|Float too large' 论文.log
+**绿/红判据** (必须绿才进 Step 4.3):
+- **绿**: `! Error` = 0, `Overfull \hbox` < 5, `Underfull \hbox` < 10
+- **红**: `! Error` ≥ 1 → 修 LaTeX; `Overfull` ≥ 5 → 调列宽比例 (paper-spec §4.1 公式 1.04−0.04N)
+
+```powershell
+# 一行 grep 警告 (PowerShell)
+Select-String -Path 论文.log, 电子版.log -Pattern 'Overfull|Underfull|Float too large'
 
 # 修复：调整列宽比例 / 改换行位置
 # 2 次修不好允许 \\newline 或 \\sloppy
@@ -493,7 +497,7 @@ if ($sizeMB -gt 20) { Write-Error "超过 20MB 限制！" }
 - **XGBoost/GBR 过拟合**：降低 max_depth、增加正则化参数
 - **预测值异常**：检查特征是否存在数据泄露
 - **交叉验证方差过大**：增加折数或采用重复 CV
-- **LaTeX 编译 Error**：先 grep 看具体错，针对修；连续 2 次失败切换策略（改 `\caption` 转义 / 检查字体路径）
+- **LaTeX 编译 Error**：先 `Select-String -Path 论文.log -Pattern '! Error'` 看具体错，针对修；连续 2 次失败切换策略（改 `\caption` 转义 / 检查字体路径）
 - **Overfull/Underfull warning**：调整列宽比例 / 改换行位置；2 次修不好允许 `\\newline` 或 `\\sloppy`
 
 ---
