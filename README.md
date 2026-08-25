@@ -3,6 +3,11 @@
 > **数学建模竞赛端到端 skill · 2026 规范版**
 > 读题 → 建模 → 求解 → 写论文 → 双版编译，一条龙。
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Version v1.4.3](https://img.shields.io/badge/version-v1.4.3-blue.svg)](CHANGELOG.md)
+[![Smoke Test](https://github.com/z376/li-mtrie-2026/actions/workflows/smoke-test.yml/badge.svg)](.github/workflows/smoke-test.yml)
+[![2026 Spec](https://img.shields.io/badge/2026%E8%A7%84%E8%8C%83-%E5%AF%B9%E9%BD%90-green.svg)](references/合规检查清单.md)
+
 按 2026 年全国大学生数学建模竞赛《论文格式规范（2026 年修订稿）》+《人工智能工具
 使用规定（2026 年试行）》做了对齐更新。
 
@@ -112,4 +117,4 @@ li-mtrie-2026/
 
 ## License
 
-仅供学习交流使用。
+[MIT](LICENSE) - 仅供学习交流使用。
