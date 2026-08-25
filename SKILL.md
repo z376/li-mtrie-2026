@@ -8,7 +8,7 @@ description: |
   Do NOT use for: general data analysis, one-off Python scripts, or research questions
   that don't lead to a `论文.pdf` deliverable.
 metadata:
-  version: "1.3.2"
+  version: "1.4.0"
   category: competition-workflow
   scope: user
   source_workspace: D:/MiniMax code/1/数建Skill模板
@@ -17,9 +17,13 @@ metadata:
 
 # Math Modeling
 
-数学建模竞赛（国赛/美赛/校赛）端到端解题 + 论文写作工作流。基于 2024 高教社杯 4 篇
-获奖论文（B159/B195/B196/D039）的结构归纳，并按 2026 年全国组委会修订的论文格式
-规范（2026 年修订稿）+《人工智能工具使用规定（2026 年试行）》做了对齐更新。
+数学建模竞赛（国赛/美赛/校赛）端到端解题 + 论文写作工作流。基于 2024 高教社杯 5 篇
+获奖论文（B159/B195/B196/D039 + 南科大板凳龙国一）的结构归纳，并按 2026 年全国组委会
+修订的论文格式规范（2026 年修订稿）+《人工智能工具使用规定（2026 年试行）》做了对齐更新。
+
+**5 篇参考论文速查** → 详 `references/获奖论文/` 目录:
+- B159 / B195 / B196 / D039（数据驱动题为主, 4 篇归纳的 10 章结构基线）
+- 板凳龙-南科大-2024 国一（机理题, 极坐标+运动学+碰撞, 见 `板凳龙-南科大-2024国一.md`）
 
 ## 规范版本兼容
 
