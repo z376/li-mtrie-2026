@@ -164,6 +164,52 @@ os.makedirs(FIG_DIR, exist_ok=True)
 os.makedirs(OUT_DIR, exist_ok=True)
 
 
+# ==================== 数据目录自动扫描（备用，机理题通常无外部数据）====================
+def scan_data_dir(data_dir='数据'):
+    """扫描 数据/ 目录，自动发现数据文件并返回路径字典。
+
+    机理题通常无外部数据, 但有些题目会给附件(如 2024 A 题给 result1/2/4.xlsx).
+    此函数方便用户快速发现项目根目录或上层 数据/ 里的附件.
+
+    返回:
+        dict: { 'xlsx': [...], 'csv': [...], 'txt': [...], 'img': [...] }
+              值为相对于 data_dir 的相对路径列表
+    """
+    data_dir = os.path.abspath(data_dir)
+    if not os.path.isdir(data_dir):
+        print(f"[WARN] 数据目录不存在: {data_dir}")
+        return {}
+
+    result = {'xlsx': [], 'csv': [], 'txt': [], 'img': [], 'other': []}
+    for root, dirs, files in os.walk(data_dir):
+        for f in files:
+            rel = os.path.relpath(os.path.join(root, f), data_dir)
+            ext = os.path.splitext(f)[1].lower()
+            if ext in ('.xlsx', '.xls'):
+                result['xlsx'].append(rel)
+            elif ext == '.csv':
+                result['csv'].append(rel)
+            elif ext in ('.txt', '.dat', '.tsv'):
+                result['txt'].append(rel)
+            elif ext in ('.png', '.jpg', '.jpeg', '.bmp', '.gif'):
+                result['img'].append(rel)
+            else:
+                result['other'].append(rel)
+
+    print(f"\n{'='*50}")
+    print(f"数据目录扫描结果: {data_dir}")
+    print(f"{'='*50}")
+    for category, files in result.items():
+        if files:
+            print(f"\n{category.upper()} ({len(files)} 个):")
+            for f in sorted(files):
+                size_kb = os.path.getsize(os.path.join(data_dir, f)) / 1024
+                print(f"  {f} ({size_kb:.1f} KB)")
+    if not any(result.values()):
+        print("\n[INFO] 数据目录为空（机理题通常无外部数据）")
+    return result
+
+
 # ==================== § 1  物理参数集中定义 ====================
 # 命名规范：大写字母下划线分隔
 # 例：PITCH（螺距）、L_HEAD（龙头板长）、MU（摩擦系数）

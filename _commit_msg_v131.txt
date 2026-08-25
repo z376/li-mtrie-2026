@@ -1,0 +1,48 @@
+v1.3.1: 测试报告 §8.5 5 项 P0/P1 全部闭环
+
+## 改动
+
+### P0-10 (5 min) - SKILL.md 加"规范版本兼容"段
+- 新增 `## 规范版本兼容` 段，在 Inputs to collect 之前
+- 内容：2024 / 2026 / 2027+ 三版适配表 + 5 条检查清单 + 老赛题兼容模式说明
+- 用户切版本时第一眼看到，省去查规范的步骤
+
+### P1-5 (10 min) - mechanism-template.py 加 `scan_data_dir`
+- 复制 `code-template.py` 的 `scan_data_dir` 函数到 mechanism-template
+- 机理题通常无外部数据，但有些题给附件（如 2024 A 题 result1/2/4.xlsx），需要这个 fallback
+- py_compile + exec 验证通过
+
+### 文档更新
+- 测试报告 §8.5：5 项状态从「待改」→「✅ 已实现」
+- 开发日志 §10：5 项状态从「待修」→「已修 v1.3.1」
+- 开发日志 §12：补充 8-25 后续总结
+
+## 5 项 §8.5 状态总览
+| # | 项 | 状态 |
+|---|----|------|
+| P0-8 | profile_data 时间序列 → 折线图 | ✅ 已实现 (8-24 前) |
+| P0-9 | 模板 GBK 兼容段 | ✅ 已实现 (8-24) |
+| P0-10 | SKILL.md 规范版本兼容 | ✅ 本次新加 |
+| P1-5 | 模板 scan_data_dir | ✅ 本次新加 (mechanism-template) |
+| P1-6 | profile_data 信号建议段 | ✅ 已实现 (8-24 前) |
+
+## 验证
+- ✅ mechanism-template.py py_compile + exec 成功
+- ✅ scan_data_dir("不存在的目录") 返回 {} (不崩)
+- ✅ profile_data "波数 (cm-1) vs 反射率" 触发时间序列 + 信号建议
+
+## 文件变化
+- SKILL.md: 27003 → 27140 B (+137)
+- mechanism-template.py: 17381 → 20148 B (+2767)
+- 测试报告.md: 39432 → 39908 B (+476)
+- 开发日志.md: 11927 → 12951 B (+1024)
+
+## Commits
+- 48c35ea (v1.3): 24 项 P0/P1/P2 + 去重 + 验证 + emoji fix
+- (本 commit v1.3.1): §8.5 5 项 P0/P1 闭环
+
+---
+
+Author: Mavis (MiniMax Code orchestrator)
+Session: mvs_4b391799787240e68d009406a90dc75c
+Date: 2026-08-25
