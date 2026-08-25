@@ -8,7 +8,7 @@ description: |
   Do NOT use for: general data analysis, one-off Python scripts, or research questions
   that don't lead to a `论文.pdf` deliverable.
 metadata:
-  version: "1.4.2"
+  version: "1.4.3"
   category: competition-workflow
   scope: user
   source_workspace: D:/MiniMax code/1/数建Skill模板
