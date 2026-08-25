@@ -1,19 +1,23 @@
-"""打包 li-mtrie-2026 skill 为 zip (v3 修复 GBK).
+"""打包 li-mtrie-2026 skill 为 zip (v4 含示例).
 
 两个版本:
-- 完整包 (含 fonts/):  ~19MB, 开箱即用, 编译无需装字体
-- 轻量包 (不含 fonts/): ~0.5MB, 适合分享/备份, 编译需自装思源宋体
+- 完整包 (含 fonts/):  ~22MB, 开箱即用, 编译无需装字体
+- 轻量包 (不含 fonts/): ~2.5MB, 适合分享/备份, 编译需自装思源宋体
+
+包含 (供学生学习参考):
+- 题目/  示例赛题 PDF (D 题)
+- 数据/  示例附件 xlsx
+- 求解/  示例求解代码 + 图片 + result xlsx (Q1-Q4)
+- references/examples/  机理题示例 (螺线轨迹)
+- 论文/  LaTeX 模板
 
 排除:
 - .git/, .vscode/, .idea/, __pycache__/
 - *.aux/*.log/*.out/*.toc/*.synctex.gz/*.bbl/*.blg/*.fdb_latexmk/*.fls
 - *.pyc, *.bak, *.tmp, *.swp
 - Thumbs.db, desktop.ini, .DS_Store, nul
-
-保留:
-- fonts/  (可选, 仅完整包)
-- *.pdf   (已编译 PDF, 效果展示)
-- 所有 .tex/.md/.py/.cls/.bib
+- push_*.log, _commit_msg_v*.txt (临时调试日志)
+- _archive/  历史归档
 """
 import os
 import sys
@@ -26,12 +30,7 @@ OUT_BASE = Path(__file__).parent.parent.parent
 
 EXCLUDE_DIRS = {
     '.git', '.vscode', '.idea', '__pycache__', 'node_modules',
-    # 排除测试/分享时可能含敏感数据的目录（用户实际填的题/数据/求解结果不进 skill 包）
-    '求解',       # 求解过程产物 (脚本、图片、result xlsx)
-    '求解_C',     # C 题测试过程产物
-    '_archive',   # 历史归档（A 题数据已挪到 _archive/）
-    '题目',       # 赛题 PDF（版权）
-    '数据',       # 附件 xlsx（版权）
+    '_archive',   # 历史归档（不参与分发）
 }
 EXCLUDE_EXTS = {
     '.aux', '.log', '.out', '.toc',
@@ -45,8 +44,8 @@ EXCLUDE_EXACT = {'nul', 'Thumbs.db', 'desktop.ini', '.DS_Store'}
 
 # 排除根目录的测试/调试文件
 EXCLUDE_ROOT_FILES = {
-    '测试报告.md',     # 本工作区测试产物
-    'pack_skill.py',   # 打包脚本本身
+    '测试报告.md',         # 本工作区测试产物
+    'pack_skill.py',       # 打包脚本本身
 }
 
 
@@ -59,9 +58,20 @@ def should_skip(path: Path, skip_fonts: bool = False) -> bool:
     if path.name in EXCLUDE_EXACT:
         return True
     # 根目录的测试/调试文件
-    if path.parent == ROOT and path.name in EXCLUDE_ROOT_FILES:
-        return True
+    if path.parent == ROOT:
+        if path.name in EXCLUDE_ROOT_FILES:
+            return True
+        # 临时调试日志 (push_*.log, _commit_msg_*.txt 等)
+        import fnmatch
+        if fnmatch.fnmatch(path.name, 'push_*.log') or fnmatch.fnmatch(path.name, '_commit_msg_*.txt'):
+            return True
     if path.is_file():
+        # 单下划线前缀 = 开发者临时草稿 (_dbg.txt / _q1_stderr.txt / _read_data.py 等)
+        if path.name.startswith('_') and not path.name.startswith('__'):
+            return True
+        # profile_data 运行输出
+        if path.name.startswith('profile_data_output') or path.name.startswith('profile_data_附件'):
+            return True
         name_lower = path.name.lower()
         for ext in EXCLUDE_EXTS:
             if name_lower.endswith(ext):
