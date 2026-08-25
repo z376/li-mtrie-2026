@@ -33,6 +33,7 @@ OUT_BASE = Path(__file__).parent.parent.parent
 EXCLUDE_DIRS = {
     '.git', '.vscode', '.idea', '__pycache__', 'node_modules',
     '_archive',   # 历史归档（不参与分发）
+    '.github',     # GitHub 模板 + CI（学生用不到, GitHub 网页端用）
 }
 EXCLUDE_EXTS = {
     '.aux', '.log', '.out', '.toc',
@@ -48,6 +49,8 @@ EXCLUDE_EXACT = {'nul', 'Thumbs.db', 'desktop.ini', '.DS_Store'}
 EXCLUDE_ROOT_FILES = {
     '测试报告.md',         # 本工作区测试产物 (内部)
     '开发日志.md',         # 开发 session 记录 (内部, 含决策历史/隐私)
+    'CHANGELOG.md',        # GitHub release notes (学生用不到, 网页端看)
+    'CONTRIBUTING.md',     # 贡献指南 (GitHub 网页端看)
     'pack_skill.py',       # 打包脚本本身
 }
 
