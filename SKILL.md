@@ -1,15 +1,14 @@
 ---
 name: li-mtrie
 description: |
-  数学建模竞赛端到端 skill。Use this skill when the user says "开始求解"、"求解这个题目"、
-  "生成论文"、"做数模"、"国赛/美赛/MCM/ICM/CUMCM 求解" or pastes a math modeling
-  problem PDF and asks to solve it. Triggers on phrases like "开始建模"、"跑代码写论文"、
-  "出论文 PDF"、"帮我做这道数模题".
+  数学建模竞赛（国赛/美赛/MCM/ICM/CUMCM）端到端 skill。Use when the user pastes a 数模赛题 PDF
+  and says "开始求解"/"求解这个题目"/"做数模"/"跑题" (initiate), OR after solving asks
+  "生成论文"/"出论文 PDF" (paper-only), OR 验证本 skill 自身 ("smoke test"/"跑 test_run").
 
-  Do NOT use for general data analysis, one-off Python scripts, or research questions
-  that don't lead to a 论文.pdf deliverable.
+  Do NOT use for: general data analysis, one-off Python scripts, or research questions
+  that don't lead to a `论文.pdf` deliverable.
 metadata:
-  version: "1.2"
+  version: "1.3.2"
   category: competition-workflow
   scope: user
   source_workspace: D:/MiniMax code/1/数建Skill模板
@@ -73,7 +72,7 @@ python -m pip --version
 python -c "import pandas, numpy, scipy, matplotlib, openpyxl; print('core ok')"
 ```
 
-**推荐版本**：Python 3.10 / 3.11 / 3.12（不要 3.13+，部分老包兼容性差）。
+**推荐版本**：Python 3.10 / 3.11 / 3.12（3.13+ 部分老包兼容性差）。
 
 ---
 
@@ -135,13 +134,13 @@ python -c "import pandas, numpy, scipy, matplotlib, openpyxl, fitz, pulp; print(
 
 **封闭赛场预下载建议**：把 pandas / numpy / scipy / matplotlib / openpyxl / PyMuPDF / pulp / seaborn 全下到 `pkgs/` 目录，断网时一次性 `pip install --no-index --find-links=./pkgs` 装回来。
 
-**踩坑案例**（2024 C 题测试）：开赛当晚才知道赛场断网，`pip install` 拉不下 PyMuPDF 几 MB 的 wheel，整支队伍一夜没装上包。**赛前 1 天预下载 + 验证是必须项**。
+**踩坑案例**（2024 C 题测试）：开赛当晚才知道赛场断网，`pip install` 拉不下 PyMuPDF 几 MB 的 wheel，整支队伍一夜没装上包。**赛前 1 天预下载 + 验证 = 必备**（漏了开赛当晚就来不及）。
 
 ---
 
 ## Procedure（状态机式流程）
 
-按以下 **5 步**走，每步都有明确的"输入 → 动作 → 输出 → 下一状态"。**不要跳步**。
+按以下 **5 步**走，每步都有明确的"输入 → 动作 → 输出 → 下一状态"。**跳步 = 漏判据，下一问踩坑**。
 
 ```
 ┌─ Step 0: 读取输入 ──────────────────────────────────────┐
@@ -155,14 +154,16 @@ python -c "import pandas, numpy, scipy, matplotlib, openpyxl, fitz, pulp; print(
 │  输入: 问题列表 (从 Step 0 输出)                         │
 │  动作: 为每个问题列候选模型对比表, **等用户选方案**     │
 │  输出: 用户选定方案 → 求解/求解计划.md (详细思路+参数)   │
-│  → 用户选完后跳到 Step 2                                 │
+│  绿: 每个问题 1 个选定方案, user 用 `1`/`2`/`3`/`OK` 确认 │
+│  → 全选完跳到 Step 2 (否则卡死, 不进 Step 2)            │
 └──────────────────────────────────────────────────────────┘
                           ↓
 ┌─ Step 2: 逐题求解 ──────────────────────────────────────┐
 │  输入: 选定方案                                          │
 │  动作: 每个问题一个 py 文件                              │
 │  输出: 求解/问题X/问题X_xxx.py + 图片/*.png + 结果/*.csv │
-│  → 全部问题跑完后跳到 Step 3                            │
+│  绿: 每个问题 Step 2.Gate 8 项全勾 (详 paper-spec.md §4.0)│
+│  → 全绿跳到 Step 3 (否则卡死, 不进 Step 3)              │
 └──────────────────────────────────────────────────────────┘
                           ↓
 ┌─ Step 3: 写论文 ─────────────────────────────────────────┐
@@ -178,8 +179,10 @@ python -c "import pandas, numpy, scipy, matplotlib, openpyxl, fitz, pulp; print(
 │  动作 2: 跑合规检查命令 (references/合规检查清单.md §2) │
 │  动作 3: 打包 支撑材料.rar (≤ 20 MB)                   │
 │  动作 4: 最终提交物检查 (论文版 + 电子版 + 支撑材料)    │
+│  绿: 4 份 log 中 `! Error` 数 = 0, `Overfull \hbox` < 5, │
+│      合规检查清单 §2 7 项全过, 3 个交付文件存在且 ≤ 20MB│
 │  输出: 论文.pdf + 电子版.pdf + 支撑材料.rar             │
-│  → 完成                                                   │
+│  → 全绿完成                                                │
 └──────────────────────────────────────────────────────────┘
 ```
 
@@ -202,12 +205,12 @@ python -c "import pandas, numpy, scipy, matplotlib, openpyxl, fitz, pulp; print(
 | PyMuPDF 报 `file has been encrypted` | 加密 PDF | 打开看是否空密码能解；不能解就联系组委会 |
 | `pd.read_excel('data/xxx.xls')` 报格式错误 | 老 .xls | 装 `xlrd<2.0` 后用 `pd.read_excel(..., engine='xlrd')` |
 | `pd.read_docx('题目/xxx.doc')` 报格式错 | 老 .doc 不是 .docx | Word 打开 → 另存为 .docx |
-| 打开 xlsx 有"受保护视图"提示 | Excel 标记可疑文件 | 打开 → 启用编辑 → 重新保存（**不要在受保护状态下跑脚本**） |
+| 打开 xlsx 有"受保护视图"提示 | Excel 标记可疑文件 | 打开 → 启用编辑 → 重新保存（受保护状态下跑脚本 = 空数据） |
 | 装包超时 / ConnectionError | 离线/限网赛场 | 赛前 1 天预下载：`pip download -d ./pkgs pandas numpy scipy matplotlib openpyxl PyMuPDF pulp` |
 
 ### Step 1：求解计划（先比选，再写完整计划）
 
-读题后**不要**直接写完整计划。先为每个问题列候选模型对比表，等用户选方案。
+读题后**先**为每个问题列候选模型对比表，等用户选方案（避免 model mismatch 返工）。
 
 候选模型池：
 
@@ -261,27 +264,10 @@ python -c "import pandas, numpy, scipy, matplotlib, openpyxl, fitz, pulp; print(
 
 **写论文时**：打开 `求解/问题X/图片/README.md` 查"哪张图放哪节"，**避免图与文字脱节**（评审扣分重灾区）。
 
-### Step 2.Gate：每问跑完必勾（门控检查，不勾完不能进 Step 3）
+### Step 2.Gate：每问跑完必勾（门控检查，全绿才能进 Step 3）
 
-> **踩坑教训**（2024 A 题测试）：这 8 项只作为占位，跑完 5 个问题后**没回填**，结果发现
-> 问题 2 复用了问题 1 的"碰撞距离阈值"但没显式声明；问题 4 的"调头半径 r1=4.5"是拍脑袋的值，
-> 没和"问题 3 的最小螺距"联动。**强制**：每写完一个问题的代码，必须在
-> `求解/求解计划.md` 末尾的"自检"区逐项回填，**不回填不算完成该问题**。
-
-```
-Step 2.Gate（每问跑完必勾）:
-
-□ 8 项整篇一致性自检已回填到 求解/求解计划.md 末尾（详 workflow.md §1c）
-□ 5 个踩坑检查已勾：
-  □ 跨问题参数复用一致？(如 p, L, d 跨问同值)
-  □ 后问输入是前问输出？(声明清楚)
-  □ 硬约束能程序化验证？(如不碰撞 → min_sep ≥ 板宽)
-  □ 每个最优/预测结果独立验证？(手算/解析解)
-  □ 每个输出表/文件按题面列表生成？(result1/2/4 全到位)
-□ 至少 4-6 张图，每张在 求解/问题X/图片/README.md 标注「论文哪一节用」
-□ result 文件名保留国赛附件原名（result1.xlsx 不要改成 my_result1.xlsx）
-□ 跨问题物理常量在 求解/共享/constants.py 已定义？(没有就新建)
-```
+> 8 项整篇一致性自检的**完整清单 + 模板 + 踩坑案例**在 `references/paper-spec.md §4.0`（权威源, 本节不重复列）。
+> 每写完一个问题的代码，必须在 `求解/求解计划.md` 末尾的"自检"区逐项回填，**不全绿 = 该问题未完成**。
 
 **📦 跨问题常量强制规范**（C4，详 `references/导入规范.md §8`）：
 
@@ -311,13 +297,12 @@ Step 2.Gate（每问跑完必勾）:
 
 **📌 5.X.2 「结果表」与 `resultX.xlsx` 一致性**（评审对比会标"数据不可信"）：
 
-> 数字必须与 `求解/问题X/结果/resultX.xlsx` 完全一致 — **禁止手抄**。
+> 数字必须与 `求解/问题X/结果/resultX.xlsx` 完全一致 — **从 resultX.xlsx 读出 → to_latex() 生成**（手抄 = 评审扣"数据不可信"分）。
 
 ```latex
 % 5.X.2.建模与求解.tex 内的"结果表" longtable 段
-% ⚠️ 数字必须与 求解/问题X/结果/resultX.xlsx 一致
 % 推荐做法: Python 读 resultX.xlsx → 抽关键行列 → to_latex() 生成
-%           复制到下面 longtable 的 & 数字 & 段(不要手抄)
+%           复制到下面 longtable 的 & 数字 & 段
 \begin{longtable}{>{\centering\arraybackslash}p{0.12\textwidth}...}
   \caption{问题X 求解结果}
   \label{tab:resultX} \\
@@ -332,12 +317,12 @@ Step 2.Gate（每问跑完必勾）:
 **AI 内联标注规范**（D3，2026 AI 规定第 5 条，漏标会被取消评奖）：
 
 - 章节头声明 / 公式脚注 / 图片 caption 后标注 / 段落标记
-- 严格：只标确实由 AI 生成的，不要为了"显得用了 AI"乱标
+- 严格：只标确实由 AI 生成的（乱标 = 评审反向扣"AI 标注不规范"分）
 - 完整 4 条规则 + 3 类禁用场景 → 见 `references/合规检查清单.md §1.3` + `§3 禁用场景`
 
 详细 10 章规范见 `references/paper-spec.md`（含全文统一符号表 + 8 项自检）。
 
-写完后**不要**直接编译，先做**符号一致性自检**（8 项，详见 `references/paper-spec.md §4.0`）。
+写完后**先**做**符号一致性自检**（8 项，详见 `references/paper-spec.md §4.0`），全绿再编译（漏自检 = 编译时符号错乱返工）。
 
 ### Step 4：编译 + 终态（合并自原 Step 5 + Step 5.5）
 
@@ -363,10 +348,10 @@ Remove-Item 论文\*.aux, 论文\*.log, 论文\*.synctex.gz, 论文\*.toc, 论�
 - longtable 续表头需 2 次才能定位（首页 + 跨页续表头）
 - 跟主论文共用 format.cls 的 `AI工具使用详情.pdf` 也按同样规则 ×2
 
-**判断还要不要再编**：看 `.log` 末尾
-- 出现 `Rerun` → 再编 1 次（属于正常 2 次流程）
-- 出现 `! Error` → 改 LaTeX，不是再编几次能解决的
-- 出现 `Overfull \hbox` 警告 → 排版问题，不影响编译成功，但会扣分（Step 4.2 处理）
+**红/绿判据**（必须全绿才进 Step 4.4 打包）：
+- **绿**: `! Error` 数 = 0, `Overfull \hbox` 数 < 5, `Rerun` 标记 ≤ 1 次
+- **红**: `! Error` ≥ 1 → 修 LaTeX, 再编多少次也没用; `Overfull` ≥ 5 → 调列宽比例（Step 4.2）
+- 用 `Select-String -Path 论文.log -Pattern '! Error|Overfull|Rerun'` 一行出全
 
 ```powershell
 Set-Location 论文
@@ -460,15 +445,7 @@ if ($sizeMB -gt 20) { Write-Error "超过 20MB 限制！" }
 
 ## 合规与硬规则
 
-**完整硬规则 + AI 合规 + 纪律红线**在 `references/合规检查清单.md`（不再在主文档里堆 100 行）。**写完论文后**逐项打勾 + 跑 §2 验证命令。
-
-**核心 3 条不要忘**（最高频违规）：
-
-1. **公式必须用公式编辑器**（不要截图，评审无法识别/检索）
-2. **AI 工具使用声明放参考文献之前**（不是附录）
-3. **AI 工具使用详情.pdf 放支撑材料**（不是附录）
-
-完整内容：见 `references/合规检查清单.md`。
+**完整硬规则 + AI 合规 + 纪律红线 + 4 类检查表 + 一键验证命令**在 `references/合规检查清单.md`（权威源, 本节不重复列）。**写完论文后**逐项打勾 + 跑 §2 验证命令。
 
 ---
 
@@ -506,17 +483,7 @@ if ($sizeMB -gt 20) { Write-Error "超过 20MB 限制！" }
 
 完整目录结构 + 各文件用途见 **`README.md` 目录结构段**（与本文档保持同步，README.md 是单一权威源）。
 
-## 赛前学习清单
+## 赛前学习清单 (备赛期, 跑题期不加载)
 
-正式开赛前，按 `references/赛前学习清单.md` 准备：
-
-- **§二 题型映射表** — 6 大题型的优先算法 + 备选 + 评奖加分项
-- **§三 算法清单** — 经典（A1-A4，共 30+ 算法）+ 现代（B1-B3，含启发式 + 机器学习）
-- **§四 备赛路径** — 60/30/7 天三档速成（按可投入时间选一档）
-- **§五 跑题期间红线** — 2026 参赛规则第 3、4、5 条对应的**具体禁止行为**
-- **§六 参考资源** — zhanwen/MathModel 等公开仓库的**赛前/跑题边界**标注
-- **§七 自检清单** — 赛前 1 周 / 赛前 1 天 / 开赛第 1 小时三次复检
-
-**核心 10 算法**（覆盖 80% 题型，30 天档必学）：线性规划/整数规划、动态规划、蒙特卡洛、
-AHP+熵权法组合定权、TOPSIS、灰色预测 GM(1,1)、ARIMA、随机森林/XGBoost、LSTM、
-遗传算法/粒子群（任选其一）。
+开赛前**一周**看 `references/赛前学习清单.md`（不在跑题 always-loaded 里, 节省 16 KB context）。
+覆盖 6 大题型 + 30+ 算法 + 60/30/7 天速成 + 跑题红线 + 自检清单。跑题期间不读。
