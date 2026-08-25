@@ -4,7 +4,7 @@
 %% 编译: xelatex -interaction=nonstopmode AI工具使用详情.tex (×2)
 %% 输出: 支撑材料/AI工具使用详情.pdf (≈ 5 页)
 
-\documentclass[bwprint]{format}
+\documentclass[electronic]{format}
 \usepackage{etoolbox}
 \usepackage{ctex}
 \BeforeBeginEnvironment{tabular}{\zihao{-5}}
@@ -34,7 +34,7 @@
 \thispagestyle{plain}
 \vspace{-2em}
 
-\section{一、工具信息}
+\section{工具信息}
 
 \begin{longtable}{>{\centering\arraybackslash}p{0.25\textwidth}>{\raggedright\arraybackslash}p{0.70\textwidth}}
   \toprule
@@ -48,7 +48,7 @@
   \bottomrule
 \end{longtable}
 
-\section{二、使用目的与环节}
+\section{使用目的与环节}
 
 本参赛队在以下环节使用了 AI 工具：
 
@@ -64,7 +64,7 @@
   \item \textbf{端到端 smoke test}：用 2025 A 题真实数据跑通 5 步流程, 验证 skill 可复用性
 \end{itemize}
 
-\section{三、主要 prompt 与过程 (节选)}
+\section{主要 prompt 与过程 (节选)}
 
 \subsection{3.1 几何建模 prompt: 烟幕云团-导弹视线遮挡判定}
 
@@ -162,7 +162,7 @@
 
 \textbf{采纳}: $\checkmark$ --- 11 项修复 (9 处 negation 重写 + 5 处 red/green 锚 + 4 处 completion checkable + tracer bullet 概念 + §4.0 指针校准 + 求解/共享/ 删 + 板凳龙 doc 合并)
 
-\section{四、对 AI 输出的核验情况}
+\section{对 AI 输出的核验情况}
 
 所有 AI 生成的内容均经过人工核验和修改, 具体如下:
 
@@ -190,7 +190,7 @@
   \item 与队友 / 教练讨论, 不通过就改
 \end{enumerate}
 
-\section{五、风险声明与禁用场景}
+\section{风险声明与禁用场景}
 
 \textbf{按 2026 规定第 4 条}, 以下核心判断环节\textbf{未}使用 AI (由 3 名队员 + 教练讨论确定):
 

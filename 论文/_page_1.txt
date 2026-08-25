@@ -1,0 +1,16 @@
+AI 工具使用详情
+一、一、工具信息
+项目
+内容
+工具名称
+Mavis (MiniMax Code orchestrator)
+提供方
+MiniMax
+版本/型号
+MiniMax-M3
+接入方式
+桌面应用(Windows + PowerShell)
+使用时间
+2026-08-24 ∼2026-08-25 (赛题2025 A 题烟幕干扰弹)
+二、二、使用目的与环节
+本参赛队在以下环节使用了AI 工具
