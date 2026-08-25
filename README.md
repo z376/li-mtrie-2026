@@ -86,19 +86,13 @@ li-mtrie-2026/
 
 ## 编译
 
-```powershell
-# 1. 论文版（含承诺书+编号页）
-Set-Location 论文
-xelatex -interaction=nonstopmode 论文.tex
-xelatex -interaction=nonstopmode 论文.tex
+完整 xelatex × 2 + 红/绿判据 + 打包流程在 **`SKILL.md` §Step 4 编译 + 终态**（含 `! Error`=0 + `Overfull \hbox`<5 + 合规检查 §2 7 项全过的 checkable 判据）。
 
-# 2. 电子版（跳过承诺书+编号页）
-xelatex -interaction=nonstopmode 电子版.tex
-xelatex -interaction=nonstopmode 电子版.tex
+**这里只列入口**:
+- 论文版: `论文/论文.tex`（含承诺书 + 编号页）
+- 电子版: `论文/电子版.tex`（不含承诺书，第一页直接摘要）
 
-# 3. 验证（两份 log 中 Error 数都应为 0）
-@(Get-Content 论文.log; Get-Content 电子版.log) | Select-String -Pattern 'Error'
-```
+**必装依赖**: 见 `SKILL.md §必装依赖`（pandas / numpy / scipy / matplotlib / openpyxl / PyMuPDF / pulp）。**赛前 1 天**配 `python -m venv .venv` 隔离环境。
 
 ## 规范出处
 
@@ -108,8 +102,11 @@ xelatex -interaction=nonstopmode 电子版.tex
 
 ## 版本
 
-- v1.2（2026 规范版）
-- 上一版：v1.0（2024 高教社杯 4 篇获奖论文归纳）
+- v1.3.2（writing-for-agents 审计 P0+P1+P2 全部应用, 2026-08-25）
+- v1.3.1（测试报告 §8.5 5 项 P0/P1 全部闭环）
+- v1.3（24 项 P0/P1/P2 改进 + 去重 2 轮 + 端到端验证）
+- v1.2（2026 规范版, 5 篇 2024 获奖论文归纳）
+- v1.0（2024 高教社杯 4 篇获奖论文归纳）
 
 ## License
 
