@@ -1,4 +1,35 @@
 \PassOptionsToPackage{quiet}{xeCJK}
+%% === v1.4.4 借鉴自 数模陪跑独家 模板：教学开关 + 占位符宏 ===
+%% 在文档任意位置可用 \Teach{...} 写红色填写提示，\TeachExample{...} 写红色示例。
+%% \Placeholder{...} 用黑色加粗显示【】占位符，便于交稿前搜索替换。
+%% 默认 \showteachingfalse：教学提示不显示（不影响现有 PDF 输出）。
+%% 想看教学提示：把下面 \showteachingfalse 注释掉，把上面 \showteachingtrue 取消注释即可。
+\newif\ifshowteaching
+\showteachingfalse
+% \showteachingtrue
+
+\newcommand{\Placeholder}[1]{\textbf{#1}}
+
+\newcommand{\Teach}[1]{%
+  \ifshowteaching
+    \par\begingroup
+      \noindent\color{red!78!black}\bfseries
+      【填写提示（提交前自动隐藏）：#1】\par
+    \endgroup
+  \fi
+}
+
+\newcommand{\TeachExample}[1]{%
+  \ifshowteaching
+    \par\begingroup
+      \noindent\color{red!78!black}\bfseries
+      【示例（仅供理解，提交前自动隐藏）：#1】\par
+    \endgroup
+  \fi
+}
+%% === v1.4.4 借鉴结束 ===
+
+
 %% 2026 规范修订：
 %%   - 论文版（纸质版）= withpreface → 生成 承诺书(第1页) + 编号专用页(第2页) + 摘要页(第3页,页码1) + 正文
 %%   - 电子版 = withoutpreface → 跳过承诺书和编号专用页,第一页直接是摘要页
