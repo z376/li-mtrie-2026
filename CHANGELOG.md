@@ -4,6 +4,32 @@
 
 ## [Unreleased]
 
+## [v1.4.4] - 2026-08-27
+
+**v1.4.4 阶段: 借鉴 数模陪跑独家 模板, 添加 figures/ + 教学开关宏**
+
+### Added
+- `论文/figures/` — 10 张示例图 (流程图/结果图/稳健性图), 来源标注"仅作形式参考, 参赛前必须整图替换"
+- `论文/figures/README.md` — 三件必做警告 (整图替换 / 删图题来源 / 检查图例) + 文件清单
+- `\showteachingtrue/false` 教学开关 (默认 false) + 3 个 LaTeX 宏
+  - `\Teach{...}` 红色填写提示
+  - `\TeachExample{...}` 红色示例
+  - `\Placeholder{...}` 黑色加粗占位符
+
+### Changed
+- `论文/论文.tex` + `论文/电子版.tex` + `论文/AI工具使用详情.tex` 顶部插入教学开关宏 (3 个文件保持一致)
+- `论文/AI工具使用详情.tex` 顶部注释版本号 v1.4.3 → v1.4.4
+- `SKILL.md` 顶部 metadata version v1.4.3 → v1.4.4
+- `README.md` 徽章 version v1.4.3 → v1.4.4
+
+### P2 风险标注
+- 10 张示例图来源第三方 (数模陪跑独家 → "2026 华数杯 A 论文" / "26 亚太杯中文赛 B 论文"),
+  PNG 本身无可执行负载, 但 `figures/README.md` 已明确警告"必须整图替换并删除图题元信息"
+
+### 包大小
+- 完整包: 19.05 → 22.41 MB (+10 张图, +13 文件)
+- 轻量包: 0.31 → 3.68 MB (+10 张图, +13 文件)
+
 ## [v1.4.3] - 2026-08-25
 
 **v1.4.3 阶段: 纯 framework + 求解计划模板**
@@ -128,7 +154,8 @@
 - LaTeX 模板 (format.cls + 思源宋体)
 - 必装依赖清单
 
-[Unreleased]: https://github.com/z376/li-mtrie-2026/compare/v1.4.3...HEAD
+[Unreleased]: https://github.com/z376/li-mtrie-2026/compare/v1.4.4...HEAD
+[v1.4.4]: https://github.com/z376/li-mtrie-2026/compare/v1.4.3...v1.4.4
 [v1.4.3]: https://github.com/z376/li-mtrie-2026/compare/v1.4.2...v1.4.3
 [v1.4.2]: https://github.com/z376/li-mtrie-2026/compare/v1.4.1...v1.4.2
 [v1.4.1]: https://github.com/z376/li-mtrie-2026/compare/v1.4.0...v1.4.1

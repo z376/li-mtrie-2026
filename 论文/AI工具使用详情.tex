@@ -1,8 +1,37 @@
 %% AI工具使用详情.tex (样例: 2025 A 题烟幕干扰弹)
 %% 2026 国赛 AI 工具使用规定第 4 条
-%% 配套 skill: li-mtrie-2026 v1.4.3
+%% 配套 skill: li-mtrie-2026 v1.4.4
 %% 编译: xelatex -interaction=nonstopmode AI工具使用详情.tex (×2)
 %% 输出: 支撑材料/AI工具使用详情.pdf (≈ 5 页)
+%% === v1.4.4 借鉴自 数模陪跑独家 模板：教学开关 + 占位符宏 ===
+%% 在文档任意位置可用 \Teach{...} 写红色填写提示，\TeachExample{...} 写红色示例。
+%% \Placeholder{...} 用黑色加粗显示【】占位符，便于交稿前搜索替换。
+%% 默认 \showteachingfalse：教学提示不显示（不影响现有 PDF 输出）。
+%% 想看教学提示：把下面 \showteachingfalse 注释掉，把上面 \showteachingtrue 取消注释即可。
+\newif\ifshowteaching
+\showteachingfalse
+% \showteachingtrue
+
+\newcommand{\Placeholder}[1]{\textbf{#1}}
+
+\newcommand{\Teach}[1]{%
+  \ifshowteaching
+    \par\begingroup
+      \noindent\color{red!78!black}\bfseries
+      【填写提示（提交前自动隐藏）：#1】\par
+    \endgroup
+  \fi
+}
+
+\newcommand{\TeachExample}[1]{%
+  \ifshowteaching
+    \par\begingroup
+      \noindent\color{red!78!black}\bfseries
+      【示例（仅供理解，提交前自动隐藏）：#1】\par
+    \endgroup
+  \fi
+}
+%% === v1.4.4 借鉴结束 ===
 
 \documentclass[electronic]{format}
 \usepackage{etoolbox}
