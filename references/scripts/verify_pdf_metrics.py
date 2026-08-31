@@ -24,6 +24,14 @@ li-mtrie-2026 PDF 成品结构程序化体检（PyMuPDF）
 import sys
 import re
 
+# Windows GBK console 兼容 (verify_pdf_metrics.py 用 emoji, 必修)
+# Python 3.7+
+try:
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+except Exception:
+    pass  # 旧 Python / 非 stdout 对象, 跳过
+
 # 2026 规范第一条: 上下左右页边距 ≥ 2.5 cm
 # CUMCMthesis 实际是 2.5 cm (= 0.984 inch ≈ 70.85pt)
 # 1 cm ≈ 28.3465 pt (PostScript point)
