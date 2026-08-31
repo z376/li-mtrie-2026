@@ -1,9 +1,9 @@
 ---
 name: li-mtrie
 description: |
-  数学建模竞赛（国赛/美赛/MCM/ICM/CUMCM）端到端 skill。Use when the user pastes a 数模赛题 PDF
-  and says "开始求解"/"求解这个题目"/"做数模"/"跑题" (initiate), OR after solving asks
-  "生成论文"/"出论文 PDF" (paper-only), OR 验证本 skill 自身 ("smoke test"/"跑 test_run").
+  数学建模竞赛（国赛/美赛/MCM/ICM/CUMCM）端到端 skill。Use when the user pastes 数模赛题 PDF
+  并说"开始求解"/"跑题"/"做数模"，OR 求解后说"生成论文"/"出论文 PDF"，OR 验证本 skill 自身
+  ("smoke test"/"跑 test_run")。
 
   Do NOT use for: general data analysis, one-off Python scripts, or research questions
   that don't lead to a `论文.pdf` deliverable.
@@ -47,7 +47,7 @@ metadata:
 2. **参考文献不必列 AI 工具**（Q2 官方确认）
 3. **附录首页应是支撑材料清单**（file list, 评审快速定位）
 4. **AI 声明不需要单独开一页**（紧随排版）
-5. **不要自行查重/AIGC**（避免内容泄露与知识产权风险）
+5. **不自行查重/AIGC**（官方答疑 Q5：避免内容泄露与知识产权风险）
 
 **老赛题（2024 及更早）兼容模式**：用 `v1.0 上一版`（如有归档）或删掉 §1.3 全部 AI 声明 + 详情 PDF。
 
@@ -208,6 +208,8 @@ python -c "import pandas, numpy, scipy, matplotlib, openpyxl, fitz, pulp; print(
 - 打印数据总览（shape / dtypes / 缺失率），识别问题数量 N
 - **用 `references/scripts/profile_data.py` 跑 EDA**（借鉴自 scipilot，自动检测列类型/分布/相关性/初步图型）
 
+**绿**: 题面文字提取完成 + N 题识别准确 + profile_data.py 跑出报告 + 求解计划.md 顶部填完题组+题号。
+
 **⚠️ 读题/读数据失败回退表**（按症状照做，赛前一晚就备好依赖）：
 
 | 症状 | 原因 | 回退操作 |
@@ -299,7 +301,7 @@ python -c "import pandas, numpy, scipy, matplotlib, openpyxl, fitz, pulp; print(
 
 - 物理常量（板长、螺距、重力加速度）→ **只用大写下划线** `PITCH = 0.55`，放 `求解/共享/constants.py`
 - 跨问题参数（前问估出、后问复用）→ 放 `求解/共享/params.py`，按估出问题号归档
-- **禁止**问题代码内重定义 `PITCH` / `pitch` / `p` 三种名字指代同一个量（评审标"模型不严谨"）
+- **统一命名**：问题代码内用同一名字指代同一个量（problem-1 用了 `PITCH`，后续必须用 `PITCH`，别 `pitch` / `p` 混用——评审标"模型不严谨"）
 - 每问跑完反问 3 条：
   1. 本问的物理常量**是否在共享 constants.py 已定义**？
   2. 本问的"前问输出"参数（如 p_min / t_collision）**是否在共享 params.py 已记录**？
@@ -359,7 +361,7 @@ python -c "import pandas, numpy, scipy, matplotlib, openpyxl, fitz, pulp; print(
 
 **📌 题意红线 4 条**（读完题就对照，漏一条 → 终止时刻/临界参数/关键结果整体失真）：
 
-- 题面明写物理事实必须建模（物体宽度/形状 → 真实几何判据，**严禁**质点简化）
+- **用真实几何判据**：物体有宽度/形状 → 建模时用真实几何（不是质点简化）
 - 几何初始条件必须用解析公式独立验证（不许只信视觉读图）
 - 后问对前问误差高度敏感（每步验证链不断）
 - 无官方答案时 5 步自查（解析推导 / 单位自洽 / 边界推演 / 多方法交叉 / 物理事实清单）
@@ -500,6 +502,17 @@ if ($sizeMB -gt 20) { Write-Error "超过 20MB 限制！" }
 
 ---
 
+## Failure handling（求解/编译最常踩的 6 类）
+
+- **数据缺失>20%**：KNN 插补或删除该特征，不静默丢
+- **XGBoost/GBR 过拟合**：降低 max_depth、增加正则化参数
+- **预测值异常**：检查特征是否存在数据泄露
+- **交叉验证方差过大**：增加折数或采用重复 CV
+- **LaTeX 编译 Error**：先 `Select-String -Path 论文.log -Pattern '! Error'` 看具体错，针对修；连续 2 次失败切换策略（改 `\caption` 转义 / 检查字体路径）
+- **Overfull/Underfull warning**：调整列宽比例 / 改换行位置；2 次修不好允许 `\\newline` 或 `\\sloppy`
+
+---
+
 ## 合规与硬规则
 
 **完整硬规则 + AI 合规 + 纪律红线 + 4 类检查表 + 一键验证命令**在 `references/合规检查清单.md`（权威源, 本节不重复列）。**写完论文后**逐项打勾 + 跑 §2 验证命令。
@@ -523,7 +536,7 @@ if ($sizeMB -gt 20) { Write-Error "超过 20MB 限制！" }
 
 > **附录代码 / 支撑材料 .py 必须跨 Windows / Linux / Overleaf 三平台可运行**
 
-- **路径全部用正斜杠** `'题号/xxx.py'`：Windows/Linux/Overleaf 通吃。**禁止**反斜杠和混合写法（实测漏网 62 处）
+- **路径用正斜杠** `'题号/xxx.py'`：Windows/Linux/Overleaf 通吃。自检命令 `Select-String -Path 求解/**/*.py -Pattern '\\\\'` 必须输出 0 行（实测漏网 62 处是为什么这条必看）
 - 提交前自检：
   ```powershell
   # PowerShell 查反斜杠残留
@@ -543,17 +556,6 @@ if ($sizeMB -gt 20) { Write-Error "超过 20MB 限制！" }
 ## 跑题期间红线（参赛规则第 3/5 条）
 
 > 完整 8 条禁止/允许行为表 + 严重违规后果（取消评奖 + 指导教师 2 年禁赛）→ 见 `references/合规检查清单.md §4`
-
----
-
-## Failure handling
-
-- **数据缺失>20%**：KNN 插补或删除该特征，不静默丢
-- **XGBoost/GBR 过拟合**：降低 max_depth、增加正则化参数
-- **预测值异常**：检查特征是否存在数据泄露
-- **交叉验证方差过大**：增加折数或采用重复 CV
-- **LaTeX 编译 Error**：先 `Select-String -Path 论文.log -Pattern '! Error'` 看具体错，针对修；连续 2 次失败切换策略（改 `\caption` 转义 / 检查字体路径）
-- **Overfull/Underfull warning**：调整列宽比例 / 改换行位置；2 次修不好允许 `\\newline` 或 `\\sloppy`
 
 ---
 
