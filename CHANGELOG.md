@@ -6,7 +6,7 @@
 
 ## [v1.4.4] - 2026-08-27
 
-**v1.4.4 阶段: 借鉴 数模陪跑独家 + cumcm-live-workflow v5.0, 6 commits 累计 8 个新文件**
+**v1.4.4 阶段: 借鉴 数模陪跑独家 + cumcm-live-workflow v5.0 + writing-for-agents 6 维度审计, 12 commits 累计 8 个新文件**
 
 借鉴自 2 个外部 skill:
 - **数模陪跑独家 v5.0** (2026 LaTeX 模板): figures/ 示例图 + 教学开关宏
@@ -49,14 +49,27 @@
 - `SKILL.md` 加 国奖/AIGC/题意红线/verify_pdf_metrics/跨平台 4 段交叉引用
 - `references/scripts/README.md` 3→4 脚本 + Step 5.6 + 依赖加 PyMuPDF
 
+**F. refactor + writing-for-agents 审计** (commits 584e798 + 2942466 + f774c6e + 56360a6 + 6cf77a9):
+- `paper-spec.md` §三.6 编号体系 v7 (章节/列表罗马/公式 三档区分) + 章节错位修复 + 3x 重复去重
+- `workflow.md` 砍 149 行 (343→194) 重复, 改为"SKILL.md 没说的细节专项" + §4 砍 30 行重复
+- `SKILL.md` 4 处 negation 改 positive target (不要/禁止/严禁 → 不自行/统一/用真实/用正斜杠)
+- `SKILL.md` Description 4 短语合一, 去英文标签 + Step 0 加 绿 判据 + Failure handling 上移
+- `SKILL.md` + `references/合规检查清单.md` 4 处"5 节"→"4 节" doc drift 修 (commit 2d525b6 删 §五 后未同步)
+- `.github/workflows/smoke-test.yml` 4 个 bug 修: 硬编码本地路径 → `$GITHUB_WORKSPACE` 相对路径 / pwsh 统一 / 7 个 .py 验证 / 排除规则修正
+- `流程审计-19漏点-已闭环 doc` 加 round 5/6/7 段 (writing-for-agents + 4-doc audit + smoke test)
+
 ### P2 风险标注
 - 10 张示例图来源第三方 (数模陪跑独家 → "2026 华数杯 A 论文" / "26 亚太杯中文赛 B 论文"), PNG 本身无可执行负载
 - verify_pdf_metrics.py 越界警告含页脚页码假阳性, 需人工核对真伪
+- 8/10 figures 缺 DPI 元数据 (3rd-party 来源固有问题, README 已警告"必须整图替换")
 
-### 三轮审计得分
+### 四轮审计 + 5-script smoke test 得分
 - v1.3.2 baseline: 6.0/10 (19 漏点)
 - v1.4.0 复审: 7.5/10 (11+ 修复)
-- **v1.4.4 复审: 8.0/10** (19 漏点全闭环, E1-E6 新发现, doc drift 修)
+- v1.4.4 复审: 8.0/10 (19 漏点全闭环, E1-E6 新发现)
+- writing-for-agents round: 6.5/10 (workflow.md 重复 + negation + 文档结构 bug) → 修后 7.0/10
+- 4-doc audit round: 5节→4节 doc drift + 4-script smoke test (全过, 没新 bug)
+- **v1.4.4 最终: 8.0/10** (审计维度天花板, 再提需新功能而非文档清理)
 
 ### 包大小
 - 完整包: 19.05 → 22.43 MB (+13 文件)

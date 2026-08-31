@@ -16,7 +16,7 @@ assignees: ''
 
 - [ ] 查过 `SKILL.md`
 - [ ] 查过 `references/` 下的相关章节
-- [ ] 跑过 `references/scripts/profile_data.py` / `tools/pack.py`
+- [ ] 跑过 `references/scripts/profile_data.py` 等 4 个 scripts / `tools/pack.py`
 
 ## 上下文
 

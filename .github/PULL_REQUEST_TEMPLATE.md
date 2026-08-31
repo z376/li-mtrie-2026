@@ -42,7 +42,7 @@
 - [ ] 代码 / 文档 改动有对应 commit
 - [ ] commit message 格式 `<scope>: <subject>`
 - [ ] 跑过 `py tools/pack.py` 打包成功
-- [ ] 跑过 `py references/scripts/profile_data.py` smoke test
+- [ ] 跑过 4 个 scripts smoke test (profile_data.py / visual_qa.py / check_figure.py / verify_pdf_metrics.py)
 - [ ] 没提交 `求解/题目/数据/` 里的赛题/数据 (隐私)
 - [ ] 改了 SKILL.md / README.md / CHANGELOG.md (如适用)
 - [ ] 引用了 `references/` 下的权威源 (而非另起炉灶)
