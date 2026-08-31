@@ -1,10 +1,10 @@
 # scripts/ — 程序化自检工具集
 
-> 借鉴自 `scipilot-figure-skill`（MIT 风格脚本），改写为数学建模国赛工作流。
+> 借鉴自 `scipilot-figure-skill`（MIT 风格脚本）+ cumcm-live-workflow-skill v5.0 `verify_pdf_metrics.py`，改写为数学建模国赛工作流。
 > 原作者：[scipilot-figure-skill](https://github.com/scipilot/scipilot-figure-skill)
 
-3 个 Python 脚本，覆盖「画图前数据剖析 → 出图后程序自检 → 提交前格式检查」三个环节。
-**不依赖** skill 系统本身——独立可执行，`pip install pandas matplotlib Pillow numpy` 后即用。
+4 个 Python 脚本，覆盖「画图前数据剖析 → 出图后程序自检 → 提交前格式检查 → 终审前 PDF 体检」四个环节。
+**不依赖** skill 系统本身——独立可执行，`pip install pandas matplotlib Pillow numpy PyMuPDF` 后即用。
 
 ---
 
@@ -142,6 +142,73 @@ Step 3  写论文（paper-spec.md）
 Step 4  编译（xelatex × 2）
 Step 5  排版优化（visual_qa 自检）        ← NEW（脚本）
 Step 5.5 打包支撑材料（check_figure 检）  ← NEW（脚本）
+Step 5.6 终审前 PDF 体检（verify_pdf_metrics 检）  ← NEW（脚本，借鉴 cumcm-live-workflow）
+```
+
+---
+
+## 4. `verify_pdf_metrics.py` — 终审前 PDF 成品结构体检
+
+> 借鉴自 cumcm-live-workflow-skill v5.0 `references/verify_pdf_metrics.py`，适配 li-mtrie 2026 规范 + CUMCMthesis 格式（页边距 2.5 cm）。
+
+**目的**：交付前 10 秒出 4 项体检结果：
+- **结构**：每页首行 + 字数 → 摘要是否单页
+- **越界**：bbox 检测表格/内容是否越右/左/下边界（2.5 cm）
+- **匿名**：PDF 元数据 (author/title/keywords) 应为空
+- **关键数字**：compact 去空白匹配（规避字体间距）
+- **未定义引用**：LaTeX `??` 标记（需跑第二次 xelatex 稳定交叉引用）
+- **摘要页判断**：第 1 页是否只有摘要+关键词（"问题重述"出现 = 摘要溢出）
+
+**工作流位置**：Step 5.5（打包支撑材料）前，对 `论文/论文.pdf` 跑一次。
+
+### 用法
+
+```bash
+# 基础体检（不传关键数字）
+py verify_pdf_metrics.py 论文/论文.pdf
+
+# 加关键数字检查（论文里必须有这些数字）
+py verify_pdf_metrics.py 论文/论文.pdf 0.4503 412.47 8.25
+
+# 退出码：0=通过, 1=有问题
+```
+
+### 输出示例
+
+```
+页数: 20
+
+[1] 结构 (每页首行 + 字数)
+  p1: 烟幕干扰弹的投放策略 | 1024字符 <- 摘要页
+  p2: 一、问题重述 | 856字符
+  ...
+
+[2] 越界检测 (max_x > 右边距 = 2.5cm)
+  ✓ 全部页内容在 2.5cm 边距内
+
+[3] 元数据匿名
+  ⚠ 有信息: {'author': '...', 'title': '...'}
+  → 修复: 在 format.cls / 论文.tex 顶部加 \hypersetup{pdfauthor={}, pdftitle={}}
+
+[4] 关键数字出现次数
+  0.4503: 5 次 ✓
+  412.47: 3 次 ✓
+
+[5] LaTeX 未定义引用: 0 处
+
+[6] 摘要页判断
+  含"关键词": True ✓
+  含"问题重述": False (应为 False = 摘要未溢出)
+  含"AI 工具使用声明": False (正常情况下, 论文版摘要页应不包含)
+
+========== 总评 ==========
+⚠ 有问题, 见上方提示
+```
+
+### 依赖
+
+```bash
+pip install PyMuPDF
 ```
 
 ---
@@ -149,7 +216,7 @@ Step 5.5 打包支撑材料（check_figure 检）  ← NEW（脚本）
 ## 依赖
 
 ```
-pip install pandas matplotlib Pillow numpy
+pip install pandas matplotlib Pillow numpy PyMuPDF
 ```
 
 可选（用于 visual_qa 的 PNG 预览质量）：

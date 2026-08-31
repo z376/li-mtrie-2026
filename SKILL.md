@@ -357,6 +357,24 @@ python -c "import pandas, numpy, scipy, matplotlib, openpyxl, fitz, pulp; print(
   - **L4 证据/事实**层最有效（补数字、补理由、补边界、补失败方案）
   - 把 AI 从"代写"改成"审稿人"——让 AI 指出问题，队员手动改
 
+**📌 题意红线 4 条**（读完题就对照，漏一条 → 终止时刻/临界参数/关键结果整体失真）：
+
+- 题面明写物理事实必须建模（物体宽度/形状 → 真实几何判据，**严禁**质点简化）
+- 几何初始条件必须用解析公式独立验证（不许只信视觉读图）
+- 后问对前问误差高度敏感（每步验证链不断）
+- 无官方答案时 5 步自查（解析推导 / 单位自洽 / 边界推演 / 多方法交叉 / 物理事实清单）
+
+→ 完整版 `references/题意红线.md`（4.7 KB）
+
+**📌 PDF 成品结构体检**（终审前必跑，10 秒出结果）：
+
+```powershell
+# 体检 4 项: 结构 / 越界 / 匿名 / 关键数字
+python references/scripts/verify_pdf_metrics.py 论文/论文.pdf 0.4503 412.47
+```
+
+依赖：`pip install PyMuPDF`。脚本自动检查页边距越界、元数据泄露、关键数字出现次数、未定义引用 (`??`)。
+
 写完后**先**做**符号一致性自检**（8 项，详见 `references/paper-spec.md §2 8 项自检`），全绿再编译（漏自检 = 编译时符号错乱返工）。
 
 ### Step 4：编译 + 终态（合并自原 Step 5 + Step 5.5）
@@ -498,6 +516,27 @@ if ($sizeMB -gt 20) { Write-Error "超过 20MB 限制！" }
 - `支撑材料/AI工具使用详情.pdf` — 用 AI 必填（2026 AI 规定第 4 条）
 
 中间产物（不提交但要保留）：见 `README.md` 目录结构段。
+
+---
+
+## 跨平台代码红线（借鉴 cumcm-live-workflow v5.0）
+
+> **附录代码 / 支撑材料 .py 必须跨 Windows / Linux / Overleaf 三平台可运行**
+
+- **路径全部用正斜杠** `'题号/xxx.py'`：Windows/Linux/Overleaf 通吃。**禁止**反斜杠和混合写法（实测漏网 62 处）
+- 提交前自检：
+  ```powershell
+  # PowerShell 查反斜杠残留
+  Select-String -Path 求解/**/*.py -Pattern '\\\\' -CaseSensitive:$false
+  # 输出应为 0 行; 出现任何行 = 有反斜杠
+  ```
+- 附录代码用 `black` 格式化（`pip install black` + `python -m black 求解/**/*.py`），格式化后**重跑验证**功能未破坏
+- 附录代码加文件头注释（Python 版本 / 依赖库版本 / 输入文件路径），方便评审 / 复现
+
+跟合规模块的协同:
+- `论文/10.附录.tex` 顶部已写"代码完整性铁律 + 文件列表一致性铁律"2 条
+- `references/题意红线.md` 第 1 条: 题面物理事实必须建模（避免代码缺关键逻辑）
+- `references/国奖级硬性指标.md` §3 自查表第 26 条: 全部路径用正斜杠
 
 ---
 
