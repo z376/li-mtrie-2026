@@ -32,7 +32,9 @@
 - **赛前学习清单** — 6 大题型映射 + 30+ 算法清单 + 60/30/7 天速成路径 + 跑题红线
   （`references/赛前学习清单.md`）
 
-## v1.4.4 新增（13 commits, 2026-08-27 → 08-31）
+## v1.5.0 新增（15 commits, 2026-08-27 → 08-31, 在 v1.4.4 13 commits 之上）
+
+> v1.4.4 阶段（13 commits）已合入本节上半段；v1.5.0 阶段（2 commits, LLM 工具集成 + GBK fix）见尾部 ⚡ 标记。
 
 - **figures/ 10 张示例图**（借鉴 数模陪跑独家）+ `figures/README.md` 三件必做警告
 - **`\showteaching` 教学开关宏** — 3 个文件 (论文/电子版/AI详情) 统一
@@ -42,14 +44,15 @@
 - **绘图避坑 + 图型选择决策**（借鉴 scipilot-figure-skill）— 18 条可视化陷阱 + 决策三轴（变量数/论证意图/数据规模）
 - **整题建模模式 + 策略输出规范**（借鉴 bzd-modeling-ideas）— 5 跨问题架构 + 7 题型路线 + 每道题 4 段式分析（问题概述/总体思路/模型比选/创新方向）
 - **跨题工具 + 验收清单 + 角色Prompt**（借鉴 mma v3.3）— 3 utility 函数 (GBK 兼容 + utf-8-sig CSV) + 38+ 项验收 + 4 角色 prompt 模板
-- **LLM 工具集成**（v1.4.5 学生自用）— 3 个结构化 prompt 工具（选题推荐 / 代码修复 / 自动审稿），不调外部 API，copy-paste 到任何 LLM 即可
 - **题意红线**（`references/题意红线.md`）— 4 条最高优先级教训
 - **verify_pdf_metrics.py**（`references/scripts/`）— 终审前 PDF 6 项程序化体检
 - **编号体系 v7**（`paper-spec.md §三.6`）— 章节/列表罗马/公式 三档区分
 - **跨平台代码红线 + 代码完整性铁律** — SKILL.md + 10.附录.tex 双写
 - **writing-for-agents 6 维度审计** — workflow.md 砍 149 行重复 + 4 处 negation 改 positive
+- ⚡ **LLM 工具集成**（`references/llm-prompts/`）— 3 个结构化 prompt 工具（选题推荐 / 代码修复 / 自动审稿）+ README 总览。不调外部 API，copy-paste 到 Mavis/Claude/GPT 即可。**96 小时救星**：traceback → 根因 + 最小修复 + 验证步骤（debug 30% 时间节约 8-10 小时）
+- ⚡ **verify_pdf_metrics.py GBK fix**（commit 8866cbc, hotfix）— Windows GBK PowerShell 5.1 跑 emoji 不再乱码/崩溃，stdout/stderr reconfigure utf-8
 
-详细变更见 `CHANGELOG.md` (v1.4.4 条目覆盖 13 commits 累计)。
+详细变更见 `CHANGELOG.md` (v1.4.4 + v1.5.0 条目覆盖 15 commits 累计)。
 
 ## 快速上手
 
@@ -81,13 +84,22 @@ li-mtrie-2026/
 │   ├── 导入规范.md           # 共享模块导入规则 + 跨问题常量规范
 │   ├── 获奖论文/              # 5 篇参考论文分析
 │   │   └── 板凳龙-南科大-2024国一.md  # 极坐标+运动学+碰撞, 国一第5篇
+│   ├── 2026官方答疑/          # 官方 Q&A（2026 试行规范问答）
+│   │   └── 20260826-咨询问题解答.md
 │   ├── examples/              # 机理题示例（螺线轨迹）
-│   └── scripts/              # 程序化自检工具 (5 个)
+│   │   └── 机理题示例-螺线轨迹.py
+│   ├── llm-prompts/           # ⚡ v1.5.0 LLM 工具集成（学生自用, copy-paste）
+│   │   ├── README.md         #   3 工具总览 + 96 小时使用流程
+│   │   ├── 01-选题推荐.md     #   题面+数据 → 候选模型 Top-3 (JSON)
+│   │   ├── 02-代码修复.md     #   traceback → 根因 + 最小修复 + 验证
+│   │   └── 03-自动审稿.md     #   5 维评分 + 改进建议 + AI 痕迹词
+│   └── scripts/              # 程序化自检工具 (6 个)
 │       ├── profile_data.py   #   画图前 EDA
 │       ├── check_figure.py    #   提交前格式合规 (DPI ≥ 200)
 │       ├── visual_qa.py       #   出图后版面自检
-│       ├── verify_pdf_metrics.py  # 终审前 PDF 6 项体检 (借鉴 cumcm-live-workflow)
-│       └── aigc_scan.py      #   AIGC 9 维度自动扫描 (借鉴 aigc-reduce)
+│       ├── verify_pdf_metrics.py  # 终审前 PDF 6 项体检 (借鉴 cumcm-live-workflow, GBK fix)
+│       ├── aigc_scan.py      #   AIGC 9 维度自动扫描 (借鉴 aigc-reduce, GBK fix)
+│       └── data_utils.py     #   ⚡ v1.5.0 3 跨题 utility (GBK 兼容 / utf-8-sig CSV / 字符串)
 ├── tools/
 │   └── pack.py               # skill 自身打包工具
 ├── 题目/                      # 用户填：赛题 PDF/DOCX
@@ -130,6 +142,11 @@ li-mtrie-2026/
 
 ## 版本
 
+- **v1.5.0**（15 commits 累计, 2026-08-27 → 08-31, 在 v1.4.4 13 commits 之上新增 2 commits）—
+  ⚡ LLM 工具集成（`references/llm-prompts/` 3 工具 + README, 学生 copy-paste 自用,
+  不调外部 API, 96 小时救星）+ ⚡ verify_pdf_metrics.py GBK console fix
+  (commit 8866cbc hotfix). 借鉴 mma v3.3 / bzd-modeling-ideas / scipilot-figure-skill /
+  aigc-reduce / cumcm-live-workflow / 数模陪跑独家 6 个外部 skill. 包大小 22.51 / 3.77 MB.
 - **v1.4.4**（13 commits 累计, 2026-08-27 → 08-31）— 借鉴 数模陪跑独家 + cumcm-live-workflow v5.0
   + writing-for-agents 6 维度审计 + 4-script smoke test + 8 个新文件
   （figures/ 10 张图 + 教学开关 + 国奖级硬性指标 + 去AIGC指南 + 题意红线
