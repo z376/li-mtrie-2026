@@ -418,7 +418,7 @@ xelatex -interaction=nonstopmode 论文.tex
 xelatex -interaction=nonstopmode 电子版.tex
 xelatex -interaction=nonstopmode 电子版.tex
 
-# AI 工具使用详情在 Step 4.4 子步骤 1 编译（需先填写 5 节占位符）
+# AI 工具使用详情在 Step 4.4 子步骤 1 编译（需先填写 4 节占位符）
 ```
 
 **Step 4.2: 排版优化**（循环直到日志干净）
@@ -445,8 +445,8 @@ Select-String -Path 论文.log, 电子版.log -Pattern 'Overfull|Underfull|Float
 
 ```powershell
 # 1) 填写 LaTeX 模板（人工）
-#    打开 论文/AI工具使用详情.tex，按 5 节填写占位符：
-#    工具信息 / 使用目的 / prompt 摘要 / 核验情况 / 禁用场景声明
+#    打开 论文/AI工具使用详情.tex，按 4 节填写占位符：
+#    工具信息 / 使用目的与环节 / 主要 prompt 与过程 / 对 AI 输出的核验情况
 
 # 2) 编译成 PDF（跟主论文共用 format.cls，排版一致）
 Set-Location 论文
@@ -488,7 +488,7 @@ Write-Host "支撑材料.rar: $sizeMB MB"
 if ($sizeMB -gt 20) { Write-Error "超过 20MB 限制！" }
 ```
 
-**模板位置**: `论文/AI工具使用详情.tex`（含 5 节固定结构 + 跟主论文共用 format.cls）
+**模板位置**: `论文/AI工具使用详情.tex`（含 4 节固定结构 + 跟主论文共用 format.cls）
 **编译命令**: `xelatex -interaction=nonstopmode AI工具使用详情.tex` (×2)
 
 **Step 4.5: 最终提交物检查**
