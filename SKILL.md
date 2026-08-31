@@ -359,6 +359,14 @@ python -c "import pandas, numpy, scipy, matplotlib, openpyxl, fitz, pulp; print(
   - **L4 证据/事实**层最有效（补数字、补理由、补边界、补失败方案）
   - 把 AI 从"代写"改成"审稿人"——让 AI 指出问题，队员手动改
 
+**📌 AIGC 防御体系（v1.4.5 起，借鉴 aigc-reduce v1.0）**：
+
+- **4 铁律**（核心 insight）：① 禁止 AI 重写 AI 文本（PaperPure 实测升至 100%）；② 修改率 >40% 但只能靠限定手段；③ 确定性替换不是重写；④ 保持学术语体（硬底线）
+- **3 轮协议**（结构化降重流程）：第 1 轮 减法（划禁改 → 扫描 → 词级 → 句级 → 段落）→ 第 2 轮 加法（节奏工程 + 审慎推断 + 具体化）→ 第 3 轮 Anti-AI 审计
+- **5 类禁改片段** → `references/受保护片段.md`（引用/公式/数据/术语/引语）
+- **4 平台检测弱点** → `references/检测平台弱点.md`（知网 3.0 / PaperPure / 万方 / PaperPass + 3 档修改率）
+- **9 维度自动扫描** → `references/scripts/aigc_scan.py`（借鉴 aigc-reduce，含 GBK 兼容 patch）
+
 **📌 题意红线 4 条**（读完题就对照，漏一条 → 终止时刻/临界参数/关键结果整体失真）：
 
 - **用真实几何判据**：物体有宽度/形状 → 建模时用真实几何（不是质点简化）

@@ -38,7 +38,7 @@
 - **`\showteaching` 教学开关宏** — 3 个文件 (论文/电子版/AI详情) 统一
 - **AI 工具使用声明 二者择一模板** — 对齐 2026 官方简洁版 Word
 - **国奖级硬性指标**（`references/国奖级硬性指标.md`）— 6 类数字门槛 + 26 条自查表
-- **去AIGC指南**（`references/去AIGC指南.md`）— 降重 4 层法 + 9 类痕迹 + 6 类代码特征
+- **去AIGC指南**（`references/去AIGC指南.md`）— 降重 4 层法 + 9 类痕迹 + 6 类代码特征 + **4 铁律 + 3 轮协议**（借鉴 aigc-reduce v1.0）
 - **题意红线**（`references/题意红线.md`）— 4 条最高优先级教训
 - **verify_pdf_metrics.py**（`references/scripts/`）— 终审前 PDF 6 项程序化体检
 - **编号体系 v7**（`paper-spec.md §三.6`）— 章节/列表罗马/公式 三档区分
@@ -78,11 +78,12 @@ li-mtrie-2026/
 │   ├── 获奖论文/              # 5 篇参考论文分析
 │   │   └── 板凳龙-南科大-2024国一.md  # 极坐标+运动学+碰撞, 国一第5篇
 │   ├── examples/              # 机理题示例（螺线轨迹）
-│   └── scripts/              # 程序化自检工具 (4 个)
+│   └── scripts/              # 程序化自检工具 (5 个)
 │       ├── profile_data.py   #   画图前 EDA
 │       ├── check_figure.py    #   提交前格式合规 (DPI ≥ 200)
 │       ├── visual_qa.py       #   出图后版面自检
-│       └── verify_pdf_metrics.py  # 终审前 PDF 6 项体检 (借鉴 cumcm-live-workflow)
+│       ├── verify_pdf_metrics.py  # 终审前 PDF 6 项体检 (借鉴 cumcm-live-workflow)
+│       └── aigc_scan.py      #   AIGC 9 维度自动扫描 (借鉴 aigc-reduce)
 ├── tools/
 │   └── pack.py               # skill 自身打包工具
 ├── 题目/                      # 用户填：赛题 PDF/DOCX
