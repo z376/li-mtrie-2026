@@ -39,6 +39,7 @@
 - **AI 工具使用声明 二者择一模板** — 对齐 2026 官方简洁版 Word
 - **国奖级硬性指标**（`references/国奖级硬性指标.md`）— 6 类数字门槛 + 26 条自查表
 - **去AIGC指南**（`references/去AIGC指南.md`）— 降重 4 层法 + 9 类痕迹 + 6 类代码特征 + **4 铁律 + 3 轮协议**（借鉴 aigc-reduce v1.0）
+- **绘图避坑 + 图型选择决策**（借鉴 scipilot-figure-skill）— 18 条可视化陷阱 + 决策三轴（变量数/论证意图/数据规模）
 - **题意红线**（`references/题意红线.md`）— 4 条最高优先级教训
 - **verify_pdf_metrics.py**（`references/scripts/`）— 终审前 PDF 6 项程序化体检
 - **编号体系 v7**（`paper-spec.md §三.6`）— 章节/列表罗马/公式 三档区分

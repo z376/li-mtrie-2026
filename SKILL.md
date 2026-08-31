@@ -367,6 +367,12 @@ python -c "import pandas, numpy, scipy, matplotlib, openpyxl, fitz, pulp; print(
 - **4 平台检测弱点** → `references/检测平台弱点.md`（知网 3.0 / PaperPure / 万方 / PaperPass + 3 档修改率）
 - **9 维度自动扫描** → `references/scripts/aigc_scan.py`（借鉴 aigc-reduce，含 GBK 兼容 patch）
 
+**📌 绘图避坑体系（v1.4.5 起，借鉴 scipilot-figure-skill）**：
+
+- **18 条可视化陷阱**（均值柱/双Y轴/饼图/Y轴截断/rainbow色图/缺字方框 等）→ `references/绘图避坑.md`（15.8 KB, 详版含审稿人视角 + 代码示例）
+- **图型选择决策三轴**（变量数/论证意图/数据规模）→ `references/图型选择决策.md`（11.6 KB, 8 类数据形态分述）
+- **速查表** → `references/绘图规范.md §0`（中文化压缩版，每条 1 行）
+
 **📌 题意红线 4 条**（读完题就对照，漏一条 → 终止时刻/临界参数/关键结果整体失真）：
 
 - **用真实几何判据**：物体有宽度/形状 → 建模时用真实几何（不是质点简化）
