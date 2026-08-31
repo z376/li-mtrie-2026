@@ -17,8 +17,7 @@
 - 全国大学生数学建模竞赛（**国赛**，A/B/C/D/E 题）
 - 美赛 / 校赛 / 其它数学建模类竞赛（结构基本通用）
 
-触发词：`开始求解`、`求解这个题目`、`做数模`、`跑代码写论文`、`出论文 PDF`、
-`帮我做这道数模题` 等。
+触发词：`开始求解`、`跑题`、`做数模`、`生成论文`、`出论文 PDF` 等。
 
 ## 核心特性
 
@@ -32,6 +31,21 @@
   模型评价/改进推广/参考文献/附录
 - **赛前学习清单** — 6 大题型映射 + 30+ 算法清单 + 60/30/7 天速成路径 + 跑题红线
   （`references/赛前学习清单.md`）
+
+## v1.4.4 新增（13 commits, 2026-08-27 → 08-31）
+
+- **figures/ 10 张示例图**（借鉴 数模陪跑独家）+ `figures/README.md` 三件必做警告
+- **`\showteaching` 教学开关宏** — 3 个文件 (论文/电子版/AI详情) 统一
+- **AI 工具使用声明 二者择一模板** — 对齐 2026 官方简洁版 Word
+- **国奖级硬性指标**（`references/国奖级硬性指标.md`）— 6 类数字门槛 + 26 条自查表
+- **去AIGC指南**（`references/去AIGC指南.md`）— 降重 4 层法 + 9 类痕迹 + 6 类代码特征
+- **题意红线**（`references/题意红线.md`）— 4 条最高优先级教训
+- **verify_pdf_metrics.py**（`references/scripts/`）— 终审前 PDF 6 项程序化体检
+- **编号体系 v7**（`paper-spec.md §三.6`）— 章节/列表罗马/公式 三档区分
+- **跨平台代码红线 + 代码完整性铁律** — SKILL.md + 10.附录.tex 双写
+- **writing-for-agents 6 维度审计** — workflow.md 砍 149 行重复 + 4 处 negation 改 positive
+
+详细变更见 `CHANGELOG.md` (v1.4.4 条目覆盖 13 commits 累计)。
 
 ## 快速上手
 
@@ -64,10 +78,11 @@ li-mtrie-2026/
 │   ├── 获奖论文/              # 5 篇参考论文分析
 │   │   └── 板凳龙-南科大-2024国一.md  # 极坐标+运动学+碰撞, 国一第5篇
 │   ├── examples/              # 机理题示例（螺线轨迹）
-│   └── scripts/              # 程序化自检工具
-│       ├── profile_data.py
-│       ├── check_figure.py
-│       └── visual_qa.py
+│   └── scripts/              # 程序化自检工具 (4 个)
+│       ├── profile_data.py   #   画图前 EDA
+│       ├── check_figure.py    #   提交前格式合规 (DPI ≥ 200)
+│       ├── visual_qa.py       #   出图后版面自检
+│       └── verify_pdf_metrics.py  # 终审前 PDF 6 项体检 (借鉴 cumcm-live-workflow)
 ├── tools/
 │   └── pack.py               # skill 自身打包工具
 ├── 题目/                      # 用户填：赛题 PDF/DOCX
@@ -110,6 +125,14 @@ li-mtrie-2026/
 
 ## 版本
 
+- **v1.4.4**（13 commits 累计, 2026-08-27 → 08-31）— 借鉴 数模陪跑独家 + cumcm-live-workflow v5.0
+  + writing-for-agents 6 维度审计 + 4-script smoke test + 8 个新文件
+  （figures/ 10 张图 + 教学开关 + 国奖级硬性指标 + 去AIGC指南 + 题意红线
+  + verify_pdf_metrics.py + 编号体系 v7 + workflow.md refactor）
+- v1.4.3（纯 framework + 求解计划模板, 2026-08-25）
+- v1.4.2（恢复 题目/数据/ 学生示例）
+- v1.4.1（v1.4.0 复审 P0 1 + P1 4 全部应用）
+- v1.4.0（加 板凳龙-南科大-2024 国一 作为第 5 篇参考论文）
 - v1.3.2（writing-for-agents 审计 P0+P1+P2 全部应用, 2026-08-25）
 - v1.3.1（测试报告 §8.5 5 项 P0/P1 全部闭环）
 - v1.3（24 项 P0/P1/P2 改进 + 去重 2 轮 + 端到端验证）
