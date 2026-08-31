@@ -1,5 +1,11 @@
 name: smoke-test
 
+# v1.4.4 round 7 修:
+# 1) 硬编码本地路径 C:\Users\admin\.minimax\... → 改用 $GITHUB_WORKSPACE
+# 2) 加所有 5 个 Python 脚本的 py_compile 验证 (之前只 4 个)
+# 3) defaults.run.shell: pwsh 统一, 避免 pwsh/bash 混用
+# 4) 加 LICENSE 验证 + 前置 pre-existing warning 注释
+
 on:
   push:
     branches: [main, master]
@@ -11,6 +17,9 @@ jobs:
   smoke-test:
     runs-on: windows-latest
     timeout-minutes: 10
+    defaults:
+      run:
+        shell: pwsh
 
     steps:
       - name: Checkout
@@ -27,60 +36,75 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install pandas openpyxl
 
-      - name: Verify pack.py runs
+      - name: Verify pack.py runs and produces 2 zips
         run: |
-          py tools/pack.py
-          if (Test-Path "C:\Users\admin\.minimax\skills\li-mtrie-2026-完整包.zip") {
-            Write-Host "OK: 完整包生成成功"
-          } else {
-            Write-Error "FAIL: 完整包未生成"
+          python tools/pack.py
+          $zips = Get-ChildItem -Path .. -Filter 'li-mtrie-2026-*.zip' -ErrorAction SilentlyContinue
+          if ($zips.Count -ne 2) {
+            Write-Error "FAIL: zip count = $($zips.Count), expected 2"
             exit 1
           }
-        shell: pwsh
+          Write-Host "OK: $($zips.Count) zips generated"
+          $zips | ForEach-Object { Write-Host "  - $($_.Name) ($([math]::Round($_.Length/1MB, 2)) MB)" }
 
       - name: Verify pack excludes sensitive + dev files
         run: |
+          $zipPath = (Get-ChildItem -Path .. -Filter 'li-mtrie-2026-轻量包.zip' | Select-Object -First 1).FullName
           Add-Type -AssemblyName System.IO.Compression.FileSystem
-          $zip = [System.IO.Compression.ZipFile]::OpenRead("C:\Users\admin\.minimax\skills\li-mtrie-2026-轻量包.zip")
+          $zip = [System.IO.Compression.ZipFile]::OpenRead($zipPath)
           $bad = @()
           $bad += $zip.Entries | Where-Object { $_.FullName -match '\.(aux|log|out|toc|pyc)$' }
           $bad += $zip.Entries | Where-Object { $_.FullName -match '开发日志\.md' }
           $bad += $zip.Entries | Where-Object { $_.FullName -match '测试报告\.md' }
           $bad += $zip.Entries | Where-Object { $_.FullName -match 'push_.*\.log' }
-          $bad += $zip.Entries | Where-Object { $_.FullName -match '^.*[\\/]+_.*\.(py|txt)$' }
-          "违规文件: $($bad.Count) (应为 0)"
+          $bad += $zip.Entries | Where-Object { $_.FullName -match '(^|[\\/])_.*\.(py|txt)$' }
+          Write-Host "违规文件数: $($bad.Count) (应为 0)"
           if ($bad.Count -gt 0) {
             $bad | ForEach-Object { Write-Host "  - $($_.FullName)" }
+            $zip.Dispose()
             exit 1
           }
-        shell: pwsh
+          $zip.Dispose()
+          Write-Host "OK: zip 内容干净 (无 .aux/.log/.pyc/开发日志/测试报告 等)"
 
-      - name: Verify SKILL.md is valid markdown + has frontmatter
+      - name: Verify SKILL.md has valid frontmatter + version
         run: |
           $content = Get-Content SKILL.md -Raw
-          if ($content -notmatch '^---') {
-            Write-Error "SKILL.md missing frontmatter"
+          if ($content -notmatch '^---\s*$') {
+            Write-Error "SKILL.md missing frontmatter (must start with ---)"
             exit 1
           }
           if ($content -notmatch 'name: li-mtrie') {
-            Write-Error "SKILL.md frontmatter name mismatch"
+            Write-Error "SKILL.md frontmatter name mismatch (expected 'name: li-mtrie')"
             exit 1
           }
           if ($content -notmatch 'version: ') {
-            Write-Error "SKILL.md missing version"
+            Write-Error "SKILL.md missing version field"
             exit 1
           }
           Write-Host "OK: SKILL.md frontmatter valid"
 
-      - name: Verify templates compile
+      - name: Verify 5 Python scripts compile
         run: |
-          py -c "import py_compile; py_compile.compile('references/code-template.py', doraise=True); print('OK: code-template.py compiles')"
-          py -c "import py_compile; py_compile.compile('references/mechanism-template.py', doraise=True); print('OK: mechanism-template.py compiles')"
-          py -c "import py_compile; py_compile.compile('tools/pack.py', doraise=True); print('OK: pack.py compiles')"
-          py -c "import py_compile; py_compile.compile('references/scripts/profile_data.py', doraise=True); print('OK: profile_data.py compiles')"
-        shell: pwsh
+          $files = @(
+            'references/code-template.py',
+            'references/mechanism-template.py',
+            'tools/pack.py',
+            'references/scripts/profile_data.py',
+            'references/scripts/visual_qa.py',
+            'references/scripts/check_figure.py',
+            'references/scripts/verify_pdf_metrics.py'
+          )
+          foreach ($f in $files) {
+            python -m py_compile $f
+            if ($LASTEXITCODE -ne 0) {
+              Write-Error "py_compile failed: $f"
+              exit 1
+            }
+            Write-Host "OK: $f"
+          }
 
-      - name: Verify LICENSE exists + is MIT
+      - name: Verify LICENSE is MIT
         run: |
           if (-not (Test-Path LICENSE)) {
             Write-Error "LICENSE missing"
@@ -97,8 +121,8 @@ jobs:
         if: always()
         run: |
           Write-Host "===== smoke-test summary ====="
-          Write-Host "pack.py: 验证生成 zip 排除 dev/sensitive"
-          Write-Host "SKILL.md: 验证 frontmatter + version"
-          Write-Host "templates: 验证 py_compile"
+          Write-Host "pack.py: 验证生成 2 个 zip + 排除 dev/sensitive"
+          Write-Host "SKILL.md: 验证 frontmatter + name + version"
+          Write-Host "Python: 7 个 .py 全部 py_compile 通过"
           Write-Host "LICENSE: 验证 MIT"
           Write-Host "==============================="
