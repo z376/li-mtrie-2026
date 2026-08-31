@@ -389,6 +389,15 @@ python -c "import pandas, numpy, scipy, matplotlib, openpyxl, fitz, pulp; print(
 - **38+ 项验收清单**（Stage 5）→ `references/验收清单.md`（12.9 KB, 6 类：A 编译 / B 数值 / C 硬规则 / D 写作 / E 支撑材料 / F 2026 规范）
 - **4 角色 prompt 模板**（建模手/代码手/论文手/验收手）→ `references/角色Prompt.md`（13.5 KB, 团队 4 人分工时直接 copy-paste 角色身份到对话）
 
+**📌 LLM 工具集成（v1.4.5 起，学生自用）**：
+
+- **3 个结构化 prompt 工具**（不调外部 API，copy-paste 到 Mavis/Claude/GPT 即可）：
+  - `01-选题推荐.md`：题面 + 数据 → 问题分类 + 候选模型 Top-3 + 数据洞察
+  - `02-代码修复.md`：**96 小时救星**——traceback → 根因 + 最小修复 + 验证步骤（debug 30% 时间节约 8-10 小时）
+  - `03-自动审稿.md`：5 维评分（机理/数据/写作/创新/排版）+ 改进建议 + AI 痕迹词
+- **核心原则**：结构化 JSON 输出 / 不调外部 API / 5 维评分 / 三道防线（diff 必读 / 测试必跑 / 备份必留）
+- 完整目录 + 使用流程 + 与 26 条自查表映射 → `references/llm-prompts/README.md`
+
 **📌 题意红线 4 条**（读完题就对照，漏一条 → 终止时刻/临界参数/关键结果整体失真）：
 
 - **用真实几何判据**：物体有宽度/形状 → 建模时用真实几何（不是质点简化）

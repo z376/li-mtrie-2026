@@ -42,6 +42,7 @@
 - **绘图避坑 + 图型选择决策**（借鉴 scipilot-figure-skill）— 18 条可视化陷阱 + 决策三轴（变量数/论证意图/数据规模）
 - **整题建模模式 + 策略输出规范**（借鉴 bzd-modeling-ideas）— 5 跨问题架构 + 7 题型路线 + 每道题 4 段式分析（问题概述/总体思路/模型比选/创新方向）
 - **跨题工具 + 验收清单 + 角色Prompt**（借鉴 mma v3.3）— 3 utility 函数 (GBK 兼容 + utf-8-sig CSV) + 38+ 项验收 + 4 角色 prompt 模板
+- **LLM 工具集成**（v1.4.5 学生自用）— 3 个结构化 prompt 工具（选题推荐 / 代码修复 / 自动审稿），不调外部 API，copy-paste 到任何 LLM 即可
 - **题意红线**（`references/题意红线.md`）— 4 条最高优先级教训
 - **verify_pdf_metrics.py**（`references/scripts/`）— 终审前 PDF 6 项程序化体检
 - **编号体系 v7**（`paper-spec.md §三.6`）— 章节/列表罗马/公式 三档区分
