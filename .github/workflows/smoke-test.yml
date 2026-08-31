@@ -83,6 +83,8 @@ jobs:
             exit 1
           }
           Write-Host "OK: SKILL.md frontmatter valid"
+          $ver = ($content | Select-String -Pattern 'version: "(\d+\.\d+\.\d+)"').Matches.Groups[1].Value
+          Write-Host "OK: SKILL.md version = $ver"
 
       - name: Verify 5 Python scripts compile
         run: |
@@ -93,7 +95,9 @@ jobs:
             'references/scripts/profile_data.py',
             'references/scripts/visual_qa.py',
             'references/scripts/check_figure.py',
-            'references/scripts/verify_pdf_metrics.py'
+            'references/scripts/verify_pdf_metrics.py',
+            'references/scripts/aigc_scan.py',
+            'references/scripts/data_utils.py'
           )
           foreach ($f in $files) {
             python -m py_compile $f
@@ -123,6 +127,6 @@ jobs:
           Write-Host "===== smoke-test summary ====="
           Write-Host "pack.py: 验证生成 2 个 zip + 排除 dev/sensitive"
           Write-Host "SKILL.md: 验证 frontmatter + name + version"
-          Write-Host "Python: 7 个 .py 全部 py_compile 通过"
+          Write-Host "Python: 8 个 .py 全部 py_compile 通过"
           Write-Host "LICENSE: 验证 MIT"
           Write-Host "==============================="

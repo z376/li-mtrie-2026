@@ -4,6 +4,37 @@
 
 ## [Unreleased]
 
+## [v1.5.0] - 2026-08-31
+
+**v1.5.0 阶段: LLM 工具集成（学生自用），19 commits 累计，新增 4 个 LLM prompt 工具**
+
+### Added
+
+**Part A — LLM 工具集成**（commit 8ee6555）：
+- `references/llm-prompts/01-选题推荐.md`（4.7 KB）— 题面+数据 → 问题分类 + 候选模型 Top-3 + 数据洞察（JSON 输出）
+- `references/llm-prompts/02-代码修复.md`（4.9 KB）— **96 小时救星**：traceback → 根因 + 最小修复 + 验证步骤（debug 30% 时间节约 8-10 小时）
+- `references/llm-prompts/03-自动审稿.md`（6.6 KB）— 5 维评分（机理/数据/写作/创新/排版）+ 改进建议 + AI 痕迹词
+- `references/llm-prompts/README.md`（3.5 KB）— 3 个工具总览 + 96 小时使用流程 + 与 26 条自查表映射
+
+**核心设计原则**：
+- **不调外部 API**（学生 copy-paste prompt 到 Mavis/Claude/GPT 即可）
+- **结构化 JSON 输出**（避免 LLM 泛泛而谈）
+- **三道防线**（工具 02：diff 必读 / 测试必跑 / 备份必留）
+
+### Changed
+
+- `SKILL.md` frontmatter `version: "1.4.4" → "1.5.0"`，加 `history` 字段（v1.5.0 + v1.4.4 摘要）
+- `README.md` 徽章 `v1.4.4 → v1.5.0`
+- `smoke-test.yml` 加 `data_utils.py` 和 `aigc_scan.py` 到 py_compile 列表（5 → 8 个）；加 SKILL.md version 提取输出
+- `llm-prompts/README.md` 标题 "v1.4.5 起" → "v1.5.0 起"
+
+### 总览
+
+- 19 commits 累计（v1.4.0 → v1.5.0 共 4 天）
+- 借鉴 6 个外部 skill（数模陪跑独家 + cumcm-live-workflow + aigc-reduce + scipilot-figure + bzd-modeling-ideas + mma v3.3）
+- 18 个新文件（6 scripts + 12 references + 4 LLM prompt 工具）
+- 包大小: 完整包 22.49 MB / 轻量包 3.75 MB
+
 ## [v1.4.4] - 2026-08-27
 
 **v1.4.4 阶段: 借鉴 数模陪跑独家 + cumcm-live-workflow v5.0 + writing-for-agents 6 维度审计, 12 commits 累计 8 个新文件**

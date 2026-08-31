@@ -5,7 +5,7 @@
 读题 → 建模 → 求解 → 写论文 → 双版编译，一条龙。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Version v1.4.4](https://img.shields.io/badge/version-v1.4.4-blue.svg)](CHANGELOG.md)
+[![Version v1.5.0](https://img.shields.io/badge/version-v1.5.0-blue.svg)](CHANGELOG.md)
 [![Smoke Test](https://github.com/z376/li-mtrie-2026/actions/workflows/smoke-test.yml/badge.svg)](.github/workflows/smoke-test.yml)
 [![2026 Spec](https://img.shields.io/badge/2026%E8%A7%84%E8%8C%83-%E5%AF%B9%E9%BD%90-green.svg)](references/合规检查清单.md)
 

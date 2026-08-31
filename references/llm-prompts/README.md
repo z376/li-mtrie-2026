@@ -1,4 +1,4 @@
-# references/llm-prompts/ — LLM 工具集成（v1.4.5 起）
+# references/llm-prompts/ — LLM 工具集成（v1.5.0 起）
 
 > **学生自用**的 LLM 工具集。把结构化 prompt 喂给 Mavis / Claude / GPT，让它**结构化输出**（JSON），避免 LLM"泛泛而谈"或"政治正确建议"。
 >
