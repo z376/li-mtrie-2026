@@ -6,29 +6,61 @@
 
 ## [v1.4.4] - 2026-08-27
 
-**v1.4.4 阶段: 借鉴 数模陪跑独家 模板, 添加 figures/ + 教学开关宏**
+**v1.4.4 阶段: 借鉴 数模陪跑独家 + cumcm-live-workflow v5.0, 6 commits 累计 8 个新文件**
 
-### Added
+借鉴自 2 个外部 skill:
+- **数模陪跑独家 v5.0** (2026 LaTeX 模板): figures/ 示例图 + 教学开关宏
+- **cumcm-live-workflow v5.0**: 国奖硬指标 + 去AIGC指南 + 题意红线 + verify_pdf_metrics.py + 跨平台红线 + 代码完整性铁律 + 编号体系 v7
+
+### Added (8 个新文件)
+
+**Part A — 借鉴 数模陪跑独家** (commit efaa2b4):
 - `论文/figures/` — 10 张示例图 (流程图/结果图/稳健性图), 来源标注"仅作形式参考, 参赛前必须整图替换"
-- `论文/figures/README.md` — 三件必做警告 (整图替换 / 删图题来源 / 检查图例) + 文件清单
-- `\showteachingtrue/false` 教学开关 (默认 false) + 3 个 LaTeX 宏
-  - `\Teach{...}` 红色填写提示
-  - `\TeachExample{...}` 红色示例
-  - `\Placeholder{...}` 黑色加粗占位符
+- `论文/figures/README.md` — 三件必做警告 + 文件清单
+- `\showteachingtrue/false` 教学开关 + 3 个 LaTeX 宏 (`\Teach` / `\TeachExample` / `\Placeholder`)
 
-### Changed
-- `论文/论文.tex` + `论文/电子版.tex` + `论文/AI工具使用详情.tex` 顶部插入教学开关宏 (3 个文件保持一致)
-- `论文/AI工具使用详情.tex` 顶部注释版本号 v1.4.3 → v1.4.4
-- `SKILL.md` 顶部 metadata version v1.4.3 → v1.4.4
-- `README.md` 徽章 version v1.4.3 → v1.4.4
+**Part B — 借鉴 cumcm-live-workflow** (commits 9f8a618 + bf58273):
+- `references/国奖级硬性指标.md` (9.4 KB) — 6 类硬性指标 (公式≥15/表格≥18/图片≥10/参考文献 15-25/三类检验齐全/正文 25-30 页) + 26 条自查表 6 维度 + PowerShell 一键自检
+- `references/去AIGC指南.md` (9.1 KB) — 降重 4 层法 (L1 词汇→L4 证据) + 9 类正文 AI 痕迹 + 6 类代码 AI 特征 + 把 AI 从"代写"改成"审稿人"
+- `references/题意红线.md` (4.7 KB) — 4 条题意红线 (题面物理事实必建模 / 解析独立验证 / 后问误差敏感 / 无官方答案 5 步自查)
+- `references/scripts/verify_pdf_metrics.py` (5.3 KB) — PDF 6 项程序化体检 (结构 / 4 边越界 / 元数据匿名 / 关键数字 / `??` 未定义引用 / 摘要页判断)
+
+### Changed (5 类)
+
+**A. 论文 LaTeX 模板** (commit efaa2b4):
+- 论文.tex + 电子版.tex + AI工具使用详情.tex 顶部插入教学开关宏
+
+**B. 文档一致性 hotfix** (commit 3699840):
+- SKILL.md / README.md / CHANGELOG.md / AI工具使用详情.tex 全部 v1.4.3 → v1.4.4
+- AI工具使用详情.tex 顶部加宏 (与论文.tex/电子版.tex 一致)
+
+**C. AI 工具使用声明 二者择一模板** (commit 0f678a8):
+- 9.0.AI工具使用声明.tex 改为对齐 2026 官方简洁版 Word 模板 (3 段: 二者择一提示 + 未使用 AI 选项 + 使用 AI 选项)
+- 用 `\Teach{}` 让"二者择一"红字提示在 showteaching 态可见 / 提交自动隐藏
+
+**D. AI工具使用详情.tex pre-existing warning 修复** (commit f48f476):
+- line 177 `\{bug,feature,question\}` → `(bug,feature,question)`, 4 个 `!` 错误全消
+
+**E. v1.4.4 复审 + cumcm-live-workflow 借鉴** (commits c408205 + bf58273):
+- `references/流程审计-19漏点-已闭环-2026-08-25.md` 加 v1.4.4 复审段 (3rd round), 19 漏点 16 Closed/3 部分/0 未关
+- `references/paper-spec.md` 加 §三.6 编号体系 v7 (章节/列表罗马/公式 三档区分)
+- `论文/3.模型假设.tex` 加 `[label=(\roman*)]` 示例
+- `论文/10.附录.tex` 顶部加 2 条铁律注释 (代码完整性 + 文件列表一致性)
+- `SKILL.md` 加 国奖/AIGC/题意红线/verify_pdf_metrics/跨平台 4 段交叉引用
+- `references/scripts/README.md` 3→4 脚本 + Step 5.6 + 依赖加 PyMuPDF
 
 ### P2 风险标注
-- 10 张示例图来源第三方 (数模陪跑独家 → "2026 华数杯 A 论文" / "26 亚太杯中文赛 B 论文"),
-  PNG 本身无可执行负载, 但 `figures/README.md` 已明确警告"必须整图替换并删除图题元信息"
+- 10 张示例图来源第三方 (数模陪跑独家 → "2026 华数杯 A 论文" / "26 亚太杯中文赛 B 论文"), PNG 本身无可执行负载
+- verify_pdf_metrics.py 越界警告含页脚页码假阳性, 需人工核对真伪
+
+### 三轮审计得分
+- v1.3.2 baseline: 6.0/10 (19 漏点)
+- v1.4.0 复审: 7.5/10 (11+ 修复)
+- **v1.4.4 复审: 8.0/10** (19 漏点全闭环, E1-E6 新发现, doc drift 修)
 
 ### 包大小
-- 完整包: 19.05 → 22.41 MB (+10 张图, +13 文件)
-- 轻量包: 0.31 → 3.68 MB (+10 张图, +13 文件)
+- 完整包: 19.05 → 22.43 MB (+13 文件)
+- 轻量包: 0.31 → 3.69 MB (+13 文件)
 
 ## [v1.4.3] - 2026-08-25
 
