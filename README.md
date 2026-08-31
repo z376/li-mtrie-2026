@@ -41,6 +41,7 @@
 - **去AIGC指南**（`references/去AIGC指南.md`）— 降重 4 层法 + 9 类痕迹 + 6 类代码特征 + **4 铁律 + 3 轮协议**（借鉴 aigc-reduce v1.0）
 - **绘图避坑 + 图型选择决策**（借鉴 scipilot-figure-skill）— 18 条可视化陷阱 + 决策三轴（变量数/论证意图/数据规模）
 - **整题建模模式 + 策略输出规范**（借鉴 bzd-modeling-ideas）— 5 跨问题架构 + 7 题型路线 + 每道题 4 段式分析（问题概述/总体思路/模型比选/创新方向）
+- **跨题工具 + 验收清单 + 角色Prompt**（借鉴 mma v3.3）— 3 utility 函数 (GBK 兼容 + utf-8-sig CSV) + 38+ 项验收 + 4 角色 prompt 模板
 - **题意红线**（`references/题意红线.md`）— 4 条最高优先级教训
 - **verify_pdf_metrics.py**（`references/scripts/`）— 终审前 PDF 6 项程序化体检
 - **编号体系 v7**（`paper-spec.md §三.6`）— 章节/列表罗马/公式 三档区分

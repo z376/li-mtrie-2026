@@ -380,6 +380,15 @@ python -c "import pandas, numpy, scipy, matplotlib, openpyxl, fitz, pulp; print(
 - **7 题型路线**（动态优化/物理反演/统计生物/实验数据/规划生产/几何覆盖/分布式信息）+ **6 断链 failures** + **8 验证 routes**（同源）
 - **4 段式硬约束 + 创新标准** → `references/策略输出规范.md`（2.8 KB, 反例"使用遗传算法/模型融合/加可视化/堆因素 不算创新"）
 
+**📌 跨题工具 + 验收 + 角色分工（v1.4.5 起，借鉴 mma v3.3）**：
+
+- **3 个跨题 utility** → `references/scripts/data_utils.py`（1.5 KB）
+  - `ensure_utf8_stdout()`：GBK console 兼容（emoji 不报错）
+  - `read_csv_safe()`：force utf-8-sig 解码，绕开 PowerShell GBK 读 UTF-8 CSV 乱码
+  - `save_csv()`：utf-8-sig 写，Excel 直接打开
+- **38+ 项验收清单**（Stage 5）→ `references/验收清单.md`（12.9 KB, 6 类：A 编译 / B 数值 / C 硬规则 / D 写作 / E 支撑材料 / F 2026 规范）
+- **4 角色 prompt 模板**（建模手/代码手/论文手/验收手）→ `references/角色Prompt.md`（13.5 KB, 团队 4 人分工时直接 copy-paste 角色身份到对话）
+
 **📌 题意红线 4 条**（读完题就对照，漏一条 → 终止时刻/临界参数/关键结果整体失真）：
 
 - **用真实几何判据**：物体有宽度/形状 → 建模时用真实几何（不是质点简化）

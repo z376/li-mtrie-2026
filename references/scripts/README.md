@@ -3,7 +3,7 @@
 > 借鉴自 `scipilot-figure-skill`（MIT 风格脚本）+ cumcm-live-workflow-skill v5.0 `verify_pdf_metrics.py`，改写为数学建模国赛工作流。
 > 原作者：[scipilot-figure-skill](https://github.com/scipilot/scipilot-figure-skill)
 
-4 个 Python 脚本，覆盖「画图前数据剖析 → 出图后程序自检 → 提交前格式检查 → 终审前 PDF 体检」四个环节。
+6 个 Python 脚本（4 自检 + 1 AIGC + 1 跨题工具），覆盖「画图前数据剖析 → 出图后程序自检 → 提交前格式检查 → 终审前 PDF 体检 → AIGC 9 维度扫描 → 跨题 GBK 兼容」。
 **不依赖** skill 系统本身——独立可执行，`pip install pandas matplotlib Pillow numpy PyMuPDF` 后即用。
 
 ---
