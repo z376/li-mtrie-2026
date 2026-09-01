@@ -40,7 +40,7 @@
 **v1.4.4 阶段: 借鉴 数模陪跑独家 + cumcm-live-workflow v5.0 + writing-for-agents 6 维度审计, 12 commits 累计 8 个新文件**
 
 借鉴自 2 个外部 skill:
-- **数模陪跑独家 v5.0** (2026 LaTeX 模板): figures/ 示例图 + 教学开关宏
+- **数模陪跑独家 v5.0** (2026 LaTeX 模板): 论文/figures/ 示例图 + 教学开关宏
 - **cumcm-live-workflow v5.0**: 国奖硬指标 + 去AIGC指南 + 题意红线 + verify_pdf_metrics.py + 跨平台红线 + 代码完整性铁律 + 编号体系 v7
 
 ### Added (8 个新文件)

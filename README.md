@@ -36,7 +36,7 @@
 
 > v1.4.4 阶段（13 commits）已合入本节上半段；v1.5.0 阶段（2 commits, LLM 工具集成 + GBK fix）见尾部 ⚡ 标记。
 
-- **figures/ 10 张示例图**（借鉴 数模陪跑独家）+ `figures/README.md` 三件必做警告
+- **`论文/figures/` 10 张示例图**（借鉴 数模陪跑独家）+ `论文/figures/README.md` 三件必做警告（整图替换 / 删图题来源 / 检查图例）
 - **`\showteaching` 教学开关宏** — 3 个文件 (论文/电子版/AI详情) 统一
 - **AI 工具使用声明 二者择一模板** — 对齐 2026 官方简洁版 Word
 - **国奖级硬性指标**（`references/国奖级硬性指标.md`）— 6 类数字门槛 + 26 条自查表
@@ -149,7 +149,7 @@ li-mtrie-2026/
   aigc-reduce / cumcm-live-workflow / 数模陪跑独家 6 个外部 skill. 包大小 22.51 / 3.77 MB.
 - **v1.4.4**（13 commits 累计, 2026-08-27 → 08-31）— 借鉴 数模陪跑独家 + cumcm-live-workflow v5.0
   + writing-for-agents 6 维度审计 + 4-script smoke test + 8 个新文件
-  （figures/ 10 张图 + 教学开关 + 国奖级硬性指标 + 去AIGC指南 + 题意红线
+  （论文/figures/ 10 张图 + 教学开关 + 国奖级硬性指标 + 去AIGC指南 + 题意红线
   + verify_pdf_metrics.py + 编号体系 v7 + workflow.md refactor）
 - v1.4.3（纯 framework + 求解计划模板, 2026-08-25）
 - v1.4.2（恢复 题目/数据/ 学生示例）
