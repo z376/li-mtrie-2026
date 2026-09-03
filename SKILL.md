@@ -158,9 +158,11 @@ python -m pip download -d ./pkgs pandas numpy scipy matplotlib openpyxl PyMuPDF 
 │  绿: 4 份 log 中 `! Error` 数 = 0, `Overfull \hbox` < 5, │
 │      合规检查清单 §2 7 项全过, 3 个交付文件存在且 ≤ 20MB│
 │  输出: 论文.pdf + 电子版.pdf + 支撑材料.rar             │
-│  → 全绿完成                                                │
+│  → sign-off (全绿 = 可交卷, 缺任一项 = 红 = 立即修)     │
 └──────────────────────────────────────────────────────────┘
 ```
+
+**sign-off 锚定**: Step 4 绿 = 全 skill 5 步状态机可闭环, 学生/团队可交卷. **sign-off 之前 = 仍在开发态**, 任何"差不多"都是红. 详见 `references/验收清单.md` 终审段.
 
 **详细执行步骤**见下面各小节。
 
@@ -173,7 +175,7 @@ python -m pip download -d ./pkgs pandas numpy scipy matplotlib openpyxl PyMuPDF 
 - 打印数据总览（shape / dtypes / 缺失率），识别问题数量 N
 - **用 `references/scripts/profile_data.py` 跑 EDA**（借鉴自 scipilot，自动检测列类型/分布/相关性/初步图型）
 
-**绿**: 题面文字提取完成 + N 题识别准确 + profile_data.py 跑出报告 + 求解计划.md 顶部填完题组+题号。
+**checkable 绿**: 题面文字 ≥ 200 字 + `求解/求解计划.md` 顶部 4 项 (题组/题号/问题数/数据概况) 已填。profile_data.py 跑出报告 = 加分项, 但不是绿门。
 
 **⚠️ 读题/读数据失败回退表**（按症状照做，赛前一晚就备好依赖）：
 
