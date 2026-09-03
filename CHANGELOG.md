@@ -44,6 +44,34 @@
 - **使用方式**: 学生**自取**, 不二次分发, 不删改 BZD 数模社署名
 - **优先级**: 默认仍用 li-mtrie 自带 `论文/format.cls` (思源宋体, 已对齐 2026 规范). BZD 模板作为**对比参考**
 
+### 追加 refactor (同一 release, 3 commits, writing-for-agents 6 维度审计整改)
+
+**审计前**: 6.83/10 (P0+P1+P2 5+5+3 = 13 项问题)
+**审计后**: 7.5/10
+
+**P0 (5 项必修)**:
+- P0-1: SKILL.md 装包 3 段 (Python 环境 + venv + 必装依赖) 合并为 1 段, 减 50 行, checkable 红/绿锚定
+- P0-2: Step 3 写论文 加 checkable 绿判据 (11 章节 ≥30 行 + AI 声明 + 附录固定说明)
+- P0-3: workflow.md 头部强化分工 (SKILL=入口, workflow=细节, 冲突以 SKILL 为准)
+- P0-4: 锚定 `checkable` 为 SKILL.md 顶部 leading word
+- P0-5: 3 份清单 (合规/国奖/验收) 各加关系段 + 使用顺序
+
+**P1 (5 项应修)**:
+- P1-1: 3 模式 ↔ 3 references 双向链接 (04 ↔ 3 新 references)
+- P1-2: 受保护片段 ↔ 检测平台弱点 双向链接 (而非合并, 主题不同)
+- P1-3: 流程审计 19 漏点 → `_archive/` (gitignore 排除, 减 34KB references/ 占用)
+- P1-4: (P0-1 已做) 装包 leading word 锚定
+- P1-5: README.md 快速上手 顶部加 "先选包 (默认完整包)"
+
+**P2 (3 项选)**:
+- P2-1: Step 0 判据精炼 (200 字 + 4 项必备, 去掉不可 checkable 的 "N 题准确")
+- P2-2: 测试报告 + 开发日志 → `_archive/` (减 69KB 内部开发记录)
+- P2-3: 引入 `sign-off` leading word (Step 4 流程图底部)
+
+**总改动**: 13 文件, 8 commits (P0: 5 files / +49/-66, P1: 8 files / +27/0 + 1 rename, P2: 3 files / +4/-2 + 2 rename)
+**新增 leading words**: `checkable` (writing-for-agents 核心), `sign-off` (终审通过)
+**新增流程图术语**: 5 步状态机 checkable 判据, 3 份清单使用顺序
+
 ## [v1.5.0] - 2026-08-31
 
 **v1.5.0 阶段: LLM 工具集成（学生自用），19 commits 累计，新增 4 个 LLM prompt 工具**
