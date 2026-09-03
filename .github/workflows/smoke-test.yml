@@ -102,6 +102,7 @@ jobs:
             'references/code-template.py',
             'references/mechanism-template.py',
             'tools/pack.py',
+            'references/scripts/dryrun.py',
             'references/scripts/profile_data.py',
             'references/scripts/visual_qa.py',
             'references/scripts/check_figure.py',
