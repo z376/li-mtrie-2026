@@ -15,12 +15,13 @@
 
 在 FY1 以 120 m/s 朝假目标方向飞行、1.5 s 后投放、3.6 s 后起爆的固定参数下：
 
-\textbf{计算过程}：
-\begin{enumerate}
-  \item 投放点：$P_{drop} = (17800, 0, 1800) + \hat{\mathbf{d}}_{fake} \times 120 \times 1.5 = (17620.91, 0, 1781.89)$ m
-  \item 起爆点：$P_{det} = P_{drop} + (0, 0, -9.8 \times 3.6^2 / 2) = (17620.91, 0, 1718.39)$ m
-  \item 起爆时刻：$t_{det} = 5.1$ s，烟幕失效时刻 $25.1$ s
-\end{enumerate}
+\textbf{计算过程}（按时间顺序）：
+\begin{align*}
+  &P_{drop} = (17800, 0, 1800) + d_f \times 120 \times 1.5 = (17620.91, 0, 1781.89)~\mathrm{m} \\
+  &P_{det} = P_{drop} + (0, 0, -9.8 \times 3.6^2 / 2) = (17620.91, 0, 1718.39)~\mathrm{m} \\
+  &t_{det} = 5.1~\mathrm{s},\ \text{烟幕失效时刻 } 25.1~\mathrm{s}
+\end{align*}
+其中 $d_f$ 为 FY1 朝假目标方向的单位向量（$\hat{\mathbf{d}}_{fake}$ 的简写，下同）。
 
 \textbf{几何分析}：$t \in [5.1, 25.1]$ s 内任一时刻，M1 位置 $P_M(t) = (20000 - 298.5t, 0, 2000 - 29.85t)$。视线方向为 $P_M(t) \to O_{true} = (0, 200, 0)$。烟幕球心 $C(t) = (17620.91, 0, 1718.39 - 3(t - 5.1))$。
 

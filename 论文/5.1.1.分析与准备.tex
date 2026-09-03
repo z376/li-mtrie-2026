@@ -70,14 +70,20 @@ C_{j,k}(t) = P_{det,j,k} - (0, 0, v_{sink}(t - t_{det,j,k})), \quad t \in [t_{de
 
 \textbf{（5）集中优化模型}。综上，将目标函数、约束与变量域集中表示为完整模型。各子问题统一在以下框架下求解，仅决策空间维度不同：
 \begin{equation}
+\max_{\theta, \phi, v, t_{drop}, \Delta t}
+T_{occ} = \sum_{t} \mathbb{1}\!\left[\exists (j,k): \text{屏蔽}(t, j, k)\right] \cdot \Delta t
+\label{eq:obj}
+\end{equation}
+约束条件集中表示为：
+\begin{equation}
 \begin{aligned}
-& \max_{\theta_j, \phi_j, v_j, t_{drop,j,k}, \Delta t_{j,k}} \quad T_{occ} = \sum_{t} \mathbb{1}\!\left[\exists (j,k): \text{屏蔽}(t, j, k)\right] \cdot \Delta t \\
 & \text{s.t.} \quad v_j \in [v_{\min}, v_{\max}] = [70, 140] \text{ m/s}, \quad j = 1, \dots, N_{FY} \\
 & \quad\quad\;\; t_{drop,j,k} \in [0, 30] \text{ s}, \quad \Delta t_{j,k} \in [0, 20] \text{ s} \\
-& \quad\quad\;\; t_{drop,j,k+1} - t_{drop,j,k} \ge 1 \text{ s (同机多弹)} \\
-& \quad\quad\;\; \text{屏蔽}(t, j, k): \text{视线段与球 } C_{j,k}(t) \text{ 且与圆柱 } O_{true} \text{ 同时有交}
+& \quad\quad\;\; t_{drop,j,k+1} - t_{drop,j,k} \ge 1 \text{ s (同机多弹)}
 \end{aligned}
+\label{eq:cons}
 \end{equation}
+其中"屏蔽$(t, j, k)$"定义为 $t$ 时刻视线段与球 $C_{j,k}(t)$ 且与圆柱 $O_{true}$ 同时有交（参见公式 \eqref{eq:cover} 的几何求交判定）。
 
 其中 $N_{FY}$ 与每机弹数随子问题变化（问题 1-2: 1 架 1 弹；问题 3: 1 架 3 弹；问题 4: 3 架各 1 弹；问题 5: 5 架各 2 弹），决策空间维度分别为 5 / 5 / 9 / 15 / 25 维。
 
