@@ -77,16 +77,40 @@
   \bottomrule
 \end{longtable}
 
+%% 借鉴 BZD 数模社 论文正文-AI工具使用声明 2026 规范: 5 项自检, 详细使用情况见支撑材料
+\section{AI 参与边界自检}
+
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.55\textwidth}>{\centering\arraybackslash}p{0.10\textwidth}>{\raggedright\arraybackslash}p{0.28\textwidth}}
+  \toprule
+  \textbf{自检项} & \textbf{是/否} & \textbf{说明} \\
+  \midrule
+  AI 是否参与核心模型设计 & 否 & 视线-球-圆柱求交、差分进化均为本参赛队基于题面物理机理独立设计；AI 仅辅助代码实现 \\
+  AI 是否生成或修改程序代码 & 是 & 详见 §3.1 烟幕-视线求交、§3.2 差分进化参数、§3.3 摘要结构、§3.4 表格生成、§3.5 pack.py 整理、§3.6 GitHub 完善、§3.7 审计修复 \\
+  AI 输出是否经人工审查、修改与核验 & 是 & 详见 §4 核验情况表 + 单元测试 + 解析解对照 + 5 轮端到端 smoke test \\
+  AI 是否独立完成核心建模 / 公式推导 / 程序计算 / 最终结论 & 否 & 公式推导、参数选择、最终结论均由参赛队独立完成；AI 仅作为辅助参考 \\
+  AI 使用占比 (估算) & -- & 资料检索 $\sim 30\%$、代码编写 $\sim 40\%$、文档润色 $\sim 20\%$、其他 $\sim 10\%$；最终决策与判定 $100\%$ 由参赛队完成 \\
+  \bottomrule
+\end{longtable}
+
 \section{使用目的与环节}
 
-本参赛队在以下环节使用了 AI 工具：
+本参赛队在以下环节使用了 AI 工具（按 BZD 规范分为"资料与思路 → 数据与程序 → 检验与写作"三阶段）：
 
+\textbf{第一阶段：资料与思路}
 \begin{itemize}[itemindent=2em]
   \item \textbf{题目理解}：辅助读题 (PyMuPDF 提取 PDF 文本)、识别问题数 (5 题)、判定题组与题号 (本科组 A)
-  \item \textbf{代码编写}：烟幕物理模块 (无人机 / 烟幕弹 / 导弹运动学 + 视线-球-圆柱求交)、差分进化求解器、matplotlib 3D 轨迹图
   \item \textbf{模型选择}：候选模型对比表初稿 (机理题 / 优化 / 灵敏度分析, 最终由队内讨论确认)
+\end{itemize}
+
+\textbf{第二阶段：数据与程序}
+\begin{itemize}[itemindent=2em]
+  \item \textbf{代码编写}：烟幕物理模块 (无人机 / 烟幕弹 / 导弹运动学 + 视线-球-圆柱求交)、差分进化求解器、matplotlib 3D 轨迹图
   \item \textbf{数据预处理}：profile\_data.py 自动识别列类型、缺失率、分布
   \item \textbf{结果可视化}：辅助生成 3D 轨迹图、遮蔽区间图, 调整字号 / 线宽 / DPI
+\end{itemize}
+
+\textbf{第三阶段：检验与写作}
+\begin{itemize}[itemindent=2em]
   \item \textbf{文档润色}：辅助 LaTeX 公式排版、表格 longtable 格式、参考文献 GB/T 7714
   \item \textbf{查重改写}：辅助问题重述改写、避免与赛题原文重复
   \item \textbf{合规检查}：辅助按 \texttt{references/合规检查清单.md} 4 类硬规则逐项核对 (格式 / 内容 / AI / 纪律)

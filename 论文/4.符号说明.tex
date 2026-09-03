@@ -2,42 +2,55 @@
 \section{符号说明}
 \subsection{符号说明}
 
-本文主要符号约定如下：
+%% 模板说明 (借鉴 BZD 数模社 第四章符号说明简洁版 2026 规范):
+%% 1. 三线表: 符号 | 含义 | 单位 (BZD 必加单位列)
+%% 2. 只收录全文反复使用、具有全局意义的主要变量/参数/集合/下标/向量/矩阵
+%% 3. 优先沿用经典模型和教材中的通用符号, 不为复杂而堆砌希腊字母
+%% 4. 有量纲变量必须标明单位; 无量纲统一写 "—"
+%% 5. 不冲突: 同符号不表示多含义, 同变量不出现多个符号, 大小写/上下标/向量矩阵格式统一
+%% 6. min/max/sum/ln 等常见运算符通常不进入符号表
+%% 7. 自定义指标/创新术语/特殊系数应先给出定义, 再列出相关符号
+%% 8. 不得虚构论文中没有的变量/单位/定义
+%% 9. 表后加注: "表中未列出的局部符号将在正文首次出现时说明"
 
-\begin{longtable}{>{\centering\arraybackslash}p{0.20\textwidth}>{\raggedright\arraybackslash}p{0.74\textwidth}}
-  \caption{符号说明} \\
+为便于模型表达，现将全文反复使用的主要符号汇总如表~\ref{tab:symbols}所示。
+
+\begin{longtable}{>{\centering\arraybackslash}p{0.18\textwidth}>{\raggedright\arraybackslash}p{0.62\textwidth}>{\centering\arraybackslash}p{0.14\textwidth}}
+  \caption{主要符号说明} \label{tab:symbols} \\
   \toprule
-  符号 & 含义 \\
+  符号 & 含义 & 单位 \\
   \midrule
   \endfirsthead
-  \caption{符号说明（续）} \\
+  \caption{主要符号说明（续）} \\
   \toprule
-  符号 & 含义 \\
+  符号 & 含义 & 单位 \\
   \midrule
   \endhead
   \bottomrule
   \endfoot
-  $M_i$ & 第 $i$ 枚来袭导弹，$i \in \{1, 2, 3\}$ \\
-  $FY_j$ & 第 $j$ 架无人机，$j \in \{1, 2, 3, 4, 5\}$ \\
-  $P_M(t)$ & $t$ 时刻导弹位置向量（3 维） \\
-  $P_{FY_j}(t)$ & $t$ 时刻无人机位置向量 \\
-  $P_{drop,j,k}$ & 第 $j$ 架无人机第 $k$ 枚弹的投放点 \\
-  $P_{det,j,k}$ & 第 $j$ 架无人机第 $k$ 枚弹的起爆点 \\
-  $t_{drop,j,k}$ & 第 $j$ 架无人机第 $k$ 枚弹的投放时刻（s） \\
-  $\Delta t_{j,k}$ & 第 $j$ 架无人机第 $k$ 枚弹的起爆延时（s） \\
-  $t_{det,j,k}$ & 第 $j$ 架无人机第 $k$ 枚弹的起爆时刻（s） \\
-  $v_j$ & 第 $j$ 架无人机的飞行速度（m/s） \\
-  $(\theta_j, \phi_j)$ & 第 $j$ 架无人机的飞行方向（球坐标） \\
-  $O_{fake}$ & 假目标位置，$O_{fake} = (0, 0, 0)$ m \\
-  $O_{true}$ & 真目标中心位置，$O_{true} = (0, 200, 0)$ m \\
-  $r_{true}$ & 真目标圆柱半径，$r_{true} = 7$ m \\
-  $h_{true}$ & 真目标圆柱高度，$h_{true} = 10$ m \\
-  $r_{smoke}$ & 烟幕云团半径，$r_{smoke} = 10$ m \\
-  $v_{missile}$ & 导弹飞行速度，$v_{missile} = 300$ m/s \\
-  $v_{sink}$ & 烟幕云团下沉速度，$v_{sink} = 3$ m/s \\
-  $T_{smoke}$ & 烟幕云团有效时长，$T_{smoke} = 20$ s \\
-  $g$ & 重力加速度，$g = 9.8$ m/s² \\
-  $C_{j,k}(t)$ & $t$ 时刻第 $j,k$ 号烟幕云团球心位置 \\
-  $T_{occ}$ & 有效遮蔽总时长（s） \\
-  $T_{occ,i}$ & 对第 $i$ 枚导弹的有效遮蔽时长 \\
+  $M_i$ & 第 $i$ 枚来袭导弹，$i \in \{1, 2, 3\}$ & — \\
+  $FY_j$ & 第 $j$ 架无人机，$j \in \{1, 2, 3, 4, 5\}$ & — \\
+  $P_M(t)$ & $t$ 时刻导弹位置向量（3 维） & m \\
+  $P_{FY_j}(t)$ & $t$ 时刻无人机位置向量 & m \\
+  $P_{drop,j,k}$ & 第 $j$ 架无人机第 $k$ 枚弹的投放点 & m \\
+  $P_{det,j,k}$ & 第 $j$ 架无人机第 $k$ 枚弹的起爆点 & m \\
+  $t_{drop,j,k}$ & 第 $j$ 架无人机第 $k$ 枚弹的投放时刻 & s \\
+  $\Delta t_{j,k}$ & 第 $j$ 架无人机第 $k$ 枚弹的起爆延时 & s \\
+  $t_{det,j,k}$ & 第 $j$ 架无人机第 $k$ 枚弹的起爆时刻 & s \\
+  $v_j$ & 第 $j$ 架无人机的飞行速度 & m/s \\
+  $(\theta_j, \phi_j)$ & 第 $j$ 架无人机的飞行方向（球坐标） & rad \\
+  $O_{fake}$ & 假目标位置，$O_{fake} = (0, 0, 0)$ & m \\
+  $O_{true}$ & 真目标中心位置，$O_{true} = (0, 200, 0)$ & m \\
+  $r_{true}$ & 真目标圆柱半径，$r_{true} = 7$ & m \\
+  $h_{true}$ & 真目标圆柱高度，$h_{true} = 10$ & m \\
+  $r_{smoke}$ & 烟幕云团半径，$r_{smoke} = 10$ & m \\
+  $v_{missile}$ & 导弹飞行速度，$v_{missile} = 300$ & m/s \\
+  $v_{sink}$ & 烟幕云团下沉速度，$v_{sink} = 3$ & m/s \\
+  $T_{smoke}$ & 烟幕云团有效时长，$T_{smoke} = 20$ & s \\
+  $g$ & 重力加速度，$g = 9.8$ & m/s² \\
+  $C_{j,k}(t)$ & $t$ 时刻第 $j,k$ 号烟幕云团球心位置 & m \\
+  $T_{occ}$ & 有效遮蔽总时长 & s \\
+  $T_{occ,i}$ & 对第 $i$ 枚导弹的有效遮蔽时长 & s \\
 \end{longtable}
+
+注：表中未列出的局部符号将在正文首次出现时说明。

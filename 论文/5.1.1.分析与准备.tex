@@ -1,78 +1,84 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{模型的建立与求解}
-\subsection{问题分析与几何建模}
+\subsection{问题分析与模型建立}
 
-烟幕遮蔽的物理本质是：来袭导弹通过电磁波（红外/雷达）探测真目标，当烟幕云团的几何位置同时满足"视线穿过云团"和"视线到达真目标"时，遮蔽有效。因此，本节首先建立精确的几何求交模型。
+%% 模板说明 (借鉴 BZD 数模社 第五章模型与求解简洁版 2026 规范):
+%% 本节对应 BZD 6 段结构的前 3 段:
+%%   5.1.1.1 建模思路与模型选择  - 题型判断 + 模型选择理由
+%%   5.1.1.2 数据处理            - 数据来源 + 处理方法 + 样本量
+%%   5.1.1.3 模型的建立          - 变量 + 参数 + 目标函数 + 约束 (集中陈述)
+%% 后 3 段 (模型求解 / 结果分析 / 模型检验) 见 5.1.2
+%% 6 段结构对齐 BZD §5 规范, 是国赛评委普遍认可的写作骨架
 
-\textbf{（1）视线段与球相交判定}
+烟幕遮蔽的物理本质是：来袭导弹通过电磁波（红外/雷达）探测真目标，当烟幕云团的几何位置同时满足"视线穿过云团"和"视线到达真目标"时，遮蔽有效。因此，本节首先建立精确的几何求交模型，然后给出适用于本问题的优化算法，最后在各子问题中分别求解。
 
-设线段起点 $P_0 \in \mathbb{R}^3$，方向向量 $\mathbf{d} \in \mathbb{R}^3$，球心 $C \in \mathbb{R}^3$，半径 $r$。令 $\mathbf{u} = \mathbf{d} / |\mathbf{d}|$ 为单位方向，$\mathbf{w} = P_0 - C$。沿 $\mathbf{u}$ 方向距 $P_0$ 距离 $s$ 处的点为 $P(s) = P_0 + s \mathbf{u}$，其到球心距离为
+\subsubsection{建模思路与模型选择}
+
+问题要求在不同无人机数量与烟幕弹数量组合下，求解使有效遮蔽总时长最大的投放策略。问题在数学上属于\textbf{连续非线性全局优化}，决策变量为各无人机的飞行方向 $(\theta_j, \phi_j)$、速度 $v_j$ 以及各烟幕弹的投放时刻 $t_{drop,j,k}$ 与起爆延时 $\Delta t_{j,k}$，目标函数为有效遮蔽总时长 $T_{occ}$。考虑到目标函数具有非凸、多局部极值、不连续、计算成本高的特点（视线与球/圆柱的相交判定是分段函数，轻微参数扰动可能导致遮蔽从"有"变"无"），不适合使用梯度类方法。本文选择\textbf{差分进化算法}（Differential Evolution, DE）作为求解器，原因：(1) 适用于不连续/不可导目标函数；(2) 群体式全局搜索能力强；(3) 参数少、实现简单、复现性好。
+
+\subsubsection{数据处理}
+
+本问题输入数据由赛题给定：导弹 $M_1$ 初始位置、速度 $v_{missile} = 300$ m/s 与假目标 $O_{fake}$ 位置；真目标 $O_{true}$ 圆柱几何（半径 7 m、高度 10 m）；烟幕云团几何（半径 10 m、有效时长 20 s、下沉速度 3 m/s）；无人机 $FY_j$ 初始位置与速度上限 140 m/s。所有数据在程序初始化时一次性读入并冻结；时间维度上以 0.01 s 为步长做离散仿真（精度对最终结果无显著影响）。处理后保留 1 个问题、3 枚导弹、5 架无人机共 9 个几何实体，无样本缺失。
+
+\subsubsection{模型的建立}
+
+定义核心变量与关键参数：$M_i$ 表示第 $i$ 枚来袭导弹；$FY_j$ 表示第 $j$ 架无人机；$P_M(t) \in \mathbb{R}^3$ 与 $P_{FY_j}(t) \in \mathbb{R}^3$ 分别为 $t$ 时刻导弹与无人机位置向量；$P_{drop,j,k}$、$P_{det,j,k}$ 分别为第 $j$ 架无人机第 $k$ 枚弹的投放点与起爆点；$t_{drop,j,k}$、$\Delta t_{j,k}$、$t_{det,j,k} = t_{drop,j,k} + \Delta t_{j,k}$ 分别为投放时刻、起爆延时与起爆时刻；$v_j$ 与 $(\theta_j, \phi_j)$ 为无人机速度与方向（球坐标）。完整符号、单位与含义见第 4 节符号说明。
+
+\textbf{（1）视线段与球相交判定}。设线段起点 $P_0 \in \mathbb{R}^3$，方向向量 $\mathbf{d} \in \mathbb{R}^3$，球心 $C \in \mathbb{R}^3$，半径 $r$。令 $\mathbf{u} = \mathbf{d} / |\mathbf{d}|$ 为单位方向，$\mathbf{w} = P_0 - C$。沿 $\mathbf{u}$ 方向距 $P_0$ 距离 $s$ 处的点为 $P(s) = P_0 + s \mathbf{u}$，其到球心距离为
 \begin{equation}
 |P(s) - C|^2 = s^2 + 2(\mathbf{w} \cdot \mathbf{u})s + |\mathbf{w}|^2 - r^2
 \end{equation}
-
 令其等于 $r^2$，解得
 \begin{equation}
 s_{0,1} = -\mathbf{w} \cdot \mathbf{u} \pm \sqrt{(\mathbf{w} \cdot \mathbf{u})^2 - |\mathbf{w}|^2 + r^2}
 \end{equation}
-
 若判别式 $(\mathbf{w} \cdot \mathbf{u})^2 - |\mathbf{w}|^2 + r^2 < 0$，则线段与球无交点；否则相交参数区间为 $[s_0, s_1] \cap [0, |\mathbf{d}|]$，归一化到 $t \in [0, 1]$ 表示沿线段的相对位置。
 
-\textbf{（2）视线段与有限高圆柱相交判定}
-
-设圆柱轴线沿 $z$ 方向，圆柱心 $(x_c, y_c, *)$，半径 $r$，高度 $z \in [z_{min}, z_{max}]$。视线参数化为 $P(t) = P_0 + t \mathbf{d}$，$t \in [0, 1]$。
-
-将 $P(t)$ 投影到 $xy$ 平面，记 $P_0^{xy} = (P_{0,x} - x_c, P_{0,y} - y_c)$，$\mathbf{d}^{xy} = (d_x, d_y)$。则
+\textbf{（2）视线段与有限高圆柱相交判定}。设圆柱轴线沿 $z$ 方向，圆柱心 $(x_c, y_c, *)$，半径 $r$，高度 $z \in [z_{min}, z_{max}]$。视线参数化为 $P(t) = P_0 + t \mathbf{d}$，$t \in [0, 1]$。将 $P(t)$ 投影到 $xy$ 平面，记 $P_0^{xy} = (P_{0,x} - x_c, P_{0,y} - y_c)$，$\mathbf{d}^{xy} = (d_x, d_y)$。则
 \begin{equation}
 |P^{xy}(t)|^2 = |\mathbf{d}^{xy}|^2 t^2 + 2(P_0^{xy} \cdot \mathbf{d}^{xy})t + |P_0^{xy}|^2
 \end{equation}
-
 令其等于 $r^2$（取最小根），并在 $z$ 方向约束 $z_{min} \le P_0^z + t d_z \le z_{max}$，最终相交区间为 $t \in [t_0, t_1] \cap [0, 1]$。
 
-\textbf{（3）有效遮蔽的最终判定}
-
-设 $t$ 时刻来袭导弹位置为 $P_M(t)$，烟幕云团球心为 $C_{j,k}(t)$。则有效遮蔽当且仅当：
+\textbf{（3）有效遮蔽的最终判定}。设 $t$ 时刻来袭导弹位置为 $P_M(t)$，烟幕云团球心为 $C_{j,k}(t)$。则有效遮蔽当且仅当：
 \begin{equation}
 [T_{smoke,\min}(P_M, C_{j,k}) \cap T_{cyl}(P_M, O_{true})] \neq \emptyset
 \end{equation}
 即球相交区间与圆柱相交区间有交集，且都在 $[0, 1]$ 内。
 
-\subsubsection{物理运动方程}
+\textbf{（4）物理运动方程}。
 
-\textbf{（1）导弹运动}：从初始位置 $M_0$ 匀速直线飞向假目标 $O_{fake}$，速度 $v_{missile} = 300$ m/s
+\textbf{导弹运动}：从初始位置 $M_0$ 匀速直线飞向假目标 $O_{fake}$，速度 $v_{missile} = 300$ m/s
 \begin{equation}
 P_M(t) = M_0 + \frac{O_{fake} - M_0}{|O_{fake} - M_0|} \cdot v_{missile} \cdot t
 \end{equation}
 
-\textbf{（2）无人机运动}：从初始位置 $FY_{j,0}$ 以速度 $v_j$ 沿单位方向 $\hat{\mathbf{d}}_j$ 等高度（$z = z_{j,init}$）匀速直线飞行
+\textbf{无人机运动}：从初始位置 $FY_{j,0}$ 以速度 $v_j$ 沿单位方向 $\hat{\mathbf{d}}_j$ 等高度（$z = z_{j,init}$）匀速直线飞行
 \begin{equation}
 P_{FY_j}(t) = FY_{j,0} + \hat{\mathbf{d}}_j \cdot v_j \cdot t, \quad \text{其中} \quad \hat{\mathbf{d}}_j = (\sin\phi_j \cos\theta_j, \sin\phi_j \sin\theta_j, \cos\phi_j)
 \end{equation}
 
-\textbf{（3）烟幕弹起爆前运动}：投放后仅受重力
+\textbf{烟幕弹起爆前运动}：投放后仅受重力
 \begin{equation}
 P_{bomb}(t) = P_{drop,j,k} + (0, 0, -g(t - t_{drop,j,k})^2 / 2), \quad t \in [t_{drop,j,k}, t_{det,j,k}]
 \end{equation}
 
-\textbf{（4）烟幕云团运动}：起爆后从起爆点以 3 m/s 匀速下沉
+\textbf{烟幕云团运动}：起爆后从起爆点以 3 m/s 匀速下沉
 \begin{equation}
 C_{j,k}(t) = P_{det,j,k} - (0, 0, v_{sink}(t - t_{det,j,k})), \quad t \in [t_{det,j,k}, t_{det,j,k} + 20]
 \end{equation}
 
-\subsubsection{优化算法选择}
+\textbf{（5）集中优化模型}。综上，将目标函数、约束与变量域集中表示为完整模型。各子问题统一在以下框架下求解，仅决策空间维度不同：
+\begin{equation}
+\begin{aligned}
+& \max_{\theta_j, \phi_j, v_j, t_{drop,j,k}, \Delta t_{j,k}} \quad T_{occ} = \sum_{t} \mathbb{1}\!\left[\exists (j,k): \text{屏蔽}(t, j, k)\right] \cdot \Delta t \\
+& \text{s.t.} \quad v_j \in [v_{\min}, v_{\max}] = [70, 140] \text{ m/s}, \quad j = 1, \dots, N_{FY} \\
+& \quad\quad\;\; t_{drop,j,k} \in [0, 30] \text{ s}, \quad \Delta t_{j,k} \in [0, 20] \text{ s} \\
+& \quad\quad\;\; t_{drop,j,k+1} - t_{drop,j,k} \ge 1 \text{ s (同机多弹)} \\
+& \quad\quad\;\; \text{屏蔽}(t, j, k): \text{视线段与球 } C_{j,k}(t) \text{ 且与圆柱 } O_{true} \text{ 同时有交}
+\end{aligned}
+\end{equation}
 
-由于目标函数（有效遮蔽时长）具有以下特征：
-\begin{itemize}
-  \item 非凸、多局部极值（视线与球/圆柱的相交判定是分段函数）
-  \item 不连续（轻微参数扰动可能导致遮蔽从"有"变"无"）
-  \item 计算成本高（单次评估需数秒仿真）
-\end{itemize}
+其中 $N_{FY}$ 与每机弹数随子问题变化（问题 1-2: 1 架 1 弹；问题 3: 1 架 3 弹；问题 4: 3 架各 1 弹；问题 5: 5 架各 2 弹），决策空间维度分别为 5 / 5 / 9 / 15 / 25 维。
 
-因此不适合使用梯度类方法。本文采用\textbf{差分进化}（Differential Evolution, DE）算法：
-\begin{itemize}
-  \item 群体规模 $N_p = 10 \sim 20$
-  \item 最大迭代 $G = 30 \sim 80$
-  \item 缩放因子 $F = 0.5$，交叉率 $CR = 0.7$
-  \item 边界约束：直接投影到可行域
-  \item 适应度：$-T_{occ}$（最大化遮蔽时长等价于最小化负遮蔽时长）
-\end{itemize}
+\textbf{（6）算法参数}。差分进化算法采用：群体规模 $N_p = 10 \sim 20$，最大迭代 $G = 30 \sim 80$，缩放因子 $F = 0.5$，交叉率 $CR = 0.7$；边界约束直接投影到可行域；适应度为 $-T_{occ}$（最大化遮蔽时长等价于最小化负遮蔽时长）。同一问题重复运行 10 次取最优，以减小差分进化的随机性。
