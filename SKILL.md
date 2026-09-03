@@ -25,6 +25,8 @@ metadata:
 获奖论文（B159/B195/B196/D039 + 南科大板凳龙国一）的结构归纳，并按 2026 年全国组委会
 修订的论文格式规范（2026 年修订稿）+《人工智能工具使用规定（2026 年试行）》做了对齐更新。
 
+**本 skill 所有 step 完成判据遵循 `checkable` 原则** — 完成状态由 1 行命令或 1 次肉眼扫描验证为 **绿/红** 二元, 不接受"应该差不多了"。红 = 立即停下修, 绿 = 跳下一步。
+
 **5 篇参考论文速查** → 详 `references/获奖论文/` 目录:
 - B159 / B195 / B196 / D039（数据驱动题为主, 4 篇归纳的 10 章结构基线）
 - 板凳龙-南科大-2024 国一（机理题, 极坐标+运动学+碰撞, 见 `板凳龙-南科大-2024国一.md`）
@@ -65,91 +67,47 @@ metadata:
 
 如果用户只说"开始求解"而没放题/数据，**必须**先停下来等用户放好再启动。
 
-## Python 环境就位（开赛第 1 小时必做）
+## Python 环境（开赛第 1 小时必做, 赛前 1 天必验证）
 
-**为什么**：Windows 上常同时存在多个 Python（微软商店版 / Anaconda / 系统版 / VS Code 选中版），
-`pip install` 装到 A 解释器，Jupyter 用的却是 B 解释器 → `import pulp` 仍 `ModuleNotFoundError`。
-**半小时排查不如提前 30 秒确认**。
+**checkable 红/绿 锚定**: 本节所有步骤完成状态由 1 行命令验证。**绿 = 1 行 `core ok` 输出**, **红 = 任何 import 失败或 pip/python 不一致**。
 
-**3 步确认（开赛第 1 小时跑一次，截图存 `求解/环境确认.md`）**：
+**Why 5 分钟排查 = 1 行提前验证**: Windows 上常同时存在多个 Python (微软商店版 / Anaconda / 系统版 / VS Code 选中版), `pip install` 装到 A 解释器, Jupyter 用 B → `import pulp` 仍 `ModuleNotFoundError`. **3 步全过 = 绿**:
 
 ```powershell
-# 1) 确认"接下来要用的"是哪个解释器
+# Step 1: 解释器一致 (1 行)
 python -c "import sys; print(sys.executable)"
-# 记下输出路径, 例如: C:\Python312\python.exe
-# 后续所有 python / pip 都用这个
 
-# 2) 确认 pip 和 python 是同一个（避免 pip 装到别处）
+# Step 2: pip/python 同源 (1 行)
 python -m pip --version
-# 看输出第一行是不是和上面 sys.executable 一致
 
-# 3) 装包后用同一个解释器验证
-python -c "import pandas, numpy, scipy, matplotlib, openpyxl; print('core ok')"
-```
-
-**推荐版本**：Python 3.10 / 3.11 / 3.12（3.13+ 部分老包兼容性差）。
-
----
-
-## 环境隔离（强烈建议 venv）
-
-**为什么**：赛前一周装的 `pandas 2.0`，赛题要用 `pandas 2.2` 的新 feature → 全局升级破坏以前的脚本；
-两支队伍在同一个目录下抢包 → 互相覆盖。建议**每个赛题目录一个 venv**。
-
-```powershell
-# 1) 在当前赛题目录下创建 venv（一次性）
-python -m venv .venv
-
-# 2) 激活 venv（每次新开终端都要做）
-.\.venv\Scripts\Activate.ps1
-# 激活后命令行前缀会变成 (.venv) PS ...，证明已隔离
-
-# 3) 在 venv 里装包（用 python -m pip 不用 pip，更稳）
-python -m pip install --upgrade pip
-python -m pip install pandas numpy scipy matplotlib openpyxl PyMuPDF pulp
-```
-
-**赛前 1 天**必做：按上面装好并 `python -c "import 全部包"` 验证一次。**封闭网络环境**见
-下方必装依赖的「离线装包」段。
-
----
-
-## 必装依赖
-
-```bash
-# 核心（必装）
-pip install pandas numpy scipy matplotlib openpyxl PyMuPDF
-
-# 优化（强烈建议，C 题/规划类题用）
-pip install pulp  # ILP 求解器
-
-# 可选（视觉/数据科学增强）
-pip install seaborn plotly scikit-learn
-```
-
-**踩坑案例**（2024 C 题测试）：没装 `pulp` → 重茬约束解不了；用 `scipy.optimize.linprog` 降级为 LP 版，流程跑通但解不是最优。
-
-**离线/限网环境**（封闭赛场常见）：
-
-> **赛前 1 天必做 2 件事**（开赛当晚就来不及了）：
-> 1. 切清华镜像（速度 + 防墙）
-> 2. 预下载全部 wheel 包到本地，验证 `python -c "import pandas, ..."` 全通
-
-```powershell
-# 1) 切清华镜像（速度 + 防墙）
-python -m pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
-
-# 2) 赛前提前下好 wheel 包（断网时离线安装）
-python -m pip download -d ./pkgs pandas numpy scipy matplotlib openpyxl PyMuPDF pulp
-# 比赛时: python -m pip install --no-index --find-links=./pkgs 全部包名
-
-# 3) 验证可 import（赛前 1 天跑一次，出 7 行 OK 就放心）
+# Step 3: import 验证 (1 行 = 绿)
 python -c "import pandas, numpy, scipy, matplotlib, openpyxl, fitz, pulp; print('core ok')"
 ```
 
-**封闭赛场预下载建议**：把 pandas / numpy / scipy / matplotlib / openpyxl / PyMuPDF / pulp / seaborn 全下到 `pkgs/` 目录，断网时一次性 `pip install --no-index --find-links=./pkgs` 装回来。
+**推荐 Python**: 3.10 / 3.11 / 3.12 (3.13+ 部分老包兼容性差).
 
-**踩坑案例**（2024 C 题测试）：开赛当晚才知道赛场断网，`pip install` 拉不下 PyMuPDF 几 MB 的 wheel，整支队伍一夜没装上包。**赛前 1 天预下载 + 验证 = 必备**（漏了开赛当晚就来不及）。
+**venv 隔离** (强烈建议, 每赛题目录一个):
+```powershell
+python -m venv .venv ; .\.venv\Scripts\Activate.ps1
+# 激活后命令行前缀变 (.venv) PS ... = 隔离绿
+```
+
+**装包命令** (核心 + 优化, 缺 pulp → C 题规划类解不了):
+```bash
+pip install pandas numpy scipy matplotlib openpyxl PyMuPDF pulp
+# 可选: pip install seaborn plotly scikit-learn
+```
+
+**封闭赛场预下载** (赛前 1 天必做, 开赛当晚来不及):
+```powershell
+python -m pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+python -m pip download -d ./pkgs pandas numpy scipy matplotlib openpyxl PyMuPDF pulp
+# 比赛时: python -m pip install --no-index --find-links=./pkgs <pkgs>
+```
+
+**checkable 绿 (赛前 1 天跑一次)**: `python -c "import pandas, numpy, scipy, matplotlib, openpyxl, fitz, pulp; print('core ok')"` → 输出 `core ok` = **绿**, 无输出 / ImportError = **红** (开赛当晚才修 = 灾难).
+
+**踩坑案例** (2024 C 题测试): 没装 pulp → 重茬约束解不了; 赛场断网 PyMuPDF wheel 拉不下 = 一夜没装上包.
 
 ---
 
@@ -186,7 +144,10 @@ python -c "import pandas, numpy, scipy, matplotlib, openpyxl, fitz, pulp; print(
 │  动作: 10 章论文结构 (摘要/引言/总体分析/模型假设/符号/ │
 │        建模与求解/模型检验/模型评价/改进推广/参考文献/附录)│
 │  输出: 论文/0-10 章.tex + 论文.tex 主入口                │
-│  → 写完后跳到 Step 4                                    │
+│  checkable 绿: 11 个章节 .tex 全存在 + 每个 ≥ 30 行       │
+│       + AI 工具使用声明二者择一已选                       │
+│       + 附录固定说明两段已填 + 论文.tex 主入口存在         │
+│  → 全绿跳到 Step 4                                       │
 └──────────────────────────────────────────────────────────┘
                           ↓
 ┌─ Step 4: 编译 + 终态（合并自原 Step 5 + Step 5.5）─────┐
