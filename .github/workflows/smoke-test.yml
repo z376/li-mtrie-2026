@@ -179,19 +179,23 @@ print('OK: verify_pdf_metrics importable')
 
       - name: Verify 5 步状态机 checkable 自检 (v1.5.0+ 锚定)
         run: |
-          # 跑 5 步 sign-off checkable 自检: 装包 / 6 脚本 / profile_data
-          $checks = @(
-            @{ name = '装包 (Step 0 前置)'; code = 'import pandas, numpy, scipy, openpyxl; print("core ok")' },
-            @{ name = '6 脚本 import (Step 2)'; code = 'import importlib.util, os, sys; sys.path.insert(0, "references/scripts"); [importlib.util.spec_from_file_location(m[:-3], "references/scripts/"+m).loader.exec_module(importlib.util.module_from_spec(importlib.util.spec_from_file_location(m[:-3], "references/scripts/"+m))) for m in ["aigc_scan.py","check_figure.py","data_utils.py","profile_data.py","verify_pdf_metrics.py","visual_qa.py"]]' }
-          )
-          foreach ($c in $checks) {
-            python -c $c.code
-            if ($LASTEXITCODE -ne 0) {
-              Write-Error "FAIL: $($c.name)"
-              exit 1
-            }
-            Write-Host "GREEN: $($c.name)"
+          # checkable 1: 装包 (Step 0 前置) — 4 包 import
+          python -c "import pandas, numpy, scipy, openpyxl; print('core ok')"
+          if ($LASTEXITCODE -ne 0) { Write-Error "FAIL: 装包 (Step 0 前置)"; exit 1 }
+          Write-Host "GREEN: 装包 (Step 0 前置)"
+
+          # checkable 2: 6 脚本 import (Step 2) — 6 py_compile
+          $scripts6 = @('aigc_scan','check_figure','data_utils','profile_data','verify_pdf_metrics','visual_qa')
+          foreach ($s in $scripts6) {
+            python -c "import importlib.util; s = importlib.util.spec_from_file_location('$s', 'references/scripts/$s.py'); m = importlib.util.module_from_spec(s); s.loader.exec_module(m); print('imported: $s')"
+            if ($LASTEXITCODE -ne 0) { Write-Error "FAIL: 6 脚本 import (Step 2) - $s"; exit 1 }
+            Write-Host "GREEN: import $s"
           }
+
+          # checkable 3: dryrun.py 5 步自检 (本地学生用法, CI 只验证 import 不跑 LaTeX 编译)
+          python -c "import importlib.util; s = importlib.util.spec_from_file_location('dryrun', 'references/scripts/dryrun.py'); m = importlib.util.module_from_spec(s); s.loader.exec_module(m); print('imported: dryrun (学生本地跑 6/6 sign-off 检查)')"
+          if ($LASTEXITCODE -ne 0) { Write-Error "FAIL: dryrun.py import"; exit 1 }
+          Write-Host "GREEN: dryrun.py import (学生本地跑 6/6)"
           # 跑 profile_data 实际 EDA (空数据测试, 不报错即可)
           python -c "import sys; sys.path.insert(0, 'references/scripts'); import importlib.util; spec = importlib.util.spec_from_file_location('p', 'references/scripts/profile_data.py'); m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m); print('GREEN: profile_data 函数数', len([x for x in dir(m) if not x.startswith(\"_\")]))"
 
