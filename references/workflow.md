@@ -1,9 +1,11 @@
 # references/workflow.md — SKILL.md 没说的细节专项
 
-> **分工 (checkable)**: 
-> - **SKILL.md = 单一真相源, 5 步状态机入口** (含 Procedure ASCII 流程图 + 每步 checkable 红/绿判据)
-> - **本文件 = 细节展开, 6 个 sub-step 深入** (整题建模主线 / 模型比选 / 8 项自检回填 / 论文各章约束 / 图路径 / 代码规范 / 常见错误 / 最终提交物)
-> - **冲突时一律以 SKILL.md 为准**, 本文件是补全不重复
+> **分工 (checkable, 与 paper-spec.md 严格不重叠)**:
+> - **SKILL.md = 单一真相源, 5 步状态机入口** (含 Procedure ASCII 流程图 + 每步 checkable `green`/`red` 判据)
+> - **`references/paper-spec.md` = 10 章论文模板规范** (摘要/引言/.../附录 各自怎么写)
+> - **本文件 = sub-step 细节展开, 8 个 sub-step 深入** (整题建模主线 / 模型比选 / 8 项自检回填 / 论文各章约束 / 图路径 / 代码规范 / 常见错误 / 最终提交物)
+> - **冲突时一律以 SKILL.md 为准**, 本文件 + paper-spec.md 是补全不重复
+> - **本文件不重复**: (1) 5 步状态机本身 → 看 SKILL.md; (2) 10 章论文每章怎么写 → 看 paper-spec.md; (3) checkable `green`/`red` 判据 → 看 SKILL.md Step 0-4.
 
 ---
 
