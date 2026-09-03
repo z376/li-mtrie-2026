@@ -10,6 +10,9 @@
 *.fls
 *.pdf
 
+# 例外: references/数模资料/ 下的 PDF 是 BZD 数模社公开资源, 需 commit
+!references/数模资料/**/*.pdf
+
 # ===== Python 编译产物 =====
 __pycache__/
 *.pyc
