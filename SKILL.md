@@ -103,6 +103,9 @@ pip install pandas numpy scipy matplotlib openpyxl PyMuPDF pulp
 ```powershell
 python -m pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
 python -m pip download -d ./pkgs pandas numpy scipy matplotlib openpyxl PyMuPDF pulp
+
+**赛前 1 天 dry-run 自动化** (v1.5.2 新增): 跑 `python references/scripts/dryrun.py` 一键验证 6 项 checkable:
+装包 / 6 脚本 / LaTeX 编译 / Overfull 数 / pack.py / AIGC 风险. **6/6 全 green = 赛前绿, 可安心参赛**. 跟 CI `smoke-test.yml` 等价, 但本地手动跑. 出 red 项时脚本给修复建议.
 # 比赛时: python -m pip install --no-index --find-links=./pkgs <pkgs>
 ```
 
