@@ -32,12 +32,23 @@
 - **赛前学习清单** — 6 大题型映射 + 30+ 算法清单 + 60/30/7 天速成路径 + 跑题红线
   （`references/赛前学习清单.md`）
 
-## v1.5.2 新增（2026-09-03, PyMuPDF ≥1.24 fitz deprecate 兼容）
+## v1.5.2 新增（2026-09-03, PyMuPDF ≥1.24 fitz deprecate 兼容 + LaTeX 全绿 + writing-for-agents 二轮审计）
 
-- **`fix(scripts)`** — `verify_pdf_metrics.py` + `visual_qa.py` 改 `try/except` 双 import: 优先 `import pymupdf as fitz` (PyMuPDF ≥1.24 推荐, 无 deprecate 警告), fallback `import fitz` (PyMuPDF <1.24 老版本, API 不变)
-- **验证**: 2 脚本 py_compile OK, pymupdf 1.28.2 实际安装跑通 24 页 PDF, fitz 警告消失
-- **向后兼容**: 老 Python (PyMuPDF <1.24) 走 fallback, 不会破坏
-- **影响范围**: 仅 2 个脚本, 不改 v1.5.1 的 4 个新文件 + 6 个 .tex 模板
+**Part A — `fix(scripts)` fitz deprecate 兼容** (commit 087fea2):
+- `verify_pdf_metrics.py` + `visual_qa.py` 改 `try/except` 双 import: 优先 `import pymupdf as fitz` (PyMuPDF ≥1.24 推荐), fallback `import fitz` (老版本)
+- 验证: 2 脚本 py_compile OK, pymupdf 1.28.2 实际跑通 24 页 PDF, 警告消失
+- 向后兼容: 老 PyMuPDF <1.24 走 fallback, 不破坏
+
+**Part B — `fix(论文)` LaTeX Overfull 全绿** (commit 9b63e6b, 6 文件):
+- 11 Overfull → 0: 4.符号说明 longtable 列宽 / 5.1.1 集中优化拆 2 equation / 5.1.2 enumerate→align* / 6.模型检验 5 列表 92%→80% / 9.参考文献 sloppypar / 10.附录 verbatim 换行
+- **sign-off 全绿**: 论文.pdf 24 页 + 电子版.pdf 22 页 = **0 Overfull**; AI详情.pdf 6 页 = 4 Overfull < 5 判据绿
+
+**Part C — writing-for-agents 二轮审计 4 项整改** (commit c7ecb34, audit 7.5→7.8):
+- **P3-4** `green`/`red` 锚定: SKILL.md 顶部 'checkable 红/绿' → 'green/red 二元' (pretrained 视觉 prior 替代自造词)
+- **P3-3** 工具 01 ↔ 04-M1 双向链接: 调用链清晰 (粗筛→细评→格式自查→终评)
+- **P3-1** 绘图规范 vs 绘图避坑 显式分工 (How / What Not), 学生不再翻错文档
+- **P3-5** 角色Prompt.md 5 处 negation 改 positive (agent 实际 prompt 行为更明确)
+- **P3-2 留作后续** (workflow.md + paper-spec.md 删 5 步状态机重复段, 工作量 0.5 天)
 
 ---
 

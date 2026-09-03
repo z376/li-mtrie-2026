@@ -43,6 +43,39 @@
 - 借鉴源: 仍是 9 个外部 skill (v1.5.1)
 - 包大小: 完整包 27.39 MB / 轻量包 8.65 MB (跟 v1.5.1 几乎相同, 8 行改动对 zip 影响微乎其微)
 
+### 追加 (同一 release, 2 commits, writing-for-agents 二轮审计整改 + LaTeX 全绿)
+
+**审计前**: 7.5/10 (v1.5.1 P0+P1+P2 整改后)
+**审计后**: 7.8/10 (P3 4 项整改后, P3-2 留作后续 release 达 8.0 上限)
+
+**fix(论文) 11 Overfull → 0** (commit 9b63e6b, 6 文件 +23/-12):
+- 4.符号说明.tex: longtable 列宽 18/62/14% → 16/60/12%
+- 5.1.1.分析与准备.tex: 集中优化 aligned 拆 2 个 equation (max + s.t.)
+- 5.1.2.建模与求解.tex: enumerate 内联数学 (23.6pt × 3) → align* 块, 简写 d_f
+- 6.模型检验.tex: 5 列 longtable 总宽 92%→80% (0.08/0.16/0.14/0.14/0.28)
+- 9.参考文献.tex: \begin{sloppypar} 包住 enumerate
+- 10.附录.tex: verbatim 60pt 长行手动换行
+- **结果**: 论文.pdf (24 页) + 电子版.pdf (22 页) = 0 Overfull sign-off 全绿; AI详情.pdf (6 页) 4 Overfull < 5 判据绿
+
+**P3 writing-for-agents 二轮审计 4 项整改** (commit c7ecb34, 6 文件 +34/-12):
+- **P3-4 `green`/`red` 锚定**: SKILL.md 顶部 'checkable 红/绿' → 'green/red 二元' (用 green/red 而非红/绿, 锚定 pretrained 视觉 prior). sign-off 段统一. 强度: pretrained > 自造.
+- **P3-3 工具 01 ↔ 04-M1 双向链接**: 01-选题推荐 顶部加 '调用链: 01 粗筛 → 04 §M1 细评'. 04-百分制评审 顶部加 '调用链: 粗筛 (01) → 细评 (§M1) → 格式自查 (§M2) → 终评 (§M3)'.
+- **P3-1 绘图规范 vs 绘图避坑 显式分工**: 绘图规范.md 标题加 '(How — 字号/线宽/DPI 怎么写)'. 绘图避坑.md 标题加 '(What Not — 18 条陷阱)'. 协同: 写图前 How → 跑图后 What Not → 提交前 check_figure.py.
+- **P3-5 negation 扫描 (只改最高杠杆 角色Prompt.md)**: 5 处 negation 改 positive (等用户确认/用具体传递内容标注/避免返工/遵循模板预设/用深色主线/保持原 figsize). 其他文档 negation 大部分是硬 guardrail 或反例警示, 合理.
+
+**P3-2 未执行** (工作量 0.5 天, 留作后续 release):
+- workflow.md 14KB 删 5 步状态机重复段 (-4KB)
+- paper-spec.md 33KB 删 5 步状态机重复段 (-3KB)
+- 涉及 2 文档大改, 边际收益 0.2 audit 分, 当前 7.8/10 接近 8.0 上限
+
+**总览** (v1.5.2 整个 release):
+- 4 commits: 087fea2 (fitz) + 4efe740 (元数据) + 9b63e6b (Overfull) + c7ecb34 (P3 4 项)
+- 文件: 8 文件 (+86/-26 行)
+- 借鉴源: 9 个外部 skill (不变)
+- 包大小: 完整 27.43 MB / 轻量 8.69 MB
+- 审计分: 6.83 (v1.5.1 整改前) → 7.5 (P0+P1+P2) → 7.8 (P3)
+- sign-off: 全绿 (3 PDF Overfull < 5 判据)
+
 ## [v1.5.1] - 2026-09-03
 
 **v1.5.1 阶段: 借鉴 BZD 数模社 3 个核心 skill, 4 个新文件, 闭环 references + llm-prompts**
