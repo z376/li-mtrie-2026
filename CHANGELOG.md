@@ -4,6 +4,32 @@
 
 ## [Unreleased]
 
+## [v1.5.1] - 2026-09-03
+
+**v1.5.1 阶段: 借鉴 BZD 数模社 3 个核心 skill, 4 个新文件, 闭环 references + llm-prompts**
+
+### Added
+
+**Part A — 3 个 references 方法论**:
+- `references/模型字典使用指南.md` (6.9 KB) — 11 维评估 (任务对齐/观测单元/目标输出/数据充分性/假设合理性/泄露因果/约束机理/可验证性/可解释性/计算可行性/论文完整性) + 4 档适配性判定 (合适/有条件合适/不合适/证据不足) + 6 类指标 routing (分类/回归/时序/聚类/优化/评价/机理). 借鉴 BZD `bzd-model-dictionary` v1.0
+- `references/格式自查清单.md` (9.5 KB) — 12 章节 Markdown 报告模板 + 100+ 原子检查点 (摘要 5/页面 8/标题/图文/匿名/...) + 15 分逐项扣分制 + 4 个专项表格 (标题密度/建模可读性/优化模型集中陈述/图表重复) + 国赛特殊规则 (无目录/30 页/附录分板块). 借鉴 BZD `bzd-paper-format-checker` v1.0
+- `references/百分制评审方法.md` (6.5 KB) — 100 分制 (摘要 10 + 格式 10 + 模型/求解/结果 70-75 + 补充 5-10) + 每问题三块拆解 (建立/求解/结果) + 90% 封顶制 + 1/2/3 档扣分 + 格式质量系数 `(format_score_10 + 10) / 20` + 位次估计 (CUMCM 2025 锚点 / 其他均匀近似). 借鉴 BZD `bzd-review-paper` v1.0
+
+**Part B — 1 个 LLM 工具**:
+- `references/llm-prompts/04-百分制评审.md` (12.4 KB) — 3 模式合并为 1 个工具: **M1 字典预查** (选模型, 5-10 分钟) / **M2 格式自查** (写完, 15-25 分钟) / **M3 百分制评审** (终审, 20-40 分钟). 每模式独立 prompt 模板 + 严格 JSON OUTPUT_FORMAT. 学生 copy-paste 自用, 不调外部 API
+
+**Part C — 元数据更新**:
+- `SKILL.md` frontmatter `version: "1.5.0" → "1.5.1"`, `history` 字段加 1.5.1 条目
+- `README.md` 徽章 `v1.5.0 → v1.5.1` + 新增 v1.5.1 章节 + 版本历史 v1.5.1 条目
+- `llm-prompts/README.md` 工具表 3 → 4, 加 04 + 3 模式说明 + 协同表加 04 行 + 使用流程图加 04 节点
+
+### 总览
+
+- 4 个新文件 (3 references + 1 llm-prompt), 总 ~35 KB
+- 借鉴源从 6 个扩到 9 个外部 skill (BZD 3 个: model-dictionary + paper-format-checker + review-paper)
+- 闭环设计: `references/方法论.md` ↔ `llm-prompts/工具.md` 双向引用, 学生 1 次学方法论 + 1 次用工具, 不重复
+- 包大小: 完整包 ~22.5 MB / 轻量包 ~3.8 MB (微小增量, 4 个 md 文件)
+
 ## [v1.5.0] - 2026-08-31
 
 **v1.5.0 阶段: LLM 工具集成（学生自用），19 commits 累计，新增 4 个 LLM prompt 工具**

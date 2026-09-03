@@ -8,12 +8,13 @@ description: |
   Do NOT use for: general data analysis, one-off Python scripts, or research questions
   that don't lead to a `论文.pdf` deliverable.
 metadata:
-  version: "1.5.0"
+  version: "1.5.1"
   category: competition-workflow
   scope: user
   source_workspace: D:/MiniMax code/1/数建Skill模板
   spec_compliance: "全国大学生数学建模竞赛论文格式规范（2026年修订稿，2026-09-01起试行）+ 全国大学生数学建模竞赛人工智能工具使用规定（2026年试行）"
   history:
+    - 1.5.1: 借鉴 BZD 数模社 bzd-model-dictionary + bzd-paper-format-checker + bzd-review-paper v1.0 — 新增 3 个 references (模型字典使用指南 / 格式自查清单 / 百分制评审方法) + 1 个 LLM 工具 04 百分制评审 (3 模式 M1/M2/M3)
     - 1.5.0: 新增 LLM 工具集成 (3 个结构化 prompt 工具) — 学生自用
     - 1.4.4: 借鉴 6 个外部 skill (数模陪跑独家 + cumcm-live-workflow + aigc-reduce + scipilot-figure + bzd-modeling-ideas + mma v3.3)
 ---

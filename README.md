@@ -5,7 +5,7 @@
 读题 → 建模 → 求解 → 写论文 → 双版编译，一条龙。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Version v1.5.0](https://img.shields.io/badge/version-v1.5.0-blue.svg)](CHANGELOG.md)
+[![Version v1.5.1](https://img.shields.io/badge/version-v1.5.1-blue.svg)](CHANGELOG.md)
 [![Smoke Test](https://github.com/z376/li-mtrie-2026/actions/workflows/smoke-test.yml/badge.svg)](.github/workflows/smoke-test.yml)
 [![2026 Spec](https://img.shields.io/badge/2026%E8%A7%84%E8%8C%83-%E5%AF%B9%E9%BD%90-green.svg)](references/合规检查清单.md)
 
@@ -31,6 +31,20 @@
   模型评价/改进推广/参考文献/附录
 - **赛前学习清单** — 6 大题型映射 + 30+ 算法清单 + 60/30/7 天速成路径 + 跑题红线
   （`references/赛前学习清单.md`）
+
+## v1.5.1 新增（2026-09-03, 借鉴 BZD 数模社 3 个核心 skill, 4 个新文件）
+
+- **`references/模型字典使用指南.md`**（6.9 KB）— 11 维评估 + 4 档判定（合适/有条件合适/不合适/证据不足）+ 6 类指标 routing（分类/回归/时序/聚类/优化/评价/机理）。借鉴 BZD `bzd-model-dictionary` v1.0
+- **`references/格式自查清单.md`**（9.5 KB）— 12 章节 Markdown 报告 + 100+ 原子检查点 + 15 分逐项扣分制 + 国赛特殊规则（无目录/30 页/附录分板块）。借鉴 BZD `bzd-paper-format-checker` v1.0
+- **`references/百分制评审方法.md`**（6.5 KB）— 100 分制（摘要 10 + 格式 10 + 模型/求解/结果 70-75 + 补充 5-10）+ 90% 封顶 + 1/2/3 档扣分 + 格式质量系数（deterministic）+ 位次估计（CUMCM 用 2025 锚点 / 其他用均匀近似）。借鉴 BZD `bzd-review-paper` v1.0
+- ⚡ **`llm-prompts/04-百分制评审.md`**（12.4 KB）— 3 模式 LLM 工具：**M1 字典预查**（选模型时）/ **M2 格式自查**（写完后）/ **M3 百分制评审**（终审前）。把 3 个方法论包装成 3 套结构化 prompt，学生 copy-paste 自用
+
+**总览**:
+- 4 个新文件（3 references + 1 llm-prompt）
+- 借鉴源扩到 7 个外部 skill（BZD 3 个加入：model-dictionary + paper-format-checker + review-paper）
+- 闭环：`references/方法论` + `llm-prompts/工具` 双向引用, 工具 04 的 3 模式分别对应 3 个方法论
+
+---
 
 ## v1.5.0 新增（15 commits, 2026-08-27 → 08-31, 在 v1.4.4 13 commits 之上）
 
@@ -142,6 +156,12 @@ li-mtrie-2026/
 
 ## 版本
 
+- **v1.5.1**（2026-09-03, 在 v1.5.0 之上 + 4 commits 累计）— 借鉴 BZD 数模社 3 个核心
+  skill: `bzd-model-dictionary` (11 维评估+4档判定) + `bzd-paper-format-checker`
+  (12 章节报告+15 分制) + `bzd-review-paper` (100 分+90% 封顶+格式系数+位次估计).
+  产出 4 新文件: `references/模型字典使用指南.md` (6.9KB) + `references/格式自查清单.md`
+  (9.5KB) + `references/百分制评审方法.md` (6.5KB) + `llm-prompts/04-百分制评审.md`
+  (12.4KB, 3 模式 M1/M2/M3 合并). 借鉴源扩到 7 个外部 skill.
 - **v1.5.0**（15 commits 累计, 2026-08-27 → 08-31, 在 v1.4.4 13 commits 之上新增 2 commits）—
   ⚡ LLM 工具集成（`references/llm-prompts/` 3 工具 + README, 学生 copy-paste 自用,
   不调外部 API, 96 小时救星）+ ⚡ verify_pdf_metrics.py GBK console fix
