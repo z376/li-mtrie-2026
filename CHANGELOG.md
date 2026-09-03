@@ -4,6 +4,45 @@
 
 ## [Unreleased]
 
+## [v1.5.2] - 2026-09-03
+
+**v1.5.2 阶段: fix(scripts) PyMuPDF ≥1.24 fitz deprecate 兼容 (1 commit, 2 文件)**
+
+### Fixed
+
+- **PyMuPDF ≥1.24 deprecate `import fitz`**, 推荐 `import pymupdf` (或 `import pymupdf as fitz`).
+  - `references/scripts/verify_pdf_metrics.py` (强制 import) — 改 `try/except` 双 import
+  - `references/scripts/visual_qa.py` (可选 import) — 改 `try/except` 双 import
+- **新 import 顺序**:
+  ```python
+  try:
+      import pymupdf as fitz  # PyMuPDF ≥1.24 推荐
+  except ImportError:
+      import fitz  # PyMuPDF <1.24 fallback
+  ```
+- **API 调用方式不变**: `fitz.open(path)` 在两个分支都可用
+
+### Changed
+
+- 无 (v1.5.2 是 fix-only, 不改 v1.5.1 的 4 个新文件 + 6 个 .tex 模板)
+
+### 验证
+
+- ✓ 2 脚本 py_compile OK
+- ✓ pymupdf 1.28.2 实际安装, fitz 警告消失
+- ✓ `verify_pdf_metrics.py 论文.pdf` 实际跑通 24 页, 0 fitz deprecate warning
+
+### 向后兼容
+
+- PyMuPDF ≥1.24 (2024+): 用 `pymupdf as fitz` (推荐, 无警告)
+- PyMuPDF <1.24 (2023-): fallback `import fitz` (老版本, API 不变, 不会破坏)
+
+### 总结
+
+- 1 commit (087fea2), 2 文件, +8/-2 行
+- 借鉴源: 仍是 9 个外部 skill (v1.5.1)
+- 包大小: 完整包 27.39 MB / 轻量包 8.65 MB (跟 v1.5.1 几乎相同, 8 行改动对 zip 影响微乎其微)
+
 ## [v1.5.1] - 2026-09-03
 
 **v1.5.1 阶段: 借鉴 BZD 数模社 3 个核心 skill, 4 个新文件, 闭环 references + llm-prompts**

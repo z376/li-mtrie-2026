@@ -5,7 +5,7 @@
 读题 → 建模 → 求解 → 写论文 → 双版编译，一条龙。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Version v1.5.1](https://img.shields.io/badge/version-v1.5.1-blue.svg)](CHANGELOG.md)
+[![Version v1.5.2](https://img.shields.io/badge/version-v1.5.2-blue.svg)](CHANGELOG.md)
 [![Smoke Test](https://github.com/z376/li-mtrie-2026/actions/workflows/smoke-test.yml/badge.svg)](.github/workflows/smoke-test.yml)
 [![2026 Spec](https://img.shields.io/badge/2026%E8%A7%84%E8%8C%83-%E5%AF%B9%E9%BD%90-green.svg)](references/合规检查清单.md)
 
@@ -31,6 +31,15 @@
   模型评价/改进推广/参考文献/附录
 - **赛前学习清单** — 6 大题型映射 + 30+ 算法清单 + 60/30/7 天速成路径 + 跑题红线
   （`references/赛前学习清单.md`）
+
+## v1.5.2 新增（2026-09-03, PyMuPDF ≥1.24 fitz deprecate 兼容）
+
+- **`fix(scripts)`** — `verify_pdf_metrics.py` + `visual_qa.py` 改 `try/except` 双 import: 优先 `import pymupdf as fitz` (PyMuPDF ≥1.24 推荐, 无 deprecate 警告), fallback `import fitz` (PyMuPDF <1.24 老版本, API 不变)
+- **验证**: 2 脚本 py_compile OK, pymupdf 1.28.2 实际安装跑通 24 页 PDF, fitz 警告消失
+- **向后兼容**: 老 Python (PyMuPDF <1.24) 走 fallback, 不会破坏
+- **影响范围**: 仅 2 个脚本, 不改 v1.5.1 的 4 个新文件 + 6 个 .tex 模板
+
+---
 
 ## v1.5.1 新增（2026-09-03, 借鉴 BZD 数模社 3 个核心 skill, 4 个新文件）
 
@@ -167,6 +176,10 @@ li-mtrie-2026/
 
 ## 版本
 
+- **v1.5.2**（2026-09-03, 在 v1.5.1 之上 + 1 commit 累计）— `fix(scripts)` 兼容 PyMuPDF ≥1.24
+  的 fitz deprecate. verify_pdf_metrics.py + visual_qa.py 改 try/except 双 import
+  (优先 `import pymupdf as fitz`, fallback `import fitz`). 2 文件, +8/-2 行. 验证
+  跑通 24 页 PDF 无警告. 向后兼容 PyMuPDF <1.24.
 - **v1.5.1**（2026-09-03, 在 v1.5.0 之上 + 4 commits 累计）— 借鉴 BZD 数模社 3 个核心
   skill: `bzd-model-dictionary` (11 维评估+4档判定) + `bzd-paper-format-checker`
   (12 章节报告+15 分制) + `bzd-review-paper` (100 分+90% 封顶+格式系数+位次估计).
