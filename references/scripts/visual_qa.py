@@ -266,7 +266,10 @@ def render_preview(fig_or_path, out_png: str = "_preview.png",
         return path
     if ext == "pdf":
         try:
-            import fitz  # PyMuPDF, 可选
+            try:
+                import pymupdf as fitz  # PyMuPDF ≥1.24 推荐
+            except ImportError:
+                import fitz  # PyMuPDF <1.24 fallback
         except ImportError as e:
             raise RuntimeError(
                 "把 PDF 渲成预览需要 PyMuPDF（pip install pymupdf）。"

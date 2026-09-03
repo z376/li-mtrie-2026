@@ -43,7 +43,10 @@ LEFT_MARGIN_PT = 2.5 * 28.3465
 
 def verify(path, key_numbers=()):
     """主体检函数. 返回 0 = 通过, 1 = 有警告."""
-    import fitz  # PyMuPDF
+    try:
+        import pymupdf as fitz  # PyMuPDF ≥1.24 推荐, fitz 旧别名仍兼容
+    except ImportError:
+        import fitz  # PyMuPDF <1.24 fallback
     doc = fitz.open(path)
     print(f'页数: {len(doc)}')
 
