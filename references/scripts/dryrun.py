@@ -357,7 +357,9 @@ def main():
         try:
             status, msg, fix = fn()
         except Exception as e:
-            status, msg, fix = "red", f"check 异常: {e}", "查脚本"
+            import traceback
+            tb = traceback.format_exc()
+            status, msg, fix = "red", f"check 异常: {e}", f"查脚本. Traceback: {tb[-500:]}"
         results[name] = {"status": status, "msg": msg, "fix": fix}
 
     if json_mode:
@@ -365,6 +367,7 @@ def main():
     elif ci_mode:
         # GitHub Actions 友好: 每项打印 GREEN/RED/YELLOW, exit code 0/1
         green_count = 0
+        red_items = []
         for name, info in results.items():
             sym = {"green": "GREEN", "yellow": "YELLOW", "red": "RED"}.get(info["status"], "?")
             print(f"::group::{sym}: {name}")
@@ -375,9 +378,32 @@ def main():
             if info["status"] == "green":
                 green_count += 1
             elif info["status"] == "red":
+                red_items.append(name)
                 print(f"::error::{name}: {info['msg']}")
+        # 写到 GITHUB_STEP_SUMMARY (UI 可见, 即使 step fail 也能看)
+        summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
+        if summary_path:
+            try:
+                with open(summary_path, "a", encoding="utf-8") as f:
+                    f.write(f"## li-mtrie-2026 smoke-test 结果\n\n")
+                    f.write(f"**{green_count}/{len(results)} green**\n\n")
+                    if red_items:
+                        f.write(f"### ❌ Red 项 ({len(red_items)}):\n")
+                        for name in red_items:
+                            info = results[name]
+                            f.write(f"- **{name}**: {info['msg']}\n")
+                            if info["fix"]:
+                                f.write(f"  - 修复: {info['fix']}\n")
+                    f.write(f"\n### 全部 {len(results)} 项:\n")
+                    for name, info in results.items():
+                        sym = {"green": "🟢", "yellow": "🟡", "red": "🔴"}.get(info["status"], "?")
+                        f.write(f"- {sym} **{name}**: {info['msg']}\n")
+            except Exception as e:
+                print(f"  WARN: 写 GITHUB_STEP_SUMMARY 失败: {e}")
         n = len(results)
         print(f"\n===== smoke-test summary: {green_count}/{n} green =====")
+        if red_items:
+            print(f"RED 项: {red_items}")
         sys.exit(0 if green_count == n else 1)
     else:
         # 友好 Markdown 输出 (学生本地用)
