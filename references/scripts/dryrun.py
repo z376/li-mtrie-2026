@@ -396,6 +396,7 @@ def main():
     elif ci_mode:
         # GitHub Actions 友好: 每项打印 GREEN/RED/YELLOW, exit code 0/1
         green_count = 0
+        yellow_count = 0
         red_items = []
         for name, info in results.items():
             sym = {"green": "GREEN", "yellow": "YELLOW", "red": "RED"}.get(info["status"], "?")
@@ -406,6 +407,8 @@ def main():
             print("::endgroup::")
             if info["status"] == "green":
                 green_count += 1
+            elif info["status"] == "yellow":
+                yellow_count += 1
             elif info["status"] == "red":
                 red_items.append(name)
                 # 把 fix 也拼进 ::error:: 注释, annotations API 能看到完整
@@ -434,10 +437,11 @@ def main():
             except Exception as e:
                 print(f"  WARN: 写 GITHUB_STEP_SUMMARY 失败: {e}")
         n = len(results)
-        print(f"\n===== smoke-test summary: {green_count}/{n} green =====")
+        # 退出码: 0 = 0 red, 1 = 有 red (yellow 不算失败, 提示 CI 环境差异)
+        print(f"\n===== smoke-test summary: {green_count}/{n} green, {yellow_count} yellow, {len(red_items)} red =====")
         if red_items:
             print(f"RED 项: {red_items}")
-        sys.exit(0 if green_count == n else 1)
+        sys.exit(0 if not red_items else 1)
     else:
         # 友好 Markdown 输出 (学生本地用)
         print("=" * 60)
@@ -454,14 +458,16 @@ def main():
                 green_count += 1
         print("\n" + "=" * 60)
         n = len(results)
-        if green_count == n:
-            print(f"🟢 sign-off 绿: {green_count}/{n} 全 green")
+        yellow_count = sum(1 for r in results.values() if r["status"] == "yellow")
+        red_count = sum(1 for r in results.values() if r["status"] == "red")
+        if red_count == 0:
+            print(f"🟢 sign-off 绿: {green_count}/{n} green, {yellow_count} yellow, 0 red")
             print("   赛前可安心参赛. 祝拿国一!")
         else:
-            print(f"⚠️  sign-off 未全绿: {green_count}/{n} green")
-            print(f"   修复 red 项后重跑, 直到全 green")
+            print(f"⚠️  sign-off 有 red: {green_count}/{n} green, {yellow_count} yellow, {red_count} red")
+            print(f"   修复 red 项后重跑, 直到 0 red")
         print("=" * 60)
-        sys.exit(0 if green_count == n else 1)
+        sys.exit(0 if red_count == 0 else 1)
 
 
 if __name__ == "__main__":
