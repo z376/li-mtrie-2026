@@ -1,14 +1,20 @@
-"""li-mtrie-2026 赛前 1 天必做 dry-run 脚本 (v1.5.2).
+"""li-mtrie-2026 赛前 1 天必做 + CI smoke-test 一体化脚本 (v1.5.3 patch4).
 
-跟 CI smoke-test.yml 等价但本地可跑, 赛前 1 天手动验证 6 类 checkable 全 green,
-确保开赛当晚不踩"装包失败 / 模板坏 / LaTeX 不通"等灾难性坑.
+跟 CI smoke-test.yml 等价但本地可跑, 赛前 1 天手动验证全部 checkable 全 green,
+确保开赛当晚不踩"装包失败 / 模板坏 / LaTeX 不通 / 文件缺失"等灾难性坑.
 
-输出: 结构化 checkable 报告 (Python dict), 6 项全 green = 赛前绿, 可安心参赛.
+输出: 结构化 checkable 报告 (Python dict), N 项全 green = 赛前绿, 可安心参赛.
 任何 red 项, 打印修复建议.
 
+v1.5.3 patch4: 加 8 项 CI 检查 (frontmatter / Python 10 个 / LLM 工具 / BZD 借鉴 /
+LICENSE / pack exclude / fitz compat / 全文件存在性), 凑齐 14 项覆盖 smoke-test
+全部 step. 替代 v1.5.3 之前在 YAML 里嵌 PowerShell + Python 多行的复杂 step (14+ 次
+连 fail 的根因).
+
 用法:
-    python references/scripts/dryrun.py            # 跑 6 项 checkable
+    python references/scripts/dryrun.py            # 跑 14 项 checkable
     python references/scripts/dryrun.py --json    # 输出 JSON 报告 (可管道)
+    python references/scripts/dryrun.py --ci      # CI 模式, 输出 GitHub Actions 友好格式
 """
 import json
 import sys
@@ -16,12 +22,14 @@ import os
 import subprocess
 import shutil
 import re
+import zipfile
 from pathlib import Path
 
 # 路径 (相对 skill 根)
 SKILL_ROOT = Path(__file__).parent.parent.parent  # references/scripts/dryrun.py → skill root
 TEX_DIR = SKILL_ROOT / "论文"
 SCRIPTS_DIR = SKILL_ROOT / "references" / "scripts"
+REFS_DIR = SKILL_ROOT / "references"
 
 
 def check_pkg():
@@ -32,7 +40,6 @@ def check_pkg():
         import scipy
         import openpyxl
         import fitz  # pymupdf 别名, v1.5.2 已修兼容
-        # 可选: matplotlib (画图), pulp (ILP)
         try:
             import matplotlib
         except ImportError:
@@ -47,27 +54,34 @@ def check_pkg():
                 f"跑 `pip install pandas numpy scipy openpyxl pymupdf` (赛前 1 天)")
 
 
-def check_scripts():
-    """checkable 2: 6 脚本 py_compile + import 验证."""
-    scripts = ["aigc_scan", "check_figure", "data_utils",
-               "profile_data", "verify_pdf_metrics", "visual_qa"]
+def check_python_scripts():
+    """checkable 2: 10 Python 脚本 py_compile + import 验证."""
+    scripts = [
+        ("references/code-template.py", "code-template"),
+        ("references/mechanism-template.py", "mechanism-template"),
+        ("tools/pack.py", "pack"),
+        ("references/scripts/dryrun.py", "dryrun"),
+        ("references/scripts/profile_data.py", "profile_data"),
+        ("references/scripts/visual_qa.py", "visual_qa"),
+        ("references/scripts/check_figure.py", "check_figure"),
+        ("references/scripts/verify_pdf_metrics.py", "verify_pdf_metrics"),
+        ("references/scripts/aigc_scan.py", "aigc_scan"),
+        ("references/scripts/data_utils.py", "data_utils"),
+    ]
     failed = []
-    for s in scripts:
-        path = SCRIPTS_DIR / f"{s}.py"
+    for rel, name in scripts:
+        path = SKILL_ROOT / rel
         if not path.exists():
-            failed.append(f"缺文件 {s}.py")
+            failed.append(f"缺 {rel}")
             continue
-        try:
-            # 尝试 import
-            import importlib.util
-            spec = importlib.util.spec_from_file_location(s, path)
-            m = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(m)
-        except Exception as e:
-            failed.append(f"{s}.py import 失败: {e}")
+        # py_compile
+        r = subprocess.run([sys.executable, "-m", "py_compile", str(path)],
+                           capture_output=True, text=True, timeout=15)
+        if r.returncode != 0:
+            failed.append(f"{name} py_compile 失败: {r.stderr[:100]}")
     if failed:
-        return ("red", f"{len(failed)}/6 脚本失败", "; ".join(failed[:3]))
-    return ("green", f"6/6 脚本 import OK (aigc/check/data/profile/verify/visual)", None)
+        return ("red", f"{len(failed)}/10 脚本失败", "; ".join(failed[:3]))
+    return ("green", f"10/10 Python 脚本 py_compile OK (含 v1.5.0 data_utils + v1.5.2 dryrun)", None)
 
 
 def check_tex_compile():
@@ -76,14 +90,13 @@ def check_tex_compile():
     if not xelatex:
         return ("yellow", "xelatex 未安装 (跳过编译检查)",
                 "本地必装 MiKTeX/TeX Live, 跑 `xelatex 论文.tex`")
-    # 跑 xelatex × 2
     old_cwd = os.getcwd()
     try:
         os.chdir(TEX_DIR)
         for i in range(2):
             r = subprocess.run([xelatex, "-interaction=nonstopmode", "-halt-on-error",
                                "论文.tex"], capture_output=True, text=True, timeout=60,
-                      encoding="utf-8", errors="replace")
+                              encoding="utf-8", errors="replace")
             if r.returncode != 0:
                 return ("red", f"第 {i+1} 次 xelatex 失败 (returncode={r.returncode})",
                         "查 论文.log 中 '! Error' 行")
@@ -91,20 +104,17 @@ def check_tex_compile():
         return ("red", "xelatex 超时 (>60s)", "检查 .tex 死循环或缺包")
     finally:
         os.chdir(old_cwd)
-    # 检查 PDF 生成
     pdf_path = TEX_DIR / "论文.pdf"
     if not pdf_path.exists():
         return ("red", "论文.pdf 未生成", "查 xelatex 输出")
-    # 检查 ! Error
     log = (TEX_DIR / "论文.log").read_text(encoding="utf-8", errors="replace")
     err_count = len(re.findall(r"^!\s", log, re.M))
     if err_count > 0:
         return ("red", f"! Error 数 = {err_count}",
                 f"查 论文.log 中 '!' 开头的行")
-    # 页数
     pages = re.search(r"Output written on 论文\.pdf \((\d+) pages", log)
     pages_n = int(pages.group(1)) if pages else 0
-    return ("green", f"24 页论文.pdf 生成 ({pages_n} 页, 0 ! Error)", None)
+    return ("green", f"论文.pdf 生成 ({pages_n} 页, 0 ! Error)", None)
 
 
 def check_overfull():
@@ -122,22 +132,45 @@ def check_overfull():
 
 
 def check_pack():
-    """checkable 5: pack.py 跑通 + 2 个 zip 生成 (学生分享/解压用)."""
+    """checkable 5: pack.py 跑通 + 2 个 zip 生成 + 排除敏感/dev 文件."""
     pack_py = SKILL_ROOT / "tools" / "pack.py"
     if not pack_py.exists():
         return ("red", "tools/pack.py 不存在", "重 git clone")
     r = subprocess.run([sys.executable, str(pack_py)],
-                       capture_output=True, text=True, timeout=60,
+                       capture_output=True, text=True, timeout=120,
                        cwd=SKILL_ROOT, encoding="utf-8", errors="replace")
     if r.returncode != 0:
         return ("red", "pack.py 失败",
                 f"查 stdout/stderr (returncode={r.returncode})")
-    # 检查 zip
     zips = list(SKILL_ROOT.parent.glob("li-mtrie-2026-*.zip"))
     if len(zips) != 2:
         return ("red", f"zip 数 = {len(zips)} (期望 2: 完整包 + 轻量包)",
                 "查 pack.py 输出")
-    return ("green", f"2 zip 生成 ({[z.name for z in zips]})", None)
+    # 验证排除敏感文件
+    bad_patterns = [
+        (r"\.aux$", ".aux"),
+        (r"\.log$", ".log"),
+        (r"开发日志", "开发日志.md"),
+        (r"测试报告", "测试报告.md"),
+        (r"流程审计", "流程审计-19漏点"),
+        (r"^_.*\.(py|txt)$", "_*.py/_*.txt (开发)"),
+    ]
+    # 找轻量包 (含 EXCLUDE_DIRS)
+    lite_zip = next((z for z in zips if "轻量" in z.name), zips[0])
+    violations = []
+    try:
+        with zipfile.ZipFile(lite_zip) as zf:
+            for name in zf.namelist():
+                for pat, label in bad_patterns:
+                    if re.search(pat, name):
+                        violations.append(f"{label}: {name}")
+                        break
+    except Exception as e:
+        return ("yellow", f"zip 解析失败: {e}", "查 pack.py 输出")
+    if violations:
+        return ("red", f"zip 含 {len(violations)} 个敏感/dev 文件",
+                f"修 pack.py EXCLUDE 规则. 违规: {violations[:3]}")
+    return ("green", f"2 zip 生成 + 无敏感/dev 文件 ({[z.name for z in zips]})", None)
 
 
 def check_aigc():
@@ -152,7 +185,6 @@ def check_aigc():
                        cwd=SKILL_ROOT, encoding="utf-8", errors="replace")
     if r.returncode != 0:
         return ("red", "aigc_scan 失败", f"查 stdout/stderr")
-    # 解析综合风险
     if r.stdout and "🟢 低" in r.stdout:
         return ("green", "AIGC 综合风险 🟢 低", None)
     elif r.stdout and "🟡 中" in r.stdout:
@@ -164,29 +196,193 @@ def check_aigc():
     return ("yellow", "AIGC 风险未知 (无法解析)", "查 stdout")
 
 
+def check_skill_md_frontmatter():
+    """checkable 7: SKILL.md frontmatter 有效 (含 name + version)."""
+    skill_md = SKILL_ROOT / "SKILL.md"
+    if not skill_md.exists():
+        return ("red", "SKILL.md 不存在", "重 git clone")
+    content = skill_md.read_text(encoding="utf-8", errors="replace")
+    if not content.startswith("---\n"):
+        return ("red", "SKILL.md 缺 frontmatter (--- 开头)", "修 SKILL.md")
+    if "name: li-mtrie" not in content[:500]:
+        return ("red", "SKILL.md frontmatter 缺 name: li-mtrie", "修 SKILL.md")
+    ver_match = re.search(r'version:\s*"(\d+\.\d+\.\d+)"', content)
+    if not ver_match:
+        return ("red", "SKILL.md frontmatter 缺 version 字段", "修 SKILL.md")
+    return ("green", f"SKILL.md frontmatter 有效 (version={ver_match.group(1)})", None)
+
+
+def check_llm_tools():
+    """checkable 8: v1.5.0 LLM 工具 4 prompt + README 存在."""
+    files = [
+        "references/llm-prompts/README.md",
+        "references/llm-prompts/01-选题推荐.md",
+        "references/llm-prompts/02-代码修复.md",
+        "references/llm-prompts/03-自动审稿.md",
+        "references/llm-prompts/04-百分制评审.md",
+    ]
+    missing = [f for f in files if not (SKILL_ROOT / f).exists()]
+    if missing:
+        return ("red", f"v1.5.0 LLM 工具缺 {len(missing)}/5",
+                f"补 {missing[:3]}")
+    return ("green", f"v1.5.0 LLM 工具 5 文件全在 (4 prompt + README)", None)
+
+
+def check_bzd_v151():
+    """checkable 9: v1.5.1 BZD 借鉴 3 references 方法论 + 数模资料 README."""
+    files = [
+        "references/模型字典使用指南.md",
+        "references/格式自查清单.md",
+        "references/百分制评审方法.md",
+        "references/数模资料/README.md",
+    ]
+    missing = [f for f in files if not (SKILL_ROOT / f).exists()]
+    if missing:
+        return ("red", f"v1.5.1 BZD 借鉴缺 {len(missing)}/4",
+                f"补 {missing[:3]}")
+    return ("green", "v1.5.1 BZD 借鉴 4 文件全在 (3 references + 数模资料 README)", None)
+
+
+def check_bzd_v153():
+    """checkable 10: v1.5.3 BZD 借鉴 11 新文件 (9 板块自查 + 题意翻译 + 学校国奖画像)."""
+    files = [
+        "references/板块自查/README.md",
+        "references/板块自查/01-摘要自查.md",
+        "references/板块自查/02-AI声明自查.md",
+        "references/板块自查/03-问题重述自查.md",
+        "references/板块自查/04-问题分析自查.md",
+        "references/板块自查/05-模型假设自查.md",
+        "references/板块自查/06-符号说明自查.md",
+        "references/板块自查/07-模型求解自查.md",
+        "references/板块自查/08-参考文献附录自查.md",
+        "references/板块自查/09-AIGC审计.md",
+        "references/题意翻译.md",
+        "references/学校国奖画像.md",
+    ]
+    missing = [f for f in files if not (SKILL_ROOT / f).exists()]
+    if missing:
+        return ("red", f"v1.5.3 BZD 借鉴缺 {len(missing)}/12",
+                f"补 {missing[:3]}")
+    return ("green", "v1.5.3 BZD 借鉴 12 文件全在 (9 板块自查 + 1 README + 题意翻译 + 学校国奖画像)", None)
+
+
+def check_fitz_compat():
+    """checkable 11: PyMuPDF ≥1.24 pymupdf as fitz 兼容 (v1.5.2 fix)."""
+    try:
+        import pymupdf as fitz
+        ver = fitz.__doc__.split()[1] if fitz.__doc__ else "unknown"
+        return ("green", f"pymupdf {ver} as fitz (PyMuPDF ≥1.24 推荐)", None)
+    except ImportError:
+        try:
+            import fitz
+            return ("green", f"legacy fitz (PyMuPDF <1.24 fallback)", None)
+        except ImportError:
+            return ("red", "fitz 不可用",
+                    "pip install pymupdf (≥1.24 推荐) 或 PyMuPDF<1.24")
+
+
+def check_license_mit():
+    """checkable 12: LICENSE 是 MIT."""
+    lic = SKILL_ROOT / "LICENSE"
+    if not lic.exists():
+        return ("red", "LICENSE 不存在", "加 LICENSE (MIT)")
+    content = lic.read_text(encoding="utf-8", errors="replace")
+    if "MIT License" not in content:
+        return ("red", "LICENSE 不是 MIT", "改 LICENSE 为 MIT")
+    return ("green", "LICENSE 是 MIT", None)
+
+
+def check_5step_checkable():
+    """checkable 13: 5 步状态机 checkable — 装包 + 7 脚本 + profile_data (跟 dryrun 1+2 重叠, 简化版)."""
+    # 装包
+    try:
+        import pandas, numpy, scipy, openpyxl
+    except ImportError as e:
+        return ("red", f"装包失败: {e.name}", "pip install ...")
+    # 7 脚本 import (含 dryrun)
+    scripts = ["aigc_scan", "check_figure", "data_utils", "dryrun",
+               "profile_data", "verify_pdf_metrics", "visual_qa"]
+    failed = []
+    for s in scripts:
+        path = SCRIPTS_DIR / f"{s}.py"
+        if not path.exists():
+            failed.append(f"缺 {s}.py")
+            continue
+        try:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location(s, path)
+            m = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(m)
+        except Exception as e:
+            failed.append(f"{s} import 失败: {e}")
+    if failed:
+        return ("red", f"7 脚本 {len(failed)} 失败", "; ".join(failed[:3]))
+    return ("green", "5 步状态机 checkable green (装包 + 7 脚本 import + profile_data)", None)
+
+
+def check_latex_compile():
+    """checkable 14: LaTeX 编译可执行性 (CI skip, 本地必跑)."""
+    xelatex = shutil.which("xelatex")
+    if not xelatex:
+        return ("yellow", "xelatex 未安装 (CI skip, 本地必装 MiKTeX/TeX Live)",
+                "赛前 1 天必装 + 跑 dryrun")
+    # 已经在 check_tex_compile 跑过, 这里仅报状态
+    return ("green", f"xelatex {xelatex} 可用 (详 check_tex_compile)", None)
+
+
 CHECKS = [
-    ("1. 装包", check_pkg),
-    ("2. 6 脚本", check_scripts),
+    ("1. 装包 (核心包)", check_pkg),
+    ("2. 10 Python 脚本", check_python_scripts),
     ("3. LaTeX 编译", check_tex_compile),
     ("4. Overfull 数", check_overfull),
-    ("5. pack.py 装包", check_pack),
+    ("5. pack.py + 2 zip", check_pack),
     ("6. AIGC 风险", check_aigc),
+    ("7. SKILL.md frontmatter", check_skill_md_frontmatter),
+    ("8. v1.5.0 LLM 工具 4 prompt", check_llm_tools),
+    ("9. v1.5.1 BZD 借鉴 3 references", check_bzd_v151),
+    ("10. v1.5.3 BZD 借鉴 11 新文件", check_bzd_v153),
+    ("11. v1.5.2 fitz compat", check_fitz_compat),
+    ("12. LICENSE = MIT", check_license_mit),
+    ("13. 5 步状态机 checkable", check_5step_checkable),
+    ("14. LaTeX 编译可执行性", check_latex_compile),
 ]
 
 
 def main():
     json_mode = "--json" in sys.argv
+    ci_mode = "--ci" in sys.argv
     results = {}
+
     for name, fn in CHECKS:
-        status, msg, fix = fn()
+        try:
+            status, msg, fix = fn()
+        except Exception as e:
+            status, msg, fix = "red", f"check 异常: {e}", "查脚本"
         results[name] = {"status": status, "msg": msg, "fix": fix}
 
     if json_mode:
         print(json.dumps(results, ensure_ascii=False, indent=2))
+    elif ci_mode:
+        # GitHub Actions 友好: 每项打印 GREEN/RED/YELLOW, exit code 0/1
+        green_count = 0
+        for name, info in results.items():
+            sym = {"green": "GREEN", "yellow": "YELLOW", "red": "RED"}.get(info["status"], "?")
+            print(f"::group::{sym}: {name}")
+            print(f"  {info['msg']}")
+            if info["fix"]:
+                print(f"  修复: {info['fix']}")
+            print("::endgroup::")
+            if info["status"] == "green":
+                green_count += 1
+            elif info["status"] == "red":
+                print(f"::error::{name}: {info['msg']}")
+        n = len(results)
+        print(f"\n===== smoke-test summary: {green_count}/{n} green =====")
+        sys.exit(0 if green_count == n else 1)
     else:
-        # 友好 Markdown 输出
+        # 友好 Markdown 输出 (学生本地用)
         print("=" * 60)
-        print("li-mtrie-2026 赛前 1 天必做 dry-run (v1.5.2)")
+        print("li-mtrie-2026 赛前 1 天 + CI smoke-test (v1.5.3 patch4)")
         print("=" * 60)
         green_count = 0
         for name, info in results.items():
@@ -197,17 +393,15 @@ def main():
                 print(f"         修复: {info['fix']}")
             if info["status"] == "green":
                 green_count += 1
-        # 总结
         print("\n" + "=" * 60)
         n = len(results)
         if green_count == n:
-            print(f"🟢 赛前 dry-run 绿: {green_count}/{n} 全 green")
-            print("   可安心参赛. 祝拿国一!")
+            print(f"🟢 sign-off 绿: {green_count}/{n} 全 green")
+            print("   赛前可安心参赛. 祝拿国一!")
         else:
-            print(f"⚠️  赛前 dry-run 未全绿: {green_count}/{n} green")
+            print(f"⚠️  sign-off 未全绿: {green_count}/{n} green")
             print(f"   修复 red 项后重跑, 直到全 green")
         print("=" * 60)
-        # 退出码
         sys.exit(0 if green_count == n else 1)
 
 

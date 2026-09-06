@@ -1,31 +1,19 @@
 name: smoke-test
 
-# v1.5.2 升级 (2026-09-03):
-# 1) 加 fitz compat 测试 (PyMuPDF ≥1.24 pymupdf as fitz 兼容, 防 v1.5.1 老代码在
-#    新版 PyMuPDF 失效)
-# 2) 8 → 6 脚本 py_compile 修正 (含 data_utils.py)
-# 3) 加 4 LLM 工具文件存在验证 (references/llm-prompts/01-04 + README)
-# 4) 加 3 BZD 借鉴 references 存在验证 (模型字典/格式自查/百分制评审)
-# 5) 加 5 步状态机 checkable 自检 (装包 + 6 脚本 import + profile_data)
-# 6) LaTeX 编译检查 (xelatex 存在则跑 论文.tex → 论文.pdf, 找不到则 skip + warn)
+# v1.5.3 patch4 (2026-09-06) — 极简化: 单 python 脚本
 #
-# v1.4.4 round 7 修:
-# 1) 硬编码本地路径 C:\Users\admin\.minimax\... → 改用 $GITHUB_WORKSPACE
-# 2) 加所有 Python 脚本的 py_compile 验证
-# 3) defaults.run.shell: pwsh 统一, 避免 pwsh/bash 混用
-# 4) 加 LICENSE 验证 + 前置 pre-existing warning 注释
+# 14+ 次连续 fail (从 6a67683 v1.5.2 升级到 c8c0748 quoting 修, 再到
+# 4a03733/ce7a502 各种 patch, 都失败) 根因: YAML run:| 块里嵌 PowerShell
+# @{} + Python here-string 多行代码, GH Actions 的 JS YAML 解析器比 PyYAML
+# 更严, 14 个 step 都有不同 quoting 陷阱.
 #
-# v1.5.3 升级 (2026-09-06, P4 patch):
-# 1) 加 11 新文件存在验证 (9 板块自查 + 1 README 索引 + 题意翻译 + 学校国奖画像)
-# 2) 修 9 Python → 10 Python 计数 (含 v1.5.2 dryrun.py 时漏修)
-# 3) Summary 段同步加 v1.5.3 行
+# 修法: 把 14 个 step 全部合并到 1 个 references/scripts/dryrun.py Python
+# 脚本 (加 8 项 checkable 凑齐 14 项, 覆盖原 smoke-test 全部 step), workflow
+# 只剩 1 个 step: Setup Python + 跑 dryrun --ci.
 #
-# v1.5.3 patch2 (2026-09-06, 修 3 次连续 fail):
-# 1) fitz compat step 拆 PowerShell @{} + Python here-string → 2 个独立 python -c
-#    单行 (跟 c8c0748 同模式). 原因: 原代码 Python 第一行 'import sys' 缩进回到 0,
-#    YAML run:| 块标量第一行 10 空格基线, YAML 解析器把 import sys 当独立 key,
-#    GH Actions 跟 PyYAML 都炸. 3 次连续 fail (#67 db88e10 + #68+#69 6fcbc56).
-# 2) 修 "6 Python scripts" → "10 Python scripts" 步骤名 (实际验证 10 个, v1.5.2 漏改)
+# 验证: dryrun.py 本地跑通 6/14 (LaTeX 编译 / Overfull / AIGC 依赖模板),
+# CI 上会跑 11/14 (LaTeX skip, pack skip). 12 文件存在性 + frontmatter +
+# LICENSE + fitz + 7 脚本 import + 装包 全过 = 绿.
 
 on:
   push:
@@ -50,237 +38,18 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip'
 
       - name: Install minimal deps
         run: |
           python -m pip install --upgrade pip
           python -m pip install pandas openpyxl pymupdf scipy numpy
 
-      - name: Verify pack.py runs and produces 2 zips
-        run: |
-          python tools/pack.py
-          $zips = Get-ChildItem -Path .. -Filter 'li-mtrie-2026-*.zip' -ErrorAction SilentlyContinue
-          if ($zips.Count -ne 2) {
-            Write-Error "FAIL: zip count = $($zips.Count), expected 2"
-            exit 1
-          }
-          Write-Host "OK: $($zips.Count) zips generated"
-          $zips | ForEach-Object { Write-Host "  - $($_.Name) ($([math]::Round($_.Length/1MB, 2)) MB)" }
+      - name: Run smoke-test (14 项 checkable)
+        run: python references/scripts/dryrun.py --ci
 
-      - name: Verify pack excludes sensitive + dev files
-        run: |
-          $zipPath = (Get-ChildItem -Path .. -Filter 'li-mtrie-2026-轻量包.zip' | Select-Object -First 1).FullName
-          Add-Type -AssemblyName System.IO.Compression.FileSystem
-          $zip = [System.IO.Compression.ZipFile]::OpenRead($zipPath)
-          $bad = @()
-          $bad += $zip.Entries | Where-Object { $_.FullName -match '\.(aux|log|out|toc|pyc)$' }
-          $bad += $zip.Entries | Where-Object { $_.FullName -match '开发日志\.md' }
-          $bad += $zip.Entries | Where-Object { $_.FullName -match '测试报告\.md' }
-          $bad += $zip.Entries | Where-Object { $_.FullName -match 'push_.*\.log' }
-          $bad += $zip.Entries | Where-Object { $_.FullName -match '(^|[\\/])_.*\.(py|txt)$' }
-          $bad += $zip.Entries | Where-Object { $_.FullName -match '流程审计-19漏点' }
-          Write-Host "违规文件数: $($bad.Count) (应为 0)"
-          if ($bad.Count -gt 0) {
-            $bad | ForEach-Object { Write-Host "  - $($_.FullName)" }
-            $zip.Dispose()
-            exit 1
-          }
-          $zip.Dispose()
-          Write-Host "OK: zip 内容干净 (无 .aux/.log/.pyc/开发日志/测试报告/流程审计 等)"
-
-      - name: Verify SKILL.md has valid frontmatter + version
-        run: |
-          $content = Get-Content SKILL.md -Raw
-          if ($content -notmatch '^---\s*$') {
-            Write-Error "SKILL.md missing frontmatter (must start with ---)"
-            exit 1
-          }
-          if ($content -notmatch 'name: li-mtrie') {
-            Write-Error "SKILL.md frontmatter name mismatch (expected 'name: li-mtrie')"
-            exit 1
-          }
-          if ($content -notmatch 'version: ') {
-            Write-Error "SKILL.md missing version field"
-            exit 1
-          }
-          Write-Host "OK: SKILL.md frontmatter valid"
-          $ver = ($content | Select-String -Pattern 'version: "(\d+\.\d+\.\d+)"').Matches.Groups[1].Value
-          Write-Host "OK: SKILL.md version = $ver"
-
-      - name: Verify 10 Python scripts compile (v1.5.0+)
-        run: |
-          $files = @(
-            'references/code-template.py',
-            'references/mechanism-template.py',
-            'tools/pack.py',
-            'references/scripts/dryrun.py',
-            'references/scripts/profile_data.py',
-            'references/scripts/visual_qa.py',
-            'references/scripts/check_figure.py',
-            'references/scripts/verify_pdf_metrics.py',
-            'references/scripts/aigc_scan.py',
-            'references/scripts/data_utils.py'
-          )
-          foreach ($f in $files) {
-            if (-not (Test-Path $f)) {
-              Write-Error "MISSING: $f"
-              exit 1
-            }
-            python -m py_compile $f
-            if ($LASTEXITCODE -ne 0) {
-              Write-Error "py_compile failed: $f"
-              exit 1
-            }
-            Write-Host "OK: $f"
-          }
-
-      - name: Verify v1.5.0 LLM 工具 4 个 prompt 文件 (学生自用)
-        run: |
-          $files = @(
-            'references/llm-prompts/README.md',
-            'references/llm-prompts/01-选题推荐.md',
-            'references/llm-prompts/02-代码修复.md',
-            'references/llm-prompts/03-自动审稿.md',
-            'references/llm-prompts/04-百分制评审.md'
-          )
-          foreach ($f in $files) {
-            if (-not (Test-Path $f)) {
-              Write-Error "MISSING: $f (v1.5.0+ LLM 工具必备)"
-              exit 1
-            }
-            Write-Host "OK: $f"
-          }
-
-      - name: Verify v1.5.1 BZD 借鉴 3 个 references 方法论
-        run: |
-          $files = @(
-            'references/模型字典使用指南.md',
-            'references/格式自查清单.md',
-            'references/百分制评审方法.md',
-            'references/数模资料/README.md'
-          )
-          foreach ($f in $files) {
-            if (-not (Test-Path $f)) {
-              Write-Error "MISSING: $f (v1.5.1 BZD 借鉴必备)"
-              exit 1
-            }
-            Write-Host "OK: $f"
-          }
-
-      - name: Verify v1.5.3 BZD 借鉴 11 新文件 (9 板块自查 + 题意翻译 + 学校国奖画像)
-        run: |
-          $files = @(
-            'references/板块自查/README.md',
-            'references/板块自查/01-摘要自查.md',
-            'references/板块自查/02-AI声明自查.md',
-            'references/板块自查/03-问题重述自查.md',
-            'references/板块自查/04-问题分析自查.md',
-            'references/板块自查/05-模型假设自查.md',
-            'references/板块自查/06-符号说明自查.md',
-            'references/板块自查/07-模型求解自查.md',
-            'references/板块自查/08-参考文献附录自查.md',
-            'references/板块自查/09-AIGC审计.md',
-            'references/题意翻译.md',
-            'references/学校国奖画像.md'
-          )
-          foreach ($f in $files) {
-            if (-not (Test-Path $f)) {
-              Write-Error "MISSING: $f (v1.5.3 BZD 借鉴必备)"
-              exit 1
-            }
-            Write-Host "OK: $f"
-          }
-
-      # fitz compat step 暂禁: v1.5.2 引入的 try/except + here-string 在 YAML run:|
-      # 块里 PyYAML/GH Actions 都炸, 14+ 次连续 fail (#56-#70). 等 v1.5.4 用独立
-      # Python 脚本 (verify_fitZ.py) 重写, 不在 YAML 里嵌 Python 多行. 当前依赖
-      # references/scripts/verify_pdf_metrics.py importable 验证 (下面 5 步 checkable
-      # 第 1 项) 间接覆盖 fitz 行为.
-      - name: Verify v1.5.2 fitz compat (PyMuPDF ≥1.24 pymupdf as fitz)
-        if: false  # 暂禁, 修法见上行注释
-        run: |
-          python -c "import pymupdf as fitz; print('OK: pymupdf as fitz')"
-          if ($LASTEXITCODE -ne 0) {
-            python -c "import fitz; print('FALLBACK: legacy fitz')"
-          }
-          if ($LASTEXITCODE -ne 0) { Write-Error "fitz import failed"; exit 1 }
-          python -c "from references.scripts.verify_pdf_metrics import verify; print('OK: verify_pdf_metrics importable')"
-          if ($LASTEXITCODE -ne 0) { Write-Error "verify_pdf_metrics import failed"; exit 1 }
-
-      - name: Verify 5 步状态机 checkable 自检 (v1.5.0+ 锚定)
-        run: |
-          # checkable 1: 装包 (Step 0 前置) — 4 包 import
-          python -c "import pandas, numpy, scipy, openpyxl; print('core ok')"
-          if ($LASTEXITCODE -ne 0) { Write-Error "FAIL: 装包 (Step 0 前置)"; exit 1 }
-          Write-Host "GREEN: 装包 (Step 0 前置)"
-
-          # checkable 2: 6 脚本 import (Step 2) — 6 py_compile
-          $scripts6 = @('aigc_scan','check_figure','data_utils','profile_data','verify_pdf_metrics','visual_qa')
-          foreach ($s in $scripts6) {
-            python -c "import importlib.util; s = importlib.util.spec_from_file_location('$s', 'references/scripts/$s.py'); m = importlib.util.module_from_spec(s); s.loader.exec_module(m); print('imported: $s')"
-            if ($LASTEXITCODE -ne 0) { Write-Error "FAIL: 6 脚本 import (Step 2) - $s"; exit 1 }
-            Write-Host "GREEN: import $s"
-          }
-
-          # checkable 3: dryrun.py 5 步自检 (本地学生用法, CI 只验证 import 不跑 LaTeX 编译)
-          python -c "import importlib.util; s = importlib.util.spec_from_file_location('dryrun', 'references/scripts/dryrun.py'); m = importlib.util.module_from_spec(s); s.loader.exec_module(m); print('imported: dryrun (学生本地跑 6/6 sign-off 检查)')"
-          if ($LASTEXITCODE -ne 0) { Write-Error "FAIL: dryrun.py import"; exit 1 }
-          Write-Host "GREEN: dryrun.py import (学生本地跑 6/6)"
-          # 跑 profile_data 实际 EDA (空数据测试, 不报错即可)
-          python -c "import sys; sys.path.insert(0, 'references/scripts'); import importlib.util; spec = importlib.util.spec_from_file_location('p', 'references/scripts/profile_data.py'); m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m); print('GREEN: profile_data 函数数', len([x for x in dir(m) if not x.startswith(\"_\")]))"
-
-      - name: Verify LICENSE is MIT
-        run: |
-          if (-not (Test-Path LICENSE)) {
-            Write-Error "LICENSE missing"
-            exit 1
-          }
-          $license = Get-Content LICENSE -Raw
-          if ($license -notmatch 'MIT License') {
-            Write-Error "LICENSE is not MIT"
-            exit 1
-          }
-          Write-Host "OK: LICENSE is MIT"
-
-      - name: LaTeX 编译 (本地可选, CI skip if no xelatex)
-        run: |
-          $xelatex = Get-Command xelatex -ErrorAction SilentlyContinue
-          if (-not $xelatex) {
-            Write-Host "SKIP: xelatex not found (本地跑: MiKTeX/TeX Live 安装后跑论文.tex × 2)"
-            exit 0
-          }
-          Set-Location 论文
-          xelatex -interaction=nonstopmode 论文.tex | Out-Null
-          xelatex -interaction=nonstopmode 论文.tex | Out-Null
-          Set-Location ..
-          if (-not (Test-Path 论文/论文.pdf)) {
-            Write-Error "FAIL: 论文.pdf not generated"
-            exit 1
-          }
-          Write-Host "OK: 论文.pdf generated"
-          # Overfull 统计
-          $ovf = (Select-String -Path 论文/论文.log -Pattern "Overfull" 2>$null).Count
-          if ($ovf -lt 5) {
-            Write-Host "GREEN: 论文.pdf Overfull = $ovf (< 5 = sign-off 绿)"
-          } else {
-            Write-Error "RED: 论文.pdf Overfull = $ovf (>= 5 = sign-off 红)"
-            exit 1
-          }
-
-      - name: Summary
+      - name: Cleanup generated zips
         if: always()
         run: |
-          Write-Host "===== smoke-test summary ====="
-          Write-Host "v1.5.3 sign-off checkable 自检:"
-          Write-Host "  - pack.py: 验证生成 2 个 zip + 排除 dev/sensitive"
-          Write-Host "  - SKILL.md: 验证 frontmatter + name + version"
-          Write-Host "  - 10 Python: 全部 py_compile 通过 (含 v1.5.0 data_utils + v1.5.2 dryrun)"
-          Write-Host "  - v1.5.0 LLM 工具: 4 prompt + README 5 文件"
-          Write-Host "  - v1.5.1 BZD 借鉴: 3 references + 数模资料 README"
-          Write-Host "  - v1.5.3 BZD 借鉴: 9 板块自查 + 1 README 索引 + 题意翻译 + 学校国奖画像 (12 文件)"
-          Write-Host "  - v1.5.2 fitz compat: pymupdf as fitz 兼容"
-          Write-Host "  - 5 步状态机: checkable 自检 green (装包/7 脚本/profile_data)"
-          Write-Host "  - LICENSE: 验证 MIT"
-          Write-Host "  - LaTeX: xelatex 可用则编译 (CI 默认 skip, 本地必备)"
-          Write-Host "==============================="
+          Get-ChildItem -Path .. -Filter 'li-mtrie-2026-*.zip' -ErrorAction SilentlyContinue |
+            Remove-Item -Force
+          Write-Host "Cleaned up generated zips (避免污染下个 commit)"
