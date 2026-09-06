@@ -502,6 +502,7 @@ def check_appendix_files():
         return ("yellow",
                 f"附录无具体文件引用 ({'/'.join(source_files) or '10.附录.tex/10.0 均不存在'})",
                 "建议在 10.附录.tex 加 \\\\texttt{求解/问题1/问题1_xxx.py} 等")
+    is_template = "templates" in str(paper_dir) or "example" in str(paper_dir)
     missing = []
     for ref in file_refs:
         candidates = [
@@ -515,6 +516,10 @@ def check_appendix_files():
         if not any(c.exists() for c in candidates):
             missing.append(ref)
     if missing:
+        if is_template:
+            return ("yellow",
+                    f"example 模板的附录示例引用了 {len(missing)} 个文件不存在 (设计意图, 跑题用户替换占位符即解决)",
+                    f"占位符引用: {missing[:3]}. 跑题用户用自己实际文件替换")
         return ("red",
                 f"附录列了 {len(file_refs)} 个文件, {len(missing)} 个不存在",
                 f"要么补文件, 要么从附录里删. 缺失: {missing[:3]}")
@@ -549,6 +554,7 @@ def check_figure_exists():
     if not refs:
         return ("yellow", "论文 .tex 无 \\includegraphics 引用 (检查 LaTeX 模板)",
                 "正常论文应 ≥ 10 张图, 0 张 = 异常")
+    is_template = "templates" in str(paper_dir) or "example" in str(paper_dir)
     missing = []
     for ref in refs:
         candidates = [
@@ -563,6 +569,10 @@ def check_figure_exists():
         if not any(c.exists() for c in candidates):
             missing.append(ref)
     if missing:
+        if is_template:
+            return ("yellow",
+                    f"example 模板示例引用了 {len(missing)} 张图 (设计意图, 跑题用户跑 .py 生成自己的图即解决)",
+                    f"占位符引用: {missing[:3]}. 跑题用户用 figures/ 下的实际图替换")
         return ("red", f"图引用 {len(refs)} 个, {len(missing)} 个找不到文件",
                 f"要么生成图 (跑对应问题 py), 要么从 .tex 删 \\includegraphics. 缺失: {missing[:3]}")
     return ("green", f"图引用 {len(refs)} 个全在 ({len(refs) - len(missing)} 个有效)",

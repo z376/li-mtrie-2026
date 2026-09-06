@@ -1,56 +1,164 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% 2026 规范第五/十一条 + 2026-08-26 官方答疑 Q3:
-% - 附录首页应是支撑材料清单 (file list)
-% - 附录 1: 程序使用说明 (用了/没用)
-% - 附录 2: 支撑材料说明 (提供了/没有)
-% - 附录 3: 核心源代码 (推荐)
-% ⚠️ 漏写就是 0 分（评审硬性要求）
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% ==================== 附录固定说明 模板 (v1.5.6, BZD 数模社 2026 规范) ====================
+%%
+%% 借鉴 BZD 数模社 附录模板: A 支撑材料清单 + B 软件环境 + C/D/E/F 源程序 + 补充
+%%
+%% 2026 规范 (第五/十一条 + 2026-08-26 官方答疑 Q3):
+%% - 附录首页应是支撑材料清单 (file list)
+%% - 附录 1: 程序使用说明
+%% - 附录 2: 支撑材料说明
+%% - 附录 3: 核心源代码 (推荐)
+%% - 漏写 = 0 分 (评审硬性要求)
+%%
+%% 跑题用户必须:
+%% 1. 删掉所有 % 注释
+%% 2. 替换【】占位符为自己的实际文件清单和软件版本
+%% 3. 删 下面的 \AppendixSlot{...} 行 (check 15 抓这个 inline 【】)
 
-\subsection*{附录 0：支撑材料清单}
+\section*{附录固定说明}
 
-% ===== 填法：列出支撑材料.rar 里的所有文件路径 =====
-% 本参赛队提供的支撑材料（详见 \texttt{支撑材料.rar}）包含以下文件：
+% ====== 附录 A: 支撑材料文件列表 (必填) ======
+\subsection*{附录 A \quad 支撑材料文件列表}
 
-% \begin{itemize}
-%   \item 求解/问题1/问题1\_单源水流漫延.py
-%   \item 求解/问题1/图片/*.png
-%   \item 求解/问题2/问题2\_单源逃生.py
-%   \item $\cdots$
-%   \item 支撑材料/AI工具使用详情.pdf
-% \end{itemize}
+\begin{table}[H]
+  \centering
+  \caption{支撑材料文件列表}
+  \label{tab:appendix_files}
+  \begin{tabular}{clll}
+    \toprule
+    \textbf{序号} & \textbf{文件名称} & \textbf{格式} & \textbf{主要内容} \\
+    \midrule
+    1 & \texttt{求解/问题1/问题1\_xxx.py} & PY & 问题一数据处理与模型求解 \\
+    2 & \texttt{求解/问题1/图片/*.png} & PNG & 问题一输出图表 \\
+    3 & \texttt{求解/问题1/结果/*.csv} & CSV & 问题一中间结果 \\
+    4 & \texttt{求解/问题2/问题2\_yyy.py} & PY & 问题二预测与时点优化 \\
+    5 & \texttt{求解/问题3/问题3\_zzz.py} & PY & 问题三分层优化 \\
+    6 & \texttt{求解/问题4/问题4\_ddd.py} & PY & 问题四集成决策 \\
+    7 & \texttt{求解/共享/constants.py} & PY & 跨问题物理常量 \\
+    8 & \texttt{数据/原始数据.xlsx} & XLSX & 题目附件 (如有补充数据) \\
+    9 & \texttt{AI工具使用详情.pdf} & PDF & AI 工具使用情况详细说明 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
 
-% ===== 简版（懒人版）=====
-% 详见支撑材料 \texttt{支撑材料.rar}（共 N 个文件，M MB），含全部源代码、数据集、中间图、PDF 报告。
+% ====== 附录 B: 软件环境与求解工具 (必填) ======
+\subsection*{附录 B \quad 软件环境与求解工具}
 
-\subsection*{附录 1：程序使用说明}
+本文使用 \textbf{Python 3.12} 完成数据处理与模型求解, 主要程序库及版本:
+\begin{itemize}
+  \item numpy 1.26 (数值计算)
+  \item pandas 2.0 (数据处理)
+  \item scipy 1.11 (科学计算, 含 optimize 优化)
+  \item scikit-learn 1.4 (机器学习, 含线性回归/随机森林/Isolation Forest)
+  \item matplotlib 3.8 (可视化)
+  \item PuLP 2.7 (线性规划, 如有优化问题)
+\end{itemize}
 
-% ===== 情况 A：未使用任何程序（删掉情况 B 段）=====
-% 本论文没有使用任何程序。
+使用 \textbf{Overleaf + xelatex (TeX Live 2024)} 完成论文排版, 使用 \textbf{TikZ} 绘制整体求解框架图。
 
-% ===== 情况 B：使用了程序（删掉情况 A 段，留 B）=====
-% 本参赛队在建模过程中使用了 Python 程序，主要用于【数据预处理、模型求解、
-% 数据可视化】。具体程序清单见支撑材料中的源程序文件。
+% ====== 附录 C-F: 各问题源程序说明模板 (简化) ======
+\subsection*{附录 C \quad 问题一完整源程序}
 
-\subsection*{附录 2：支撑材料说明}
+\begin{itemize}
+  \item \textbf{程序名称}: 问题1\_xxx.py
+  \item \textbf{编程语言及版本}: Python 3.12
+  \item \textbf{对应问题}: 问题一
+  \item \textbf{程序作用}: 【数据处理 / 模型求解 / 检验 / 绘图】
+  \item \textbf{输入文件}: 【原始数据.xlsx 的 Sheet1】
+  \item \textbf{输出文件}: 【问题1\_图片/*.png, 问题1\_结果/*.csv】
+  \item \textbf{依赖环境}: numpy, pandas, scikit-learn
+  \item \textbf{运行顺序}: \texttt{python 问题1/问题1\_xxx.py}
+  \item \textbf{正文对应位置}: 第五章 5.1 节
+\end{itemize}
 
-% ===== 情况 A：没有支撑材料（删掉情况 B 段）=====
-% 本论文没有支撑材料。
+完整源程序:
+\begin{verbatim}
+# 完整可运行的 Python 代码 (贴核心 30-50 行)
+import numpy as np
+import pandas as pd
+from sklearn.ensemble import RandomForestRegressor
 
-% ===== 情况 B：提供了支撑材料（删掉情况 A 段，留 B）=====
-% 本参赛队提供了支撑材料（详见支撑材料.rar），包含：
-% \begin{itemize}
-%   \item 求解/：所有 Python 源代码
-%   \item 求解/图片/：所有图表
-%   \item 求解/结果/：所有结果数据
-%   \item AI工具使用详情.pdf：AI 工具使用情况详细说明
-% \end{itemize}
+# 1. 加载数据
+data = pd.read_excel('../../数据/原始数据.xlsx', sheet_name=0)
 
-\subsection*{附录 3：核心源代码（推荐）}
+# 2. 数据预处理
+X = data[['特征1', '特征2', '特征3']].values
+y = data['目标变量'].values
 
-% 贴 1-2 个关键函数, 加 AI 标注 (如适用)
-% \begin{verbatim}
-% def distance(p1, p2):
-%     return math.sqrt((p1[0]-p2[0])**2 + (p1[1]-p2[1])**2)
-% \end{verbatim}
-% 此函数为团队手写, 未使用 AI。
+# 3. 训练模型
+model = RandomForestRegressor(n_estimators=100, random_state=42)
+model.fit(X, y)
+
+# 4. 预测与评估
+y_pred = model.predict(X)
+r2 = model.score(X, y)
+print(f'R² = {r2:.4f}')
+\end{verbatim}
+
+\subsection*{附录 D \quad 问题二完整源程序}
+
+\textbf{程序名称}: 问题2\_yyy.py
+
+\textbf{编程语言及版本}: Python 3.12
+
+\textbf{对应问题}: 问题二
+
+\textbf{程序作用}: 【数据处理 / 模型求解 / 检验 / 绘图】
+
+\textbf{输入文件}: 【原始数据.xlsx 的 Sheet1】+ 【问题一输出结果】
+
+\textbf{输出文件}: 【问题2\_图片/*.png, 问题2\_结果/*.csv】
+
+\textbf{依赖环境}: numpy, pandas, scikit-learn, scipy
+
+\textbf{运行顺序}: \texttt{python 问题2/问题2\_yyy.py}
+
+\textbf{正文对应位置}: 第五章 5.2 节
+
+% 完整可运行代码见支撑材料对应文件
+
+\subsection*{附录 E \quad 问题三完整源程序}
+
+\textbf{程序名称}: 问题3\_zzz.py
+
+\textbf{编程语言及版本}: Python 3.12
+
+\textbf{对应问题}: 问题三
+
+\textbf{程序作用}: 【数据处理 / 模型求解 / 检验 / 绘图】
+
+\textbf{输入文件}: 【原始数据.xlsx 的 Sheet1】+ 【问题一/二输出结果】
+
+\textbf{输出文件}: 【问题3\_图片/*.png, 问题3\_结果/*.csv】
+
+\textbf{依赖环境}: numpy, pandas, scikit-learn, scipy
+
+\textbf{运行顺序}: \texttt{python 问题3/问题3\_zzz.py}
+
+\textbf{正文对应位置}: 第五章 5.3 节
+
+% 完整可运行代码见支撑材料对应文件
+
+\subsection*{附录 F \quad 问题四完整源程序}
+
+\textbf{程序名称}: 问题4\_ddd.py
+
+\textbf{编程语言及版本}: Python 3.12
+
+\textbf{对应问题}: 问题四
+
+\textbf{程序作用}: 【数据处理 / 模型求解 / 检验 / 绘图】
+
+\textbf{输入文件}: 【原始数据.xlsx 的 Sheet1 或 Sheet2】+ 【问题一/二/三输出结果】
+
+\textbf{输出文件}: 【问题4\_图片/*.png, 问题4\_结果/*.csv】
+
+\textbf{依赖环境}: numpy, pandas, scikit-learn
+
+\textbf{运行顺序}: \texttt{python 问题4/问题4\_ddd.py}
+
+\textbf{正文对应位置}: 第五章 5.4 节
+
+% 完整可运行代码见支撑材料对应文件
+
+% 跑题后必须删下面这一行 (check 15 占位符自检)
+\AppendixSlot{【这里填实际的文件清单 (附录 A 表格) + 软件环境 (附录 B) + 各问题源程序说明 (附录 C-F), 删掉这一行】}

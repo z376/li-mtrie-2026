@@ -1,71 +1,122 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% 通用附录模板 (v1.5.5 重写, 通用化) — 替代原 2024B 烟幕题 example
-%
-% 设计原则:
-% 1. 整段都是 \TeX 注释 (以 % 开头), check 16 跳过 % 行 → dryrun 不报 RED
-% 2. 留 1 行 INLINE 占位符 \AppendixSlot{...}, check 16 抓 \texttt{} 引用 → 跑题用户填完才 GREEN
-% 3. 跑题用户复制本文件后, 删注释 + 填实际文件路径, 删 \AppendixSlot 行
-%
-% 2026 规范第五/十一条 + 2026-08-26 官方答疑 Q3:
-% - 附录首页应是支撑材料清单 (file list)
-% - 附录 1: 程序使用说明 (用了/没用)
-% - 附录 2: 支撑材料说明 (提供了/没有)
-% - 附录 3: 核心源代码 (推荐)
-% - ⚠️ 漏写就是 0 分 (评审硬性要求)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% ==================== 附录 核心源代码 模板 (v1.5.6, BZD 数模社 2026 规范) ====================
+%%
+%% 借鉴 BZD 数模社 附录模板: 核心源代码 (附录 3 推荐)
+%% 选择 1-2 个最关键函数贴入, 不用整文件贴 (会超页)
+%% 配合"该代码使用 AI 工具: ..."标注
+%%
+%% 跑题用户必须:
+%% 1. 删掉所有 % 注释
+%% 2. 替换【】占位符为自己的实际代码
+%% 3. 删 下面的 \CodeSlot{...} 行 (check 15 抓这个 inline 【】)
+%% 4. 每个代码块用 \begin{verbatim}...\end{verbatim} 包围, 不要用 \begin{lstlisting} 避免依赖问题
 
-\section*{附录 1：程序使用说明}
+\section*{附录 \quad 核心源代码}
 
-%%\subsection*{运行环境}
-%%本参赛队使用 Python \texttt{3.12} + 主要依赖: numpy $\ge 1.24$, scipy $\ge 1.11$, pandas $\ge 2.0$, matplotlib $\ge 3.7$, openpyxl $\ge 3.1$。如果用了其他库 (如 scikit-learn, PuLP, PyMC), 在此列出。
+\subsection*{核心函数 1 \quad 【问题 1 主函数名, 1 句功能】}
 
-%%\subsection*{目录结构}
-%%\texttt{求解/} 目录下的主要文件:
-%%\begin{itemize}
-%%  \item \texttt{共享/constants.py} --- 跨问题物理常量
-%%  \item \texttt{共享/params.py} --- 跨问题复用参数
-%%  \item \texttt{问题1/问题1\_xxx.py} --- 问题 1 主代码
-%%  \item \texttt{问题1/图片/*.png} --- 问题 1 输出图
-%%  \item \texttt{问题1/结果/*.csv} --- 问题 1 输出表
-%%  ... (按你实际问题列, 1-2 行/文件)
-%%\end{itemize}
+该部分代码使用 AI 工具: 【是 / 否, 如 是: 工具名 + 版本 + 日期, 例如: DeepSeek-V3, 2026-08-30, 用于代码辅助】 / 团队手写.
 
-%%\subsection*{运行方法}
-%%\begin{verbatim}
-%%cd 求解
-%%python 问题1/问题1_xxx.py
-%%python 问题2/问题2_yyy.py
-%%... (按你实际问题列)
-%%\end{verbatim}
+\begin{verbatim}
+# 完整可运行的 Python 代码, 30-50 行内
+# 功能: 【例如: 多元线性回归训练, 输出 R² 和特征系数】
+import numpy as np
+import pandas as pd
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import r2_score, mean_squared_error
 
-\section*{附录 2：支撑材料说明}
+def train_model(X_train, y_train):
+    """训练多元线性回归模型.
 
-%%支撑材料包 \texttt{支撑材料.rar} 内容:
-%%\begin{enumerate}
-%%  \item \texttt{求解/}: 所有 Python 源代码
-%%  \item \texttt{求解/问题*/图片/}: 所有图表 (PNG)
-%%  \item \texttt{求解/问题*/结果/}: 所有结果 (CSV/XLSX)
-%%  \item \texttt{AI工具使用详情.pdf}: AI 工具使用情况详细说明
-%%  \item (如果用) \texttt{原始数据.xlsx}: 题面附件
-%%\end{enumerate}
-%%支撑材料大小: 约 X MB (远小于 20 MB 上限)。
+    Args:
+        X_train: np.ndarray of shape (n_samples, n_features), 训练集特征
+        y_train: np.ndarray of shape (n_samples,), 训练集目标
 
-\section*{附录 3：核心源代码}
+    Returns:
+        model: 训练好的 LinearRegression 对象
+        metrics: dict, 包含 R², RMSE, MAE
+    """
+    model = LinearRegression()
+    model.fit(X_train, y_train)
 
-%% 官方 Word 模板建议: 附录 3 放核心源代码 (贴关键文件 / 节选片段),
-%% 配合"该代码使用 AI 工具: ..."标注。挑 1-2 个最关键函数贴入,
-%% 不用整文件贴 (会超页)。
+    y_pred = model.predict(X_train)
+    metrics = {
+        'R2': r2_score(y_train, y_pred),
+        'RMSE': np.sqrt(mean_squared_error(y_train, y_pred)),
+        'MAE': np.mean(np.abs(y_train - y_pred))
+    }
+    return model, metrics
 
-%%\subsection*{关键函数 1 (xxx.py 第 N 行)}
-%%该部分代码使用 AI 工具: 【工具名, 版本, 日期】 / 团队手写
-%%\begin{verbatim}
-%%def your_key_function(...):
-%%    """功能描述"""
-%%    ... (贴核心逻辑, 30-50 行内)
-%%\end{verbatim}
+# 调用示例
+if __name__ == '__main__':
+    # 加载数据 (以 2025 C 题 NIPT 为例)
+    data = pd.read_excel('../../数据/原始数据.xlsx', sheet_name=0)
+    X = data[['孕周', 'BMI', '年龄']].values
+    y = data['Y染色体浓度'].values
+    model, metrics = train_model(X, y)
+    print(f"R² = {metrics['R2']:.4f}")
+    print(f"RMSE = {metrics['RMSE']:.4f}")
+\end{verbatim}
 
-% ===== 跑题用户最终要填的实际内容 =====
-% 把上面所有 % 注释替换为你的实际内容, 然后在下面填 1 行 inline 占位符
-% 让 dryrun check 16 验证你的支撑材料文件清单是否都在
+\subsection*{核心函数 2 \quad 【问题 2/3/4 主函数名, 1 句功能】}
 
-\textbf{【在这里列你实际的 .py / .png / .xlsx 文件路径, 跟支撑材料.zip 完全对齐。dryrun check 16 会逐个 Test-Path 验证。本行留【】= dryrun check 15 RED, 必须替换】}
+该部分代码使用 AI 工具: 【是 / 否】 / 团队手写.
+
+\begin{verbatim}
+# 完整可运行的 Python 代码, 30-50 行内
+# 功能: 【例如: 随机森林 + Isolation Forest 联合异常检测】
+import numpy as np
+import pandas as pd
+from sklearn.ensemble import RandomForestClassifier, IsolationForest
+from sklearn.metrics import classification_report, roc_auc_score
+
+def ensemble_anomaly_detection(X, y=None, contamination=0.1):
+    """随机森林 + Isolation Forest 集成异常检测.
+
+    Args:
+        X: np.ndarray of shape (n_samples, n_features), 输入特征
+        y: np.ndarray of shape (n_samples,), 真实标签 (0=正常, 1=异常), 可选
+        contamination: float, 异常比例估计
+
+    Returns:
+        rf_pred: np.ndarray, 随机森林预测 (0/1)
+        iso_pred: np.ndarray, Isolation Forest 预测 (0/1)
+        ensemble_pred: np.ndarray, 集成预测 (0/1)
+    """
+    # 随机森林 (如有标签则监督学习)
+    rf = RandomForestClassifier(n_estimators=100, random_state=42, class_weight='balanced')
+    if y is not None:
+        rf.fit(X, y)
+        rf_pred = rf.predict(X)
+    else:
+        rf_pred = np.zeros(len(X))  # 无监督场景下置 0
+
+    # Isolation Forest (无监督异常检测)
+    iso = IsolationForest(contamination=contamination, random_state=42)
+    iso_pred = (iso.fit_predict(X) == -1).astype(int)
+
+    # 集成: 任一模型标记为异常即视为异常 (高灵敏度)
+    ensemble_pred = np.maximum(rf_pred, iso_pred)
+
+    return rf_pred, iso_pred, ensemble_pred
+
+# 调用示例
+if __name__ == '__main__':
+    data = pd.read_excel('../../数据/原始数据.xlsx', sheet_name=1)
+    X = data[['T13_Z', 'T18_Z', 'T21_Z']].values
+    y = data['非整倍体标签'].values if '非整倍体标签' in data.columns else None
+    rf_pred, iso_pred, ensemble_pred = ensemble_anomaly_detection(X, y, contamination=0.1)
+    print(f"Ensemble anomaly count: {ensemble_pred.sum()}")
+    if y is not None:
+        print(classification_report(y, ensemble_pred))
+        print(f"AUC = {roc_auc_score(y, ensemble_pred):.4f}")
+\end{verbatim}
+
+% 注意事项:
+% - 整文件不超过 50 行 (用 \begin{verbatim}), 不用整文件贴 (会超页)
+% - 代码注释清晰, 能让评阅者理解变量含义
+% - 删除测试代码、print 调试、注释掉的旧代码
+% - 不要包含账号、密码、API 密钥
+% - 必须与支撑材料中的代码完全一致
+
+% 跑题后必须删下面这一行 (check 15 占位符自检)
+\CodeSlot{【这里贴 1-2 个核心函数 (各 30-50 行), 删掉这一行】}
