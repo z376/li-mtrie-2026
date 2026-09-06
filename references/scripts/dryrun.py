@@ -551,6 +551,87 @@ def check_figure_exists():
             None)
 
 
+def check_post_solution_audit():
+    """checkable 18: Post-Solution Audit (跑题后必做 4 项中 2 项自动化).
+
+    必做 1 (quote 锚定表交叉验证) 跟 必做 3 (数字一致性) 需人工/LLM, 不自动化.
+    必做 2 (代码 + 输出齐全) + 必做 4 (5.X.2 引用存在) 可自动 check.
+
+    背景: 2025C 跑题 other agent 写完 4 个 .py 但没审过"每个 .py 都实际跑了, 输出文件齐不齐".
+    现在加这道防线.
+    """
+    paper_dir = get_paper_dir()
+    # 默认假设 求解/ 在 paper_dir 的父目录 (标准 skill 目录结构)
+    solve_dir = paper_dir.parent / "求解"
+    if not solve_dir.is_dir():
+        return ("yellow", f"求解目录不存在 ({solve_dir}), 跳过 Post-Solution Audit",
+                "用 --paper-dir 指定论文目录, 跑题目录应有 求解/ 子目录")
+    # 必做 2: 每个问题目录有 .py + 图片/ + 结果/
+    problem_dirs = sorted([d for d in solve_dir.iterdir()
+                          if d.is_dir() and d.name.startswith("问题")])
+    if not problem_dirs:
+        return ("yellow", f"求解/ 下无 问题N/ 目录 (期望 问题1/ 问题2/ ...)",
+                f"按 §Step 2 创建 问题1-N 目录结构")
+    problems_status = []
+    for pd in problem_dirs:
+        py_files = list(pd.glob("*.py"))
+        pic_dir = pd / "图片"
+        res_dir = pd / "结果"
+        png_count = len(list(pic_dir.glob("*.png"))) if pic_dir.is_dir() else 0
+        csv_count = (len(list(res_dir.glob("*.csv"))) +
+                     len(list(res_dir.glob("*.xlsx")))) if res_dir.is_dir() else 0
+        problems_status.append((pd.name, len(py_files), png_count, csv_count))
+    # 预期: 每个问题 1 个 .py, ≥ 4 张图, ≥ 1 个结果表
+    bad = []
+    for name, py, png, csv in problems_status:
+        issues = []
+        if py == 0:
+            issues.append("无 .py")
+        if png < 4:
+            issues.append(f"图 {png}<4")
+        if csv < 1:
+            issues.append(f"结果 {csv}<1")
+        if issues:
+            bad.append(f"{name}({', '.join(issues)})")
+    if bad:
+        return ("red",
+                f"Post-Solution Audit 必做 2 不过: {len(bad)}/{len(problems_status)} 问题输出不齐全",
+                f"问题: {bad[:3]}. 跑对应 .py 重新生成, 缺图就调代码, 缺结果就 export")
+    # 必做 4: 5.X.2 引用的图/表文件存在
+    # 找 5.X.2 文件
+    five_two = list(paper_dir.glob("5.*.2.建模与求解.tex"))
+    if not five_two:
+        return ("yellow", "无 5.X.2 章节文件 (跳过必做 4)",
+                "5.X.2 是核心求解章节, 必写")
+    five_two_refs = set()
+    for f in five_two:
+        try:
+            content = f.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            continue
+        for m in re.finditer(r"\\includegraphics(?:\[[^\]]*\])?\{([^}]+)\}", content):
+            five_two_refs.add(m.group(1).strip())
+    missing_52 = []
+    for ref in five_two_refs:
+        candidates = [
+            paper_dir / ref,
+            paper_dir.parent / ref,
+            solve_dir / Path(ref).name,
+            SKILL_ROOT / ref,
+        ]
+        if ref.startswith("../"):
+            candidates.insert(0, (paper_dir / ref).resolve())
+        if not any(c.exists() for c in candidates):
+            missing_52.append(ref)
+    if missing_52:
+        return ("red",
+                f"5.X.2 引用 {len(five_two_refs)} 张图, {len(missing_52)} 张缺失",
+                f"跑对应 .py 重新生成缺失的图. 缺失: {missing_52[:3]}")
+    return ("green",
+            f"Post-Solution Audit 必做 2 + 4 全过: {len(problems_status)} 问题各 {problems_status[0][1]}py/{problems_status[0][2]}png/{problems_status[0][3]}csv + 5.X.2 {len(five_two_refs)} 张图全在",
+            None)
+
+
 CHECKS = [
     ("1. 装包 (核心包)", check_pkg),
     ("2. 10 Python 脚本", check_python_scripts),
@@ -569,6 +650,7 @@ CHECKS = [
     ("15. 占位符未替换 (【 TODO)", check_no_placeholder),
     ("16. 10.附录.tex 文件存在", check_appendix_files),
     ("17. 图引用存在 (includegraphics)", check_figure_exists),
+    ("18. Post-Solution Audit (必做 2+4)", check_post_solution_audit),
 ]
 
 

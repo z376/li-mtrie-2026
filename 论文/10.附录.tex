@@ -1,156 +1,71 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% 官方 Word 模板要求：附录按"附录 1/2/3"分块，不带"一、二、三"小节
-% 每块以 \textbf{附录 N：标题} 起头
+% 通用附录模板 (v1.5.5 重写, 通用化) — 替代原 2024B 烟幕题 example
 %
-% ===== v1.4.4 新增 2 条铁律 (借鉴 cumcm-live-workflow v5.0) =====
+% 设计原则:
+% 1. 整段都是 \TeX 注释 (以 % 开头), check 16 跳过 % 行 → dryrun 不报 RED
+% 2. 留 1 行 INLINE 占位符 \AppendixSlot{...}, check 16 抓 \texttt{} 引用 → 跑题用户填完才 GREEN
+% 3. 跑题用户复制本文件后, 删注释 + 填实际文件路径, 删 \AppendixSlot 行
 %
-% 1) 代码完整性铁律: 附录里的每个脚本必须可直接运行复现论文结果
-%    - 全文 \lstinputlisting 列出, 不得只贴核心片段
-%    - 不得用"见代码文件"代替
-%    - 不得伪代码冒充
-%    - 脚本依赖的中间数据 (npz/xlsx) 一并列入支撑材料
-%
-% 2) 文件列表一致性铁律: 附录文件列表与支撑材料压缩包逐项对齐
-%    - 文件名 + 数量必须完全一致
-%    - 压缩包含什么, 列表就列什么
-%    - zip 有几十个文件而附录只列几个 = 评委抓包点
-%
-% 自检命令: python ../references/scripts/verify_pdf_metrics.py ../论文.pdf
+% 2026 规范第五/十一条 + 2026-08-26 官方答疑 Q3:
+% - 附录首页应是支撑材料清单 (file list)
+% - 附录 1: 程序使用说明 (用了/没用)
+% - 附录 2: 支撑材料说明 (提供了/没有)
+% - 附录 3: 核心源代码 (推荐)
+% - ⚠️ 漏写就是 0 分 (评审硬性要求)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section*{附录 1：程序使用说明}
 
-\subsection*{运行环境}
+%%\subsection*{运行环境}
+%%本参赛队使用 Python \texttt{3.12} + 主要依赖: numpy $\ge 1.24$, scipy $\ge 1.11$, pandas $\ge 2.0$, matplotlib $\ge 3.7$, openpyxl $\ge 3.1$。如果用了其他库 (如 scikit-learn, PuLP, PyMC), 在此列出。
 
-\begin{itemize}
-  \item Python 3.12
-  \item numpy $\ge 1.24$
-  \item scipy $\ge 1.11$
-  \item pandas $\ge 2.0$
-  \item matplotlib $\ge 3.7$
-  \item openpyxl $\ge 3.1$
-\end{itemize}
+%%\subsection*{目录结构}
+%%\texttt{求解/} 目录下的主要文件:
+%%\begin{itemize}
+%%  \item \texttt{共享/constants.py} --- 跨问题物理常量
+%%  \item \texttt{共享/params.py} --- 跨问题复用参数
+%%  \item \texttt{问题1/问题1\_xxx.py} --- 问题 1 主代码
+%%  \item \texttt{问题1/图片/*.png} --- 问题 1 输出图
+%%  \item \texttt{问题1/结果/*.csv} --- 问题 1 输出表
+%%  ... (按你实际问题列, 1-2 行/文件)
+%%\end{itemize}
 
-\subsection*{目录结构}
-
-\texttt{求解/} 目录下的主要文件与子目录如下：
-
-\begin{itemize}
-  \item \texttt{共享/geometry.py} --- 视线-球-圆柱求交、导弹/烟幕运动
-  \item \texttt{共享/simulator.py} --- 单导弹多烟幕仿真
-  \item \texttt{共享/optimizer.py} --- 通用优化器
-  \item \texttt{问题1/问题1\_验证场景.py} --- 问题 1 验证
-  \item \texttt{问题1/问题1\_3D几何.png} --- 问题 1 三维几何图
-  \item \texttt{问题1/问题1\_遮蔽时间线.png} --- 问题 1 遮蔽时间线
-  \item \texttt{问题3/问题3\_三弹优化.py} --- 问题 3 优化
-  \item \texttt{问题3/result1.xlsx} --- 问题 3 结果
-  \item \texttt{问题4/问题4\_三机协同.py} --- 问题 4 优化
-  \item \texttt{问题4/result2.xlsx} --- 问题 4 结果
-  \item \texttt{问题5/问题5\_多机多弹.py} --- 问题 5 优化
-  \item \texttt{问题5/result3.xlsx} --- 问题 5 结果
-  \item \texttt{run\_all.py} --- 一键运行所有问题
-\end{itemize}
-
-\subsection*{运行方法}
-
-\textbf{单独运行某个问题}：
-\begin{verbatim}
-cd 求解_A
-python 问题1/问题1_验证场景.py
-python 问题2/问题2_单弹优化.py
-python 问题3/问题3_三弹优化.py
-python 问题4/问题4_三机协同.py
-python 问题5/问题5_多机多弹.py
-\end{verbatim}
-
-\textbf{一键运行所有问题}：
-\begin{verbatim}
-cd 求解_A
-python run_all.py
-\end{verbatim}
-
-\textbf{单个问题输出}：
-\begin{itemize}
-  \item 问题 1：控制台打印遮蔽时长 + 2 张 PNG 图
-  \item 问题 2：控制台打印最优决策 + 遮蔽时长
-  \item 问题 3：控制台打印 3 弹策略 + result1.xlsx
-  \item 问题 4：控制台打印 3 机策略 + result2.xlsx
-  \item 问题 5：控制台打印 5 机策略 + result3.xlsx
-\end{itemize}
+%%\subsection*{运行方法}
+%%\begin{verbatim}
+%%cd 求解
+%%python 问题1/问题1_xxx.py
+%%python 问题2/问题2_yyy.py
+%%... (按你实际问题列)
+%%\end{verbatim}
 
 \section*{附录 2：支撑材料说明}
 
-支撑材料包 \texttt{支撑材料.rar} 内容：
-
-\begin{enumerate}
-  \item \texttt{求解/}：所有 Python 源代码
-  \item \texttt{求解/图片/}：所有图表
-  \item \texttt{求解/结果/}：所有 CSV 结果
-  \item \texttt{求解/问题3/result1.xlsx}：问题 3 结果
-  \item \texttt{求解/问题4/result2.xlsx}：问题 4 结果
-  \item \texttt{求解/问题5/result3.xlsx}：问题 5 结果
-  \item \texttt{AI工具使用详情.pdf}：AI 工具使用情况详细说明
-\end{enumerate}
-
-支撑材料大小：约 5 MB（远小于 20 MB 上限）。
+%%支撑材料包 \texttt{支撑材料.rar} 内容:
+%%\begin{enumerate}
+%%  \item \texttt{求解/}: 所有 Python 源代码
+%%  \item \texttt{求解/问题*/图片/}: 所有图表 (PNG)
+%%  \item \texttt{求解/问题*/结果/}: 所有结果 (CSV/XLSX)
+%%  \item \texttt{AI工具使用详情.pdf}: AI 工具使用情况详细说明
+%%  \item (如果用) \texttt{原始数据.xlsx}: 题面附件
+%%\end{enumerate}
+%%支撑材料大小: 约 X MB (远小于 20 MB 上限)。
 
 \section*{附录 3：核心源代码}
 
-% 官方 Word 模板建议：附录 3 放核心源代码（贴关键文件 / 节选片段），
-% 配合"该代码使用 AI 工具：..."标注。
+%% 官方 Word 模板建议: 附录 3 放核心源代码 (贴关键文件 / 节选片段),
+%% 配合"该代码使用 AI 工具: ..."标注。挑 1-2 个最关键函数贴入,
+%% 不用整文件贴 (会超页)。
 
-\subsection*{视线-球相交判定（geometry.py）}
+%%\subsection*{关键函数 1 (xxx.py 第 N 行)}
+%%该部分代码使用 AI 工具: 【工具名, 版本, 日期】 / 团队手写
+%%\begin{verbatim}
+%%def your_key_function(...):
+%%    """功能描述"""
+%%    ... (贴核心逻辑, 30-50 行内)
+%%\end{verbatim}
 
-该部分代码使用 AI 工具：Mavis, MiniMax-M3, MiniMax, 2026-08-23
+% ===== 跑题用户最终要填的实际内容 =====
+% 把上面所有 % 注释替换为你的实际内容, 然后在下面填 1 行 inline 占位符
+% 让 dryrun check 16 验证你的支撑材料文件清单是否都在
 
-\begin{verbatim}
-def segment_sphere(P0, d, C, r):
-    """线段 P0 + t*d (t∈[0,1]) 与球 |X-C|=r 的相交区间"""
-    d_norm = np.linalg.norm(d)
-    if d_norm < 1e-12:
-        return None
-    u = d / d_norm
-    w = P0 - C
-    a = 1.0
-    b = 2.0 * np.dot(w, u)
-    c = np.dot(w, w) - r * r
-    disc = b * b - 4 * a * c
-    if disc < 0:
-        return None
-    sq = np.sqrt(disc)
-    s0 = (-b - sq) / 2.0
-    s1 = (-b + sq) / 2.0
-    t_min = max(0.0, s0)
-    t_max = min(1.0, s1)
-    if t_min >= t_max:
-        return None
-    return (t_min, t_max)
-\end{verbatim}
-
-\subsection*{差分进化优化（run\_all.py）}
-
-该部分代码使用 AI 工具：Mavis, MiniMax-M3, MiniMax, 2026-08-23
-
-\begin{verbatim}
-from scipy.optimize import differential_evolution
-
-def objective(x):
-    theta, phi, v, t_drop, dt = x
-    dir_unit = decode_direction(theta, phi)
-    drop, det, t_det = compute_bomb_events(FY1, dir_unit, v, t_drop, dt)
-    t_occ = simulate_single_missile(
-        M1, [{'det_point': det, 'det_time': t_det}]
-    )[0]
-    return -t_occ
-
-result = differential_evolution(
-    objective, bounds, seed=42,
-    maxiter=40, popsize=10, tol=1e-3
-)
-\end{verbatim}
-
-% 其他可放附录的内容（按官方 Word 模板）：
-% - 某一问题的详细证明或求解过程
-% - 自己在网上找到的数据
-% - 比较大的流程图
-% - 较繁杂的图表或计算结果
+\textbf{【在这里列你实际的 .py / .png / .xlsx 文件路径, 跟支撑材料.zip 完全对齐。dryrun check 16 会逐个 Test-Path 验证。本行留【】= dryrun check 15 RED, 必须替换】}
