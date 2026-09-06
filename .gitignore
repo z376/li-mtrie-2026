@@ -35,7 +35,8 @@ __pycache__/
 # 求解/问题*/结果/*.csv 通常 push
 # 求解/共享/*.py        通常 push (跨问题物理常量)
 求解_C/                  # 旧 C 题测试残留
-_archive/                # 归档目录
+_archive/                # 归档目录 (不参与分发)
+_archive/**              # 子目录/文件也不分发 (v1.5.5 加, 强制排除新加的 _archive 内容)
 求解/问题*/*_test.py     # 单文件测试
 求解/问题*/图片/*placeholder*
 求解/问题*/结果/result*.xlsx

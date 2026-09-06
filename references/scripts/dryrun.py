@@ -86,13 +86,20 @@ def check_python_scripts():
 
 def check_tex_compile():
     """checkable 3: 论文.tex 编译 (xelatex × 2). 失败 = 模板坏了."""
+    paper_dir = get_paper_dir()
+    # example-paper 状态: 没 fonts/ 必然编译失败, yellow 跳过 (template 自检不需 LaTeX 编译)
+    is_template = "templates" in str(paper_dir) or "example" in str(paper_dir)
+    if is_template:
+        return ("yellow",
+                f"example 模板状态 (paper_dir={paper_dir.name}, 跳过 LaTeX 编译)",
+                "跑题用户复制 example-paper 到 跑题目录/论文/ 后再编译")
     xelatex = shutil.which("xelatex")
     if not xelatex:
         return ("yellow", "xelatex 未安装 (跳过编译检查)",
                 "本地必装 MiKTeX/TeX Live, 跑 `xelatex 论文.tex`")
     old_cwd = os.getcwd()
     try:
-        os.chdir(TEX_DIR)
+        os.chdir(paper_dir)
         for i in range(2):
             r = subprocess.run([xelatex, "-interaction=nonstopmode", "-halt-on-error",
                                "论文.tex"], capture_output=True, text=True, timeout=60,
@@ -104,10 +111,10 @@ def check_tex_compile():
         return ("red", "xelatex 超时 (>60s)", "检查 .tex 死循环或缺包")
     finally:
         os.chdir(old_cwd)
-    pdf_path = TEX_DIR / "论文.pdf"
+    pdf_path = paper_dir / "论文.pdf"
     if not pdf_path.exists():
         return ("red", "论文.pdf 未生成", "查 xelatex 输出")
-    log = (TEX_DIR / "论文.log").read_text(encoding="utf-8", errors="replace")
+    log = (pdf_path.parent / "论文.log").read_text(encoding="utf-8", errors="replace")
     err_count = len(re.findall(r"^!\s", log, re.M))
     if err_count > 0:
         return ("red", f"! Error 数 = {err_count}",
@@ -362,7 +369,7 @@ def check_latex_compile():
 # ===== v1.5.4 新增 3 项: 防 "答非所问 / 模板残留 / 占位符" =====
 
 def get_paper_dir():
-    """用户论文目录. 优先级: --paper-dir 参数 > PAPER_DIR 环境变量 > cwd/论文/ > cwd (含 .tex) > skill 自带 论文/.
+    """用户论文目录. 优先级: --paper-dir 参数 > PAPER_DIR 环境变量 > cwd/论文/ > references/templates/example-paper/ > cwd (含 .tex) > skill TEX_DIR (兜底).
 
     用法:
         # 跑题用户在跑题目录 (有 论文/ 子目录) 跑, 自动检测
@@ -371,7 +378,8 @@ def get_paper_dir():
         # 或显式指定 (跨目录跑)
         python references/scripts/dryrun.py --paper-dir C:/my-paper/论文
 
-        # CI 默认用 skill 自带 论文/ (example 论文, 会有占位符/附录检查)
+        # skill 自检 (cwd = skill 根, 无 论文/), 用 references/templates/example-paper/
+        # 让 check 15/16/17/18 跑 template 自检 (预期 RED, 模板留占位符)
     """
     env_dir = os.environ.get("PAPER_DIR")
     if env_dir:
@@ -380,14 +388,18 @@ def get_paper_dir():
         idx = sys.argv.index("--paper-dir")
         if idx + 1 < len(sys.argv):
             return Path(sys.argv[idx + 1])
-    # 自动检测: cwd/论文/ 优先
     cwd = Path(os.getcwd())
+    # 1. 跑题用户在跑题目录 (有 论文/ 子目录) 跑
     if (cwd / "论文").is_dir() and any((cwd / "论文").glob("*.tex")):
         return cwd / "论文"
-    # cwd 本身是论文目录 (含 .tex)
+    # 2. skill 自检 (cwd = skill 根, 有 references/templates/example-paper/)
+    template_dir = Path(__file__).parent.parent.parent / "references" / "templates" / "example-paper"
+    if template_dir.is_dir() and any(template_dir.glob("*.tex")):
+        return template_dir
+    # 3. cwd 本身是论文目录 (含 .tex, 跨目录跑)
     if cwd.is_dir() and any(cwd.glob("*.tex")):
         return cwd
-    # 兜底: skill 自带
+    # 4. 兜底: skill 自带 TEX_DIR
     return TEX_DIR
 
 
@@ -396,12 +408,15 @@ def check_no_placeholder():
 
     背景: 2025C 跑题时 other agent 留了 9.0 + 10.0 模板占位符 (【】方括号),
     dryrun 之前没查, 评委扣分. 现在加这道防线.
+
+    Template 状态 (paper_dir 含 templates/example): yellow 报, 跑题用户状态: red 报.
     """
     paper_dir = get_paper_dir()
     if not paper_dir.exists():
         return ("yellow", f"论文目录不存在 ({paper_dir}), 跳过占位符检查",
                 "用 --paper-dir <path> 指定, 或在跑题目录下跑")
-    # 占位符模式 (中括号 + 英文 TODO + 中文 待填/未填 + 通用 XXX)
+    is_template = "templates" in str(paper_dir) or "example" in str(paper_dir)
+    # 占位符模式
     patterns = [
         (r"【[^】]*】", "【】中括号占位符"),
         (r"\bTODO\b", "TODO 标记"),
@@ -418,7 +433,6 @@ def check_no_placeholder():
             continue
         for pat, label in patterns:
             for m in re.finditer(pat, content):
-                # 跳过注释行 (LaTeX 注释以 % 开头)
                 line_no = content[:m.start()].count("\n") + 1
                 line_start = content.rfind("\n", 0, m.start()) + 1
                 line_end = content.find("\n", m.end())
@@ -429,6 +443,10 @@ def check_no_placeholder():
                     continue
                 violations.append(f"{tex_file.name}:L{line_no} {label} -> {m.group()[:30]}")
     if violations:
+        if is_template:
+            return ("yellow",
+                    f"example 模板有意保留 {len(violations)} 处占位符 (设计意图, 跑题时填掉才 GREEN)",
+                    f"占位符: {violations[:2]}. 跑题用户复制 example-paper → 论文/ 后替换")
         return ("red", f"占位符未替换 ({len(violations)} 处)",
                 f"修 .tex 把 {violations[:3]} 替换成实际内容. 例: AI 声明 【文献检索】→ 文献检索")
     return ("green", "占位符全替换 (无 【 TODO 待填 XXX)", None)
