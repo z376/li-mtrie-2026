@@ -19,6 +19,13 @@ name: smoke-test
 # 1) 加 11 新文件存在验证 (9 板块自查 + 1 README 索引 + 题意翻译 + 学校国奖画像)
 # 2) 修 9 Python → 10 Python 计数 (含 v1.5.2 dryrun.py 时漏修)
 # 3) Summary 段同步加 v1.5.3 行
+#
+# v1.5.3 patch2 (2026-09-06, 修 3 次连续 fail):
+# 1) fitz compat step 拆 PowerShell @{} + Python here-string → 2 个独立 python -c
+#    单行 (跟 c8c0748 同模式). 原因: 原代码 Python 第一行 'import sys' 缩进回到 0,
+#    YAML run:| 块标量第一行 10 空格基线, YAML 解析器把 import sys 当独立 key,
+#    GH Actions 跟 PyYAML 都炸. 3 次连续 fail (#67 db88e10 + #68+#69 6fcbc56).
+# 2) 修 "6 Python scripts" → "10 Python scripts" 步骤名 (实际验证 10 个, v1.5.2 漏改)
 
 on:
   push:
@@ -101,7 +108,7 @@ jobs:
           $ver = ($content | Select-String -Pattern 'version: "(\d+\.\d+\.\d+)"').Matches.Groups[1].Value
           Write-Host "OK: SKILL.md version = $ver"
 
-      - name: Verify 6 Python scripts compile (v1.5.0+)
+      - name: Verify 10 Python scripts compile (v1.5.0+)
         run: |
           $files = @(
             'references/code-template.py',
@@ -187,24 +194,15 @@ jobs:
 
       - name: Verify v1.5.2 fitz compat (PyMuPDF ≥1.24 pymupdf as fitz)
         run: |
-          $code = @"
-import sys
-try:
-    import pymupdf as fitz
-    print('OK: pymupdf', fitz.__doc__.split()[1] if fitz.__doc__ else 'unknown', 'as fitz')
-except ImportError:
-    import fitz
-    print('FALLBACK: legacy fitz', fitz.__doc__.split()[1] if fitz.__doc__ else 'unknown')
-
-# 跑 verify_pdf_metrics 实际检查 (v1.5.2 fix 的入口点)
-from references.scripts.verify_pdf_metrics import verify
-print('OK: verify_pdf_metrics importable')
-"@
-          python -c $code
+          # 拆成 2 个独立 python -c 单行调用 (避免 PowerShell @{} + Python here-string
+          # 在 YAML run:| 块里解析炸, 跟 c8c0748 同模式)
+          python -c "import pymupdf as fitz; print('OK: pymupdf as fitz')"
           if ($LASTEXITCODE -ne 0) {
-            Write-Error "fitz compat test failed"
-            exit 1
+            python -c "import fitz; print('FALLBACK: legacy fitz')"
           }
+          if ($LASTEXITCODE -ne 0) { Write-Error "fitz import failed"; exit 1 }
+          python -c "from references.scripts.verify_pdf_metrics import verify; print('OK: verify_pdf_metrics importable')"
+          if ($LASTEXITCODE -ne 0) { Write-Error "verify_pdf_metrics import failed"; exit 1 }
 
       - name: Verify 5 步状态机 checkable 自检 (v1.5.0+ 锚定)
         run: |
