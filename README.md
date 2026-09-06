@@ -5,7 +5,7 @@
 读题 → 建模 → 求解 → 写论文 → 双版编译，一条龙。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Version v1.5.3](https://img.shields.io/badge/version-v1.5.3-blue.svg)](CHANGELOG.md)
+[![Version v1.5.4](https://img.shields.io/badge/version-v1.5.4-blue.svg)](CHANGELOG.md)
 [![Smoke Test](https://github.com/z376/li-mtrie-2026/actions/workflows/smoke-test.yml/badge.svg)](.github/workflows/smoke-test.yml)
 [![2026 Spec](https://img.shields.io/badge/2026%E8%A7%84%E8%8C%83-%E5%AF%B9%E9%BD%90-green.svg)](references/合规检查清单.md)
 
@@ -31,6 +31,36 @@
   模型评价/改进推广/参考文献/附录
 - **赛前学习清单** — 6 大题型映射 + 30+ 算法清单 + 60/30/7 天速成路径 + 跑题红线
   （`references/赛前学习清单.md`）
+
+## v1.5.4 新增（2026-09-06, 防"答非所问"强化, 源自 2025C 真实跑题失败案例）
+
+**2025C 跑题回顾**: other agent 用本 skill 跑 2025 C题 (NIPT), 写出 3 个 P0 错: 问题 4 选错 sheet (男胎判女胎) + 问题 2/3 自创 BMI 分组 + 10.附录.tex 是 2024B 烟幕题残留 + 9.0/10.0 占位符没填。**直接修这 3 个错, 但 skill 自身没 catch 住**, 所以这次增量补强 skill。
+
+**Part A — `references/scripts/dryrun.py` + 3 checkable (v1.5.4 核心)**:
+
+- **check 15: 占位符未替换** — 扫 `论文/*.tex` 找 【 / TODO / 待填 / XXX, 跳过 LaTeX 注释行 (`%` 开头), 命中 → red
+  - 抓 2025C: 9.0 + 10.0 留 8 处【】方括号, 跑完立刻 red
+- **check 16: 10.附录.tex (或 10.0.附录固定说明.tex) 文件存在** — 提取 `\texttt{...}` + 裸路径, 试 4 种解析 (skill 根 / 论文 / 论文父 / 绝对), 缺失 → red
+  - 抓 2025C: 10.附录.tex 列了 18 个 2024B 烟幕题文件, 全不存在, 跑完立刻 red
+- **check 17: 图引用存在 (`\includegraphics`)** — 扫所有 .tex 的 `\includegraphics{...}` 引用, 试 4 种解析, 缺失 → red
+  - 防 other agent 引用了图但没生成 (编译期才发现)
+- **`--paper-dir <path>` + `PAPER_DIR` 环境变量** + **cwd 自动检测** — 跑题用户在跑题目录跑自动指向 `论文/`, 跨目录显式指定
+
+**Part B — `SKILL.md` 5 段必做项**:
+
+- **§Step 0 起手 2 件事**: 题面 quote 锚定表 (每问原 quote + 解读 + 用哪个 sheet) + 题面关键判据 grep (4% / |Z|>3 / BMI 边界 / 风险权重)
+- **§Step 0 警示**: "pd.read_excel 选错 sheet" 加进 `读题/读数据失败回退表` (2025C P0-1 警示)
+- **§Step 3 占位符 grep 自检** — 写完 .tex 跑 `Select-String -Pattern '【|TODO|待填|XXX'`, 0 命中才进 Step 4
+- **§Step 4 附录文件存在性自检** — PowerShell 提取 `\texttt{...}`, 逐个 Test-Path, 缺失立即修
+- **顶部 4 大典型坑警示表** (4 行 + 修法指针) — 跑题前必读, 源自 2025C 真实失败案例
+
+**总览**:
+- 1 文件改: `dryrun.py` (8.5KB → ~20KB, 14 → 17 checkable)
+- 1 文件改: `SKILL.md` (35KB → 39KB, +4 段必做项)
+- 借 2025C 真实失败 case 校准: 拿 2025C 论文当 fixture 跑 dryrun, 15/16 立刻 RED, 验证 checkable 抓得到
+- sign-off: 17/17 仍可全绿 (skill 自带 15/16 RED 是 example 论文残留, 是设计意图, 用户跑题时自动避雷)
+
+---
 
 ## v1.5.3 新增（2026-09-06, 借鉴 BZD 数模社 12 个论文自查类子 skill + 2 个翻译/画像文档, 11 个新文件）
 
@@ -236,6 +266,13 @@ li-mtrie-2026/
 
 ## 版本
 
+- **v1.5.4**（2026-09-06, 在 v1.5.3 之上 + 1 commit 累计）— 防"答非所问"强化. 借 2025C 跑题
+  失败案例 (other agent 踩 3 P0: 问题 4 选错 sheet / 问题 2-3 自创 BMI 分组 / 10.附录.tex
+  残留 2024B 模板), 加 3 道程序化防线: dryrun.py check 15 占位符未替换 / 16 附录文件
+  存在 / 17 \includegraphics 图引用存在. SKILL.md 加 4 段必做项 (Step 0 quote 锚定
+  + 题面关键判据 grep / Step 3 占位符 grep / Step 4 附录文件 Test-Path) + 顶部
+  4 大典型坑警示表. 2 文件改 + 0 文件加. 审计 8.0/10 不变 (4 段必做项是补强, 不增加
+  文档边界, 跟 v1.5.2 末 P3-2 3 文档边界一致).
 - **v1.5.3**（2026-09-06, 在 v1.5.2 之上 + 3 commits 累计）— 借鉴 BZD 数模社 12 个论文
   自查类子 skill + bzd-problem-translator + bzd-cumcm-school-awards 核心理念.
   产出 11 新文件: `references/板块自查/` (10 文件, 9 板块级自查 + 1 README 索引)

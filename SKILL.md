@@ -8,12 +8,13 @@ description: |
   Do NOT use for: general data analysis, one-off Python scripts, or research questions
   that don't lead to a `论文.pdf` deliverable.
 metadata:
-  version: "1.5.3"
+  version: "1.5.4"
   category: competition-workflow
   scope: user
   source_workspace: D:/MiniMax code/1/数建Skill模板
   spec_compliance: "全国大学生数学建模竞赛论文格式规范（2026年修订稿，2026-09-01起试行）+ 全国大学生数学建模竞赛人工智能工具使用规定（2026年试行）"
   history:
+    - 1.5.4: 防"答非所问"强化 — SKILL.md §Step 0 加 题面 quote 锚定 + 题面关键判据 grep, §Step 1 加 数据 sheet 选错警示, §Step 3 加 占位符 grep 自检, §Step 4 加 附录文件存在性自检, 顶部加 4 大典型坑警示表; references/scripts/dryrun.py 加 3 checkable: 15 占位符未替换 (【 TODO) / 16 10.附录.tex 文件存在 / 17 \includegraphics 图引用存在; 2025C 跑题 other agent 踩 3 P0 错后增量补强
     - 1.5.3: 借鉴 BZD 数模社 12 个论文自查类子 skill + bzd-problem-translator + bzd-cumcm-school-awards (核心理念) — 新增 references/板块自查/ (9 文件 + 1 README) + references/题意翻译.md + references/学校国奖画像.md; 借鉴源 9 → 18 (BZD 12 子 skill + bzd-problem-translator + bzd-cumcm-school-awards 核心理念); 不复制 BZD 累积数据 (版权)
     - 1.5.2: fix(scripts) 兼容 PyMuPDF ≥1.24 的 fitz deprecate — verify_pdf_metrics.py + visual_qa.py 改 try/except 双 import
     - 1.5.1: 借鉴 BZD 数模社 bzd-model-dictionary + bzd-paper-format-checker + bzd-review-paper v1.0 — 新增 3 个 references (模型字典使用指南 / 格式自查清单 / 百分制评审方法) + 1 个 LLM 工具 04 百分制评审 (3 模式 M1/M2/M3); 追加 refactor P0+P1+P2 13 项 (审计 6.83→7.5/10)
@@ -182,10 +183,45 @@ python -m pip download -d ./pkgs pandas numpy scipy matplotlib openpyxl PyMuPDF 
 
 **checkable 绿**: 题面文字 ≥ 200 字 + `求解/求解计划.md` 顶部 4 项 (题组/题号/问题数/数据概况) 已填。profile_data.py 跑出报告 = 加分项, 但不是绿门。
 
+**📌 Step 0 起手 2 件事 (v1.5.4 新增, 防"答非所问")**:
+
+1. **题面 quote 锚定** — 每问 1 行, **原 quote + 解读** 写到 `求解/求解计划.md` 顶部 quote 表:
+
+   | 问题 | 题面原话 (quote 1-2 句) | 你的解读 (1 句) | 用哪个 sheet |
+   |------|--------------------------|------------------|---------------|
+   | 问题 1 | "试分析胎儿 Y 染色体浓度..." | 分析 Y 浓度的影响因素 | Sheet1 (男胎) |
+   | 问题 4 | "女胎 13/18/21 染色体非整倍体判定" | 判女胎异常 | **Sheet2 (女胎)** |
+
+   **为啥必做**: 2025C 跑题 other agent 把问题 4 答成"判男胎异常" — 整问白做, 评委扣"题意理解不深"分。quote 表让每问跟原文锚定, 写论文时回头对一遍。
+
+2. **题面关键判据 grep** — 用 `grep -oP '[\d.]+%|≥?\s*[\d.]+|≤?\s*[\d.]+|\|Z\|>[\d.]+' 题目/C题.pdf` 提取题面所有数字判据 (4% / |Z|>3 / BMI 边界 / 风险权重), 写到 `求解/求解计划.md` "题面约束" 段:
+
+   ```
+   ## 题面约束 (v1.5.4 必做)
+   - Y 染色体浓度达标 = ≥ 4% (题面"达到或高于 4%")
+   - 异常判据 = |Z| > 3 (题面"染色体非整倍体" + Z-score 定义)
+   - BMI 分组 = [20,28) [28,32) [32,36) [36,40) ≥40 (5 组, 题面明确)
+   - 风险窗口 = 早期 12 周 / 中期 13-27 周 / 晚期 28 周+ (题面"治疗窗口期")
+   - 风险权重 = 漏检严重 / 过度诊断轻 (题面"早期发现风险较低")
+   ```
+
+   **为啥必做**: 2025C 问题 2/3 自创 BMI 分组 (<25/25-28/28-32/≥32) 跟题面 [20,28)/[28,32)/[32,36)/[36,40)/≥40 完全不同 — 评审判"题意理解不深"。先 grep 提取, 跑题时逐步对照, 避免自创分组。
+
 **📌 跑题前 2 件事（v1.5.3 借鉴 BZD, 必做）**:
 
 1. **学校画像定位**（赛前 2 周 / 1 天各 1 次）→ `references/学校国奖画像.md`（4 步自查 + 4 类学校画像 A/B/C/D, 借鉴 `bzd-cumcm-school-awards` 核心理念, **不复制 BZD 累积数据** — 走 bzdshumo.com 官网查）
 2. **题意翻译**（读完 PDF 第一时间, 比写求解计划更早）→ `references/题意翻译.md`（5 步流程: 逐句翻译 → 提取核心要素 → Mermaid 跨问题流程图 → 审计遗漏 → Markdown 报告, 借鉴 `bzd-problem-translator`）
+
+**⚠️ 4 大典型坑 (v1.5.4 新增, 防"答非所问")** — 跑题前必读, 都源自 2025C 真实失败案例:
+
+| # | 坑 | 表现 | 修法 (skill 自带 check) |
+|---|----|------|--------------------------|
+| 1 | **题面 quote 没锚定** | other agent 自创 BMI 分组 + 选错 sheet (男胎判女胎), 整问白做 | Step 0 必填 quote 锚定表 + 题面约束 grep |
+| 2 | **占位符没替换** | 9.0 AI 声明 + 10.0 附录固定说明留【】方括号, 评委扣"未按规定格式" | Step 3 占位符 grep + dryrun check 15 |
+| 3 | **附录文件不存在** | 10.附录.tex 列了上一年题的脚本, 当前项目根本没这文件, 评委抽包直接判 0 | Step 4 附录文件 Test-Path + dryrun check 16 |
+| 4 | **图引用找不到文件** | \includegraphics 写了但跑题没生成该图, 编译报 missing | dryrun check 17 (Step 4 前) |
+
+**为啥现在补这 4 条**: 2025C 跑题 other agent 踩了 1+2+3 共 3 个, 整论文 P0 重写。`references/scripts/dryrun.py` 17 项 checkable 中 15/16/17 就是这 3 道防线的程序化实现, sign-off 红 = 必修。
 
 **⚠️ 读题/读数据失败回退表**（按症状照做，赛前一晚就备好依赖）：
 
@@ -197,6 +233,7 @@ python -m pip download -d ./pkgs pandas numpy scipy matplotlib openpyxl PyMuPDF 
 | `pd.read_docx('题目/xxx.doc')` 报格式错 | 老 .doc 不是 .docx | Word 打开 → 另存为 .docx |
 | 打开 xlsx 有"受保护视图"提示 | Excel 标记可疑文件 | 打开 → 启用编辑 → 重新保存（受保护状态下跑脚本 = 空数据） |
 | 装包超时 / ConnectionError | 离线/限网赛场 | 赛前 1 天预下载：`pip download -d ./pkgs pandas numpy scipy matplotlib openpyxl PyMuPDF pulp` |
+| **pd.read_excel 选错 sheet (v1.5.4 警示)** | 题面提到女胎但代码用 sheet_name=0 (男胎) | **Step 0 quote 表写明每问用哪个 sheet**, 跑题前对照 pd.read_excel 的 sheet_name 参数 |
 
 ### Step 1：求解计划（先比选，再写完整计划）
 
@@ -413,6 +450,16 @@ python references/scripts/verify_pdf_metrics.py 论文/论文.pdf 0.4503 412.47
 
 写完后**先**做**符号一致性自检**（8 项，详见 `references/paper-spec.md §2 8 项自检`），全绿再编译（漏自检 = 编译时符号错乱返工）。
 
+**📌 占位符 grep 自检 (v1.5.4 必做, 防模板残留)**:
+
+```powershell
+# 扫所有 .tex 文件, 找未替换的【】/TODO/待填/XXX 占位符
+Select-String -Path 论文\*.tex -Pattern '【|TODO|待填|未填|XXX' | 
+  Where-Object { $_.Line -notmatch '^\s*%' }  # 跳过 LaTeX 注释行
+```
+
+**0 命中 = 绿**, 任 1 命中 = 立即修, 不进 Step 4. 为啥必做: 2025C 跑题 other agent 留了 9.0 AI 声明 + 10.0 附录固定说明的【】方括号占位符, 评委直接扣分。**dryrun.py check 15 自动扫这个, 红项 = 强制 sign-off 不过**。
+
 ### Step 4：编译 + 终态（合并自原 Step 5 + Step 5.5）
 
 **🧹 编译前先清理**（A3，96 小时赛场的 C 盘空间管理）：
@@ -429,6 +476,30 @@ Remove-Item 论文\*.aux, 论文\*.log, 论文\*.synctex.gz, 论文\*.toc, 论�
 - 论文/ 编译 5+ 次临时文件 ≈ 50-100 MB
 - 支撑材料.rar 副本（重打包 3 次会堆 100MB+）≈ 300 MB
 - 提交后剩余空间留 ≥ 4 GB 给系统应急
+
+**📌 附录文件存在性自检 (v1.5.4 必做, 防"列了不存在的文件")**:
+
+写完 10.附录.tex 后, 必跑这 2 步:
+
+```powershell
+# 步骤 1: 列出 10.附录.tex 引用的所有 \texttt{...} 路径
+$appendix = Get-Content 论文\10.附录.tex -Raw
+$refs = [regex]::Matches($appendix, '\\texttt\{([^}]+)\}') | 
+  ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique
+
+# 步骤 2: 逐个 Test-Path, 缺失的立即修
+foreach ($r in $refs) {
+  $paths = @(
+    (Join-Path (Get-Location) $r),
+    (Join-Path (Get-Location) "..\$r")
+  )
+  if (-not ($paths | Where-Object { Test-Path $_ })) {
+    Write-Error "MISSING: $r (10.附录.tex 列了但文件不存在)"
+  }
+}
+```
+
+**为啥必做**: 2025C 跑题 other agent 把 2024B 烟幕题的 5 个脚本 (共享/geometry.py 等) 写进 10.附录.tex, 但当前项目根本没有这 5 个文件 — 评委抽支撑材料目录对不上, 直接判 0 分。**dryrun.py check 16 自动扫这个, 红项 = sign-off 不过**。修法: 附录 1/2 改成你**实际**有的 py + xlsx + pdf 文件名。
 
 **Step 4.1: 编译论文版 + 电子版**
 

@@ -359,6 +359,198 @@ def check_latex_compile():
     return ("green", f"xelatex {xelatex} 可用 (详 check_tex_compile)", None)
 
 
+# ===== v1.5.4 新增 3 项: 防 "答非所问 / 模板残留 / 占位符" =====
+
+def get_paper_dir():
+    """用户论文目录. 优先级: --paper-dir 参数 > PAPER_DIR 环境变量 > cwd/论文/ > cwd (含 .tex) > skill 自带 论文/.
+
+    用法:
+        # 跑题用户在跑题目录 (有 论文/ 子目录) 跑, 自动检测
+        python references/scripts/dryrun.py
+
+        # 或显式指定 (跨目录跑)
+        python references/scripts/dryrun.py --paper-dir C:/my-paper/论文
+
+        # CI 默认用 skill 自带 论文/ (example 论文, 会有占位符/附录检查)
+    """
+    env_dir = os.environ.get("PAPER_DIR")
+    if env_dir:
+        return Path(env_dir)
+    if "--paper-dir" in sys.argv:
+        idx = sys.argv.index("--paper-dir")
+        if idx + 1 < len(sys.argv):
+            return Path(sys.argv[idx + 1])
+    # 自动检测: cwd/论文/ 优先
+    cwd = Path(os.getcwd())
+    if (cwd / "论文").is_dir() and any((cwd / "论文").glob("*.tex")):
+        return cwd / "论文"
+    # cwd 本身是论文目录 (含 .tex)
+    if cwd.is_dir() and any(cwd.glob("*.tex")):
+        return cwd
+    # 兜底: skill 自带
+    return TEX_DIR
+
+
+def check_no_placeholder():
+    """checkable 15: 论文 .tex 占位符未替换检查 (【 / TODO / 待填 / XXX).
+
+    背景: 2025C 跑题时 other agent 留了 9.0 + 10.0 模板占位符 (【】方括号),
+    dryrun 之前没查, 评委扣分. 现在加这道防线.
+    """
+    paper_dir = get_paper_dir()
+    if not paper_dir.exists():
+        return ("yellow", f"论文目录不存在 ({paper_dir}), 跳过占位符检查",
+                "用 --paper-dir <path> 指定, 或在跑题目录下跑")
+    # 占位符模式 (中括号 + 英文 TODO + 中文 待填/未填 + 通用 XXX)
+    patterns = [
+        (r"【[^】]*】", "【】中括号占位符"),
+        (r"\bTODO\b", "TODO 标记"),
+        (r"待填", "中文 待填"),
+        (r"未填", "中文 未填"),
+        (r"未替换", "未替换 标记"),
+        (r"\bXXX\b", "XXX 占位符"),
+    ]
+    violations = []
+    for tex_file in sorted(paper_dir.glob("*.tex")):
+        try:
+            content = tex_file.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            continue
+        for pat, label in patterns:
+            for m in re.finditer(pat, content):
+                # 跳过注释行 (LaTeX 注释以 % 开头)
+                line_no = content[:m.start()].count("\n") + 1
+                line_start = content.rfind("\n", 0, m.start()) + 1
+                line_end = content.find("\n", m.end())
+                if line_end == -1:
+                    line_end = len(content)
+                line_text = content[line_start:line_end]
+                if line_text.lstrip().startswith("%"):
+                    continue
+                violations.append(f"{tex_file.name}:L{line_no} {label} -> {m.group()[:30]}")
+    if violations:
+        return ("red", f"占位符未替换 ({len(violations)} 处)",
+                f"修 .tex 把 {violations[:3]} 替换成实际内容. 例: AI 声明 【文献检索】→ 文献检索")
+    return ("green", "占位符全替换 (无 【 TODO 待填 XXX)", None)
+
+
+def check_appendix_files():
+    """checkable 16: 10.附录.tex (或 10.0.附录固定说明.tex) 列的每个文件存在.
+
+    背景: 2025C 跑题时 other agent 留了 2024B 烟幕题模板, 列的 5 个脚本
+    全不存在. dryrun 之前没查, 评委抽包直接判 0 分. 现在加这道防线.
+
+    同时扫 10.0.附录固定说明.tex (用户论文常用, 10.0 留作固定说明).
+    """
+    paper_dir = get_paper_dir()
+    # 两个文件都可能含文件引用
+    candidates_tex = [paper_dir / "10.附录.tex", paper_dir / "10.0.附录固定说明.tex"]
+    all_refs = []
+    source_files = []
+    for tex_path in candidates_tex:
+        if not tex_path.exists():
+            continue
+        try:
+            content = tex_path.read_text(encoding="utf-8", errors="replace")
+        except Exception as e:
+            continue
+        # 跳过 LaTeX 注释行 (避免匹配 % 注释里的示例)
+        non_comment_lines = [
+            line for line in content.splitlines()
+            if not line.lstrip().startswith("%")
+        ]
+        non_comment = "\n".join(non_comment_lines)
+        # 提取 \texttt{xxx} 引用 (file paths) + 裸路径 (含 .py/.xlsx/.csv/.pdf 等)
+        refs = set(re.findall(r"\\texttt\{([^}]+)\}", non_comment))
+        # 也扫裸路径 (e.g., "求解/问题1/问题1_xxx.py") — 排除含通配符 * 的模板占位符
+        for ext in (".py", ".xlsx", ".csv", ".pdf", ".md", ".ipynb"):
+            refs.update(re.findall(rf"[\w/\-\\.]+\{ext}", non_comment))
+        all_refs.extend(refs)
+        source_files.append(tex_path.name)
+    # 过滤: 排除描述性词 + 模板字面量 (e.g., "{ext}" 占位符本身)
+    file_refs = []
+    for r in all_refs:
+        r = r.strip().strip(",").strip(";")
+        if not r or r.startswith("{"):  # 跳过空 + 模板占位符
+            continue
+        if "*" in r:  # 通配符 = 模板说明, 跳过
+            continue
+        if "支撑材料" in r or "rar" == r.lower() or "目录" in r or "详见" in r:
+            continue
+        # 必须含扩展名才算文件
+        if "." in r.split("/")[-1].split("\\")[-1]:
+            file_refs.append(r)
+    if not file_refs:
+        return ("yellow",
+                f"附录无具体文件引用 ({'/'.join(source_files) or '10.附录.tex/10.0 均不存在'})",
+                "建议在 10.附录.tex 加 \\\\texttt{求解/问题1/问题1_xxx.py} 等")
+    missing = []
+    for ref in file_refs:
+        candidates = [
+            SKILL_ROOT / ref,
+            paper_dir / ref,
+            paper_dir.parent / ref,
+            Path(ref),
+        ]
+        if ref.startswith("../"):
+            candidates.insert(0, (paper_dir / ref).resolve())
+        if not any(c.exists() for c in candidates):
+            missing.append(ref)
+    if missing:
+        return ("red",
+                f"附录列了 {len(file_refs)} 个文件, {len(missing)} 个不存在",
+                f"要么补文件, 要么从附录里删. 缺失: {missing[:3]}")
+    return ("green",
+            f"附录列的 {len(file_refs)} 个文件全在",
+            None)
+
+
+def check_figure_exists():
+    """checkable 17: 所有 .tex \\includegraphics 引用的图都存在.
+
+    背景: 防止 other agent 引用了图但没生成, 编译报 missing file. 现在
+    跑题前 checkable 提前发现.
+    """
+    paper_dir = get_paper_dir()
+    if not paper_dir.exists():
+        return ("yellow", f"论文目录不存在 ({paper_dir}), 跳过图检查", "指定 --paper-dir")
+    # 收集所有 .tex 的 \includegraphics 引用
+    refs = set()
+    for tex_file in sorted(paper_dir.glob("*.tex")):
+        try:
+            content = tex_file.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            continue
+        # 匹配 \includegraphics[opts]{path} 或 \includegraphics{path}
+        for m in re.finditer(r"\\includegraphics(?:\[[^\]]*\])?\{([^}]+)\}", content):
+            ref = m.group(1).strip()
+            # 跳过绝对 http URL
+            if ref.startswith("http"):
+                continue
+            refs.add(ref)
+    if not refs:
+        return ("yellow", "论文 .tex 无 \\includegraphics 引用 (检查 LaTeX 模板)",
+                "正常论文应 ≥ 10 张图, 0 张 = 异常")
+    missing = []
+    for ref in refs:
+        candidates = [
+            paper_dir / ref,
+            paper_dir.parent / ref,             # 论文/xxx → 求解/xxx
+            SKILL_ROOT / ref,                   # 相对 skill 根
+            Path(ref),                          # 绝对路径
+        ]
+        # 处理 ../ 相对路径
+        if ref.startswith("../"):
+            candidates.insert(0, (paper_dir / ref).resolve())
+        if not any(c.exists() for c in candidates):
+            missing.append(ref)
+    if missing:
+        return ("red", f"图引用 {len(refs)} 个, {len(missing)} 个找不到文件",
+                f"要么生成图 (跑对应问题 py), 要么从 .tex 删 \\includegraphics. 缺失: {missing[:3]}")
+    return ("green", f"图引用 {len(refs)} 个全在 ({len(refs) - len(missing)} 个有效)",
+            None)
+
+
 CHECKS = [
     ("1. 装包 (核心包)", check_pkg),
     ("2. 10 Python 脚本", check_python_scripts),
@@ -374,6 +566,9 @@ CHECKS = [
     ("12. LICENSE = MIT", check_license_mit),
     ("13. 5 步状态机 checkable", check_5step_checkable),
     ("14. LaTeX 编译可执行性", check_latex_compile),
+    ("15. 占位符未替换 (【 TODO)", check_no_placeholder),
+    ("16. 10.附录.tex 文件存在", check_appendix_files),
+    ("17. 图引用存在 (includegraphics)", check_figure_exists),
 ]
 
 

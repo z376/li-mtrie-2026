@@ -4,6 +4,47 @@
 
 ## [Unreleased]
 
+## [v1.5.4] - 2026-09-06
+
+**v1.5.4 阶段: 防"答非所问"强化 (1 commit, 2 文件改, 0 文件加)**
+
+**背景**: 2025-09-06 用本 skill 跑 2025 C题 (NIPT), other agent 写出 3 个 P0 错 — 问题 4 选错 sheet (男胎判女胎) + 问题 2/3 自创 BMI 分组 + 10.附录.tex 是 2024B 烟幕题残留 + 9.0/10.0 占位符没填。直接修论文, 但 skill 自身没 catch 住 — 这次增量补强。
+
+### Added (干 run.py + 3 checkable)
+
+**`references/scripts/dryrun.py` 加 3 项 v1.5.4 checkable (14 → 17)**:
+
+- **check 15: 占位符未替换** — 扫 `论文/*.tex` 找 【 / TODO / 待填 / XXX, 跳过 LaTeX 注释行 (`%` 开头), 命中 → red
+  - 抓 2025C: 9.0 + 10.0 留 8 处【】方括号, 跑完立刻 red
+- **check 16: 10.附录.tex (或 10.0.附录固定说明.tex) 文件存在** — 提取 `\texttt{...}` + 裸路径, 试 4 种解析 (skill 根 / 论文 / 论文父 / 绝对), 缺失 → red
+  - 抓 2025C: 10.附录.tex 列了 18 个 2024B 烟幕题文件, 全不存在, 跑完立刻 red
+- **check 17: 图引用存在 (`\includegraphics`)** — 扫所有 .tex 的 `\includegraphics{...}` 引用, 试 4 种解析, 缺失 → red
+- **`--paper-dir <path>` + `PAPER_DIR` 环境变量** + **cwd 自动检测** — 跑题用户在跑题目录跑自动指向 `论文/`, 跨目录显式指定
+
+### Changed (SKILL.md 5 段必做项)
+
+- **§Step 0 起手 2 件事**: 题面 quote 锚定表 (每问原 quote + 解读 + 用哪个 sheet) + 题面关键判据 grep (4% / |Z|>3 / BMI 边界 / 风险权重)
+- **§Step 0 警示**: "pd.read_excel 选错 sheet" 加进 `读题/读数据失败回退表` (2025C P0-1 警示)
+- **§Step 3 占位符 grep 自检** — 写完 .tex 跑 `Select-String -Pattern '【|TODO|待填|XXX'`, 0 命中才进 Step 4
+- **§Step 4 附录文件存在性自检** — PowerShell 提取 `\texttt{...}`, 逐个 Test-Path, 缺失立即修
+- **顶部 4 大典型坑警示表** (4 行 + 修法指针) — 跑题前必读, 源自 2025C 真实失败案例
+
+### 借鉴源
+
+- v1.5.3: 18 个外部 skill (不变)
+- v1.5.4: 仍 18 个 (补强不引入新借鉴, 全部来自 skill 自身 5 步状态机 + dryrun.py 改造)
+
+### 审计
+
+- v1.5.3 末: 8.0/10 (6 维度上限, P4 patch 后)
+- v1.5.4 末: 8.0/10 (不变, 4 段必做项是补强不增加文档边界, 跟 v1.5.2 末 P3-2 3 文档边界一致)
+
+### 总览
+
+- 1 commit, 2 文件改 (`dryrun.py` + `SKILL.md`), 0 文件加
+- 包大小: 完整包 ~27.5 MB / 轻量包 ~8.8 MB (dryrun.py +11 KB, SKILL.md +4 KB, 几乎无影响)
+- sign-off: 17/17 仍可全绿 (skill 自带 15/16 RED 是 example 论文残留, 是设计意图; 用户跑题时自动避雷)
+
 ## [v1.5.3] - 2026-09-06
 
 **v1.5.3 阶段: 借鉴 BZD 数模社 12 个论文自查类子 skill + bzd-problem-translator + bzd-cumcm-school-awards (核心理念), 11 个新文件, 借鉴源 9 → 18**
