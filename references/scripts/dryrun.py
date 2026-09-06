@@ -136,18 +136,38 @@ def check_pack():
     pack_py = SKILL_ROOT / "tools" / "pack.py"
     if not pack_py.exists():
         return ("red", "tools/pack.py 不存在", "重 git clone")
-    r = subprocess.run([sys.executable, str(pack_py)],
-                       capture_output=True, text=True, timeout=120,
-                       cwd=SKILL_ROOT, encoding="utf-8", errors="replace")
+    # 落盘到 .github/dryrun-logs/ 方便 CI 排查 (artifact 上传)
+    log_dir = SKILL_ROOT / ".github" / "dryrun-logs"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    stdout_log = log_dir / "pack_stdout.log"
+    stderr_log = log_dir / "pack_stderr.log"
+    with open(stdout_log, "wb") as sout, open(stderr_log, "wb") as serr:
+        try:
+            r = subprocess.run([sys.executable, "-u", str(pack_py)],
+                               stdout=sout, stderr=serr, timeout=120,
+                               cwd=SKILL_ROOT)
+        except subprocess.TimeoutExpired:
+            return ("red", "pack.py 超时 (>120s)",
+                    f"查 {stdout_log} 和 {stderr_log}")
     if r.returncode != 0:
-        # 暴露 stdout/stderr 末尾 (PackError 实际原因). 1500 字符, 包含完整 2 zip 报告.
-        tail = (r.stdout or "")[-1500:] + " || STDERR: " + (r.stderr or "")[-500:]
+        # 读落盘的 stdout/stderr 末尾 (避免内存缓冲 + subprocess capture 丢失)
+        try:
+            stdout_txt = stdout_log.read_text(encoding="utf-8", errors="replace")
+            stderr_txt = stderr_log.read_text(encoding="utf-8", errors="replace")
+        except Exception as e:
+            return ("red", f"pack.py 失败 (exit {r.returncode})",
+                    f"读 log 失败: {e}")
+        # 暴露 stdout 末尾 2000 字符 + stderr 末尾 1000 字符
+        out_tail = stdout_txt[-2000:] if len(stdout_txt) > 2000 else stdout_txt
+        err_tail = stderr_txt[-1000:] if len(stderr_txt) > 1000 else stderr_txt
         return ("red", f"pack.py 失败 (exit {r.returncode})",
-                f"stdout 末尾 1500 字符: {tail}")
+                f"stdout 末 {len(out_tail)}/{len(stdout_txt)} 字符: {out_tail} || "
+                f"STDERR 末 {len(err_tail)}/{len(stderr_txt)} 字符: {err_tail}")
     zips = list(SKILL_ROOT.parent.glob("li-mtrie-2026-*.zip"))
     if len(zips) != 2:
+        stdout_txt = stdout_log.read_text(encoding="utf-8", errors="replace")
         return ("red", f"zip 数 = {len(zips)} (期望 2: 完整包 + 轻量包)",
-                f"pack.py stdout 末尾: {(r.stdout or '')[-1500:]}")
+                f"pack.py stdout 末 2000 字符: {stdout_txt[-2000:]}")
     # 验证排除敏感文件
     bad_patterns = [
         (r"\.aux$", ".aux"),

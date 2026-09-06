@@ -72,3 +72,6 @@ desktop.ini
 *.log
 nul
 li-mtrie-2026-*.zip
+
+# ===== CI dry-run 排查日志 (pack.py stdout/stderr, 仅 CI 落盘) =====
+.github/dryrun-logs/
