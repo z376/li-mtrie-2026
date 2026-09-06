@@ -14,7 +14,7 @@ metadata:
   source_workspace: D:/MiniMax code/1/数建Skill模板
   spec_compliance: "全国大学生数学建模竞赛论文格式规范（2026年修订稿，2026-09-01起试行）+ 全国大学生数学建模竞赛人工智能工具使用规定（2026年试行）"
   history:
-    - 1.5.3: 借鉴 BZD 数模社 12 个论文自查类子 skill — 新增 references/板块自查/ (9 文件 + 1 README, 摘要/AI声明/问题重述/问题分析/模型假设/符号说明/模型求解/参考文献附录/AIGC 9 大板块自查清单, 各 2-3.5KB, 总 23KB); 借鉴源 9 → 18 (BZD 12 子 skill 全覆盖)
+    - 1.5.3: 借鉴 BZD 数模社 12 个论文自查类子 skill + bzd-problem-translator — 新增 references/板块自查/ (9 文件 + 1 README) + references/题意翻译.md (5 步流程, BZD 第 13 个借鉴); 借鉴源 9 → 18 (BZD 12 子 skill + bzd-problem-translator 全覆盖)
     - 1.5.2: fix(scripts) 兼容 PyMuPDF ≥1.24 的 fitz deprecate — verify_pdf_metrics.py + visual_qa.py 改 try/except 双 import
     - 1.5.1: 借鉴 BZD 数模社 bzd-model-dictionary + bzd-paper-format-checker + bzd-review-paper v1.0 — 新增 3 个 references (模型字典使用指南 / 格式自查清单 / 百分制评审方法) + 1 个 LLM 工具 04 百分制评审 (3 模式 M1/M2/M3); 追加 refactor P0+P1+P2 13 项 (审计 6.83→7.5/10)
     - 1.5.0: 新增 LLM 工具集成 (3 个结构化 prompt 工具) — 学生自用
