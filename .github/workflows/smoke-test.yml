@@ -14,6 +14,11 @@ name: smoke-test
 # 2) 加所有 Python 脚本的 py_compile 验证
 # 3) defaults.run.shell: pwsh 统一, 避免 pwsh/bash 混用
 # 4) 加 LICENSE 验证 + 前置 pre-existing warning 注释
+#
+# v1.5.3 升级 (2026-09-06, P4 patch):
+# 1) 加 11 新文件存在验证 (9 板块自查 + 1 README 索引 + 题意翻译 + 学校国奖画像)
+# 2) 修 9 Python → 10 Python 计数 (含 v1.5.2 dryrun.py 时漏修)
+# 3) Summary 段同步加 v1.5.3 行
 
 on:
   push:
@@ -156,6 +161,30 @@ jobs:
             Write-Host "OK: $f"
           }
 
+      - name: Verify v1.5.3 BZD 借鉴 11 新文件 (9 板块自查 + 题意翻译 + 学校国奖画像)
+        run: |
+          $files = @(
+            'references/板块自查/README.md',
+            'references/板块自查/01-摘要自查.md',
+            'references/板块自查/02-AI声明自查.md',
+            'references/板块自查/03-问题重述自查.md',
+            'references/板块自查/04-问题分析自查.md',
+            'references/板块自查/05-模型假设自查.md',
+            'references/板块自查/06-符号说明自查.md',
+            'references/板块自查/07-模型求解自查.md',
+            'references/板块自查/08-参考文献附录自查.md',
+            'references/板块自查/09-AIGC审计.md',
+            'references/题意翻译.md',
+            'references/学校国奖画像.md'
+          )
+          foreach ($f in $files) {
+            if (-not (Test-Path $f)) {
+              Write-Error "MISSING: $f (v1.5.3 BZD 借鉴必备)"
+              exit 1
+            }
+            Write-Host "OK: $f"
+          }
+
       - name: Verify v1.5.2 fitz compat (PyMuPDF ≥1.24 pymupdf as fitz)
         run: |
           $code = @"
@@ -241,14 +270,15 @@ print('OK: verify_pdf_metrics importable')
         if: always()
         run: |
           Write-Host "===== smoke-test summary ====="
-          Write-Host "v1.5.2 sign-off checkable 自检:"
+          Write-Host "v1.5.3 sign-off checkable 自检:"
           Write-Host "  - pack.py: 验证生成 2 个 zip + 排除 dev/sensitive"
           Write-Host "  - SKILL.md: 验证 frontmatter + name + version"
-          Write-Host "  - 9 Python: 全部 py_compile 通过 (含 v1.5.0 data_utils)"
+          Write-Host "  - 10 Python: 全部 py_compile 通过 (含 v1.5.0 data_utils + v1.5.2 dryrun)"
           Write-Host "  - v1.5.0 LLM 工具: 4 prompt + README 5 文件"
           Write-Host "  - v1.5.1 BZD 借鉴: 3 references + 数模资料 README"
+          Write-Host "  - v1.5.3 BZD 借鉴: 9 板块自查 + 1 README 索引 + 题意翻译 + 学校国奖画像 (12 文件)"
           Write-Host "  - v1.5.2 fitz compat: pymupdf as fitz 兼容"
-          Write-Host "  - 5 步状态机: checkable 自检 green (装包/6 脚本/profile_data)"
+          Write-Host "  - 5 步状态机: checkable 自检 green (装包/7 脚本/profile_data)"
           Write-Host "  - LICENSE: 验证 MIT"
           Write-Host "  - LaTeX: xelatex 可用则编译 (CI 默认 skip, 本地必备)"
           Write-Host "==============================="

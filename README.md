@@ -5,7 +5,7 @@
 读题 → 建模 → 求解 → 写论文 → 双版编译，一条龙。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Version v1.5.2](https://img.shields.io/badge/version-v1.5.2-blue.svg)](CHANGELOG.md)
+[![Version v1.5.3](https://img.shields.io/badge/version-v1.5.3-blue.svg)](CHANGELOG.md)
 [![Smoke Test](https://github.com/z376/li-mtrie-2026/actions/workflows/smoke-test.yml/badge.svg)](.github/workflows/smoke-test.yml)
 [![2026 Spec](https://img.shields.io/badge/2026%E8%A7%84%E8%8C%83-%E5%AF%B9%E9%BD%90-green.svg)](references/合规检查清单.md)
 
@@ -31,6 +31,41 @@
   模型评价/改进推广/参考文献/附录
 - **赛前学习清单** — 6 大题型映射 + 30+ 算法清单 + 60/30/7 天速成路径 + 跑题红线
   （`references/赛前学习清单.md`）
+
+## v1.5.3 新增（2026-09-06, 借鉴 BZD 数模社 12 个论文自查类子 skill + 2 个翻译/画像文档, 11 个新文件）
+
+**Part A — 9 板块级自查清单** (`references/板块自查/`, 10 文件 ~30 KB, 借鉴 BZD 12 子 skill):
+- `01-摘要自查.md` (2.5 KB) — 7 维诊断 (≥ 8 绿)
+- `02-AI声明自查.md` (2.6 KB) — 5 问 + 4 铁律
+- `03-问题重述自查.md` (2.1 KB) — 3 段结构
+- `04-问题分析自查.md` (2.4 KB) — 7 维 + 4 类联动
+- `05-模型假设自查.md` (2.4 KB) — 5 维/条
+- `06-符号说明自查.md` (2.1 KB) — 7 维
+- `07-模型求解自查.md` (2.7 KB) — 5 段
+- `08-参考文献附录自查.md` (2.7 KB) — P0-P3 8 维
+- `09-AIGC审计.md` (3.6 KB) — 9+6=15 维 (≥ 80 绿)
+- `README.md` (4.3 KB) — 索引 + 借鉴源映射 + 与现有 4 文件关系
+
+**Part B — 2 个借鉴文档** (`references/` 根):
+- **`references/题意翻译.md`** (3.5 KB) — 5 步流程 + 4 类隐含条件 + 7 大常见错误 + checkable `green`/`red` 完成判据. 借鉴 BZD `bzd-problem-translator` v1.0
+- **`references/学校国奖画像.md`** (3.4 KB) — 4 步自查 + 4 类学校画像 (A 强校/B 稳定/C 黑马/D 新人) + checkable `green`/`red` 完成判据. 借鉴 BZD `bzd-cumcm-school-awards` v1.0 **核心理念** (不复制 BZD 累积数据, 走 bzdshumo.com 官网查)
+
+**Part C — writing-for-agents 二轮审计 7 项整改 (P4 patch commit)**:
+- **P4-1** README.md badge v1.5.2 → v1.5.3 + 目录结构加 板块自查/ + 题意翻译 + 学校国奖画像
+- **P4-2** CHANGELOG.md 加 v1.5.3 entry (含审计 7.7→8.0 恢复)
+- **P4-3** SKILL.md §Step 0 加 学校国奖画像 + 题意翻译 pointer
+- **P4-4** SKILL.md §Step 3 加 板块自查 9 文件 pointer (10 章 → 9 文件映射表)
+- **P4-5** 板块自查 01 + 09 修 stale 引用 (v1.5.2 → v1.5.0/v1.5.1, 路径 tools/ → references/)
+- **P4-6** 题意翻译.md Step 3 加 pointer 指 `workflow.md §1.4 Q4` (消 duplication)
+- **P4-7** 题意翻译.md + 学校国奖画像.md 加 checkable `green`/`red` 完成判据 (与 5 步状态机锚定)
+
+**总览**:
+- 11 新文件 (~30 KB)
+- 借鉴源 9 → **18** (BZD 12 子 skill + bzd-problem-translator + bzd-cumcm-school-awards 核心理念 + v1.5.2 9 个)
+- 包大小: 完整包 27.46 MB / 轻量包 8.72 MB
+- 审计: 7.7/10 (11 新文件引入 7 处新问题) → 8.0/10 (P4 整改后恢复 6 维度上限)
+
+---
 
 ## v1.5.2 新增（2026-09-03, PyMuPDF ≥1.24 fitz deprecate 兼容 + LaTeX 全绿 + writing-for-agents 二轮审计）
 
@@ -120,6 +155,8 @@ li-mtrie-2026/
 │   ├── 绘图规范.md           # matplotlib/seaborn/plotly 字号/线宽/DPI 规范
 │   ├── 赛前学习清单.md       # 备赛算法清单 + 题型映射 + 跑题红线
 │   ├── 导入规范.md           # 共享模块导入规则 + 跨问题常量规范
+│   ├── 题意翻译.md           # ⚡ v1.5.3 题意翻译 5 步流程 (借鉴 bzd-problem-translator)
+│   ├── 学校国奖画像.md       # ⚡ v1.5.3 学校画像 4 步自查 (借鉴 bzd-cumcm-school-awards 核心理念)
 │   ├── 获奖论文/              # 5 篇参考论文分析
 │   │   └── 板凳龙-南科大-2024国一.md  # 极坐标+运动学+碰撞, 国一第5篇
 │   ├── 2026官方答疑/          # 官方 Q&A（2026 试行规范问答）
@@ -138,13 +175,25 @@ li-mtrie-2026/
 │   │   ├── 数学建模论文自查表.xlsx  # 单 Sheet 团队打印自查
 │   │   ├── BZD数模论文AI痕迹自查指南.docx  # 人工 AIGC 自查 + 改写指南
 │   │   └── 各板块写作指南/   # 8 PDF (摘要/问题重述/问题分析/模型假设/符号/模型求解/模型总结/参考文献+附录)
-│   └── scripts/              # 程序化自检工具 (6 个)
+│   ├── 板块自查/             # ⚡ v1.5.3 9 板块级自查清单 (借鉴 BZD 12 子 skill)
+│   │   ├── README.md         #   索引 + 借鉴源映射 + 与现有 4 文件关系
+│   │   ├── 01-摘要自查.md    #   §0 摘要 7 维诊断 (≥ 8 绿)
+│   │   ├── 02-AI声明自查.md  #   §9.0 AI 声明 5 问 + 4 铁律
+│   │   ├── 03-问题重述自查.md #  §1 引言 3 段结构
+│   │   ├── 04-问题分析自查.md #  §2 总体分析 7 维 + 4 类联动
+│   │   ├── 05-模型假设自查.md #  §3 模型假设 5 维/条
+│   │   ├── 06-符号说明自查.md #  §4 符号说明 7 维
+│   │   ├── 07-模型求解自查.md #  §5 建模求解 + §6 检验 5 段
+│   │   ├── 08-参考文献附录自查.md # §9 文献 + §10 附录 P0-P3
+│   │   └── 09-AIGC审计.md    #   全文 9+6=15 维 (≥ 80 绿)
+│   └── scripts/              # 程序化自检工具 (7 个)
 │       ├── profile_data.py   #   画图前 EDA
 │       ├── check_figure.py    #   提交前格式合规 (DPI ≥ 200)
 │       ├── visual_qa.py       #   出图后版面自检
 │       ├── verify_pdf_metrics.py  # 终审前 PDF 6 项体检 (借鉴 cumcm-live-workflow, GBK fix)
 │       ├── aigc_scan.py      #   AIGC 9 维度自动扫描 (借鉴 aigc-reduce, GBK fix)
-│       └── data_utils.py     #   ⚡ v1.5.0 3 跨题 utility (GBK 兼容 / utf-8-sig CSV / 字符串)
+│       ├── data_utils.py     #   ⚡ v1.5.0 3 跨题 utility (GBK 兼容 / utf-8-sig CSV / 字符串)
+│       └── dryrun.py         #   ⚡ v1.5.2 赛前 1 天必做 6 项 checkable sign-off
 ├── tools/
 │   └── pack.py               # skill 自身打包工具
 ├── 题目/                      # 用户填：赛题 PDF/DOCX
@@ -187,6 +236,11 @@ li-mtrie-2026/
 
 ## 版本
 
+- **v1.5.3**（2026-09-06, 在 v1.5.2 之上 + 3 commits 累计）— 借鉴 BZD 数模社 12 个论文
+  自查类子 skill + bzd-problem-translator + bzd-cumcm-school-awards 核心理念.
+  产出 11 新文件: `references/板块自查/` (10 文件, 9 板块级自查 + 1 README 索引)
+  + `references/题意翻译.md` (3.5 KB) + `references/学校国奖画像.md` (3.4 KB).
+  借鉴源扩到 18 个外部 skill. 审计 7.7/10 (中) → 8.0/10 (P4 patch 整改后恢复 6 维度上限).
 - **v1.5.2**（2026-09-03, 在 v1.5.1 之上 + 1 commit 累计）— `fix(scripts)` 兼容 PyMuPDF ≥1.24
   的 fitz deprecate. verify_pdf_metrics.py + visual_qa.py 改 try/except 双 import
   (优先 `import pymupdf as fitz`, fallback `import fitz`). 2 文件, +8/-2 行. 验证

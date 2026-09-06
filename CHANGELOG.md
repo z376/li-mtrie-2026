@@ -4,6 +4,54 @@
 
 ## [Unreleased]
 
+## [v1.5.3] - 2026-09-06
+
+**v1.5.3 阶段: 借鉴 BZD 数模社 12 个论文自查类子 skill + bzd-problem-translator + bzd-cumcm-school-awards (核心理念), 11 个新文件, 借鉴源 9 → 18**
+
+### Added
+
+**Part A — 9 板块级自查清单** (`references/板块自查/`, 10 文件 ~30 KB, 借鉴 BZD 12 子 skill):
+- `README.md` (4.3 KB) — 索引 + BZD 12 → li-mtrie 9+3 借鉴源映射 + 与现有 4 文件关系
+- `01-摘要自查.md` (2.5 KB) — 7 维诊断 (≥ 8 绿)
+- `02-AI声明自查.md` (2.6 KB) — 5 问 + 4 铁律
+- `03-问题重述自查.md` (2.1 KB) — 3 段结构
+- `04-问题分析自查.md` (2.4 KB) — 7 维 + 4 类联动
+- `05-模型假设自查.md` (2.4 KB) — 5 维/条
+- `06-符号说明自查.md` (2.1 KB) — 7 维
+- `07-模型求解自查.md` (2.7 KB) — 5 段
+- `08-参考文献附录自查.md` (2.7 KB) — P0-P3 8 维
+- `09-AIGC审计.md` (3.6 KB) — 9+6=15 维 (≥ 80 绿)
+
+**Part B — 2 个借鉴文档** (`references/` 根, ~7 KB):
+- `题意翻译.md` (3.5 KB) — 5 步流程 + 4 类隐含条件 + 7 大常见错误. 借鉴 BZD `bzd-problem-translator` v1.0
+- `学校国奖画像.md` (3.4 KB) — 4 步自查 + 4 类学校画像 (A/B/C/D) + 4 大常见错误. 借鉴 BZD `bzd-cumcm-school-awards` v1.0 核心理念, **不复制** BZD 累积数据 (版权, 走 bzdshumo.com 官网查)
+
+### Changed
+- `SKILL.md` frontmatter `version: "1.5.2" → "1.5.3"`, `history` 字段加 1.5.3 条目
+- `SKILL.md` §Step 0 加 2 pointer: 学校国奖画像.md + 题意翻译.md
+- `SKILL.md` §Step 3 加 9 板块自查 pointer (10 章结构 → 9 文件映射表)
+- `README.md` badge v1.5.2 → v1.5.3 + 目录结构加 板块自查/ + 题意翻译 + 学校国奖画像
+- `README.md` scripts 计数 6 → 7 (v1.5.2 加 dryrun.py 时漏修)
+- `板块自查/01-摘要自查.md` 修 stale 引用 (v1.5.2 03-自动审稿 → v1.5.0, v1.5.2 04-百分制评审 → v1.5.1)
+- `板块自查/09-AIGC审计.md` 修路径错误 (tools/llm-prompts → references/llm-prompts)
+- `题意翻译.md` Step 3 加 pointer 指 `workflow.md §1.4 Q4` (消 duplication)
+- `题意翻译.md` + `学校国奖画像.md` 各加 checkable `green`/`red` 完成判据 (与 SKILL.md 5 步状态机锚定)
+
+### 借鉴源
+- v1.5.2: 9 个外部 skill
+- v1.5.3: **18 个** (BZD 12 个论文自查类子 skill + bzd-problem-translator + bzd-cumcm-school-awards 核心理念 + v1.5.2 已有 9 个)
+
+### 审计
+- v1.5.2 末: 8.0/10 (6 维度上限, P3-2 3 文档边界)
+- v1.5.3 中: 7.7/10 (11 新文件引入 7 处新问题, 见 writing-for-agents 二轮审计 P4 清单)
+- v1.5.3 末: 8.0/10 (P4 7 项整改后恢复 6 维度上限)
+
+### 总览
+- 3 commits: 66340c0 (9 板块自查) + c4bed68 (题意翻译) + db88e10 (学校画像) + 1 P4 patch commit
+- 11 新文件 (~30 KB), +189/-0 行
+- 包大小: 完整包 27.46 MB / 轻量包 8.72 MB
+- sign-off: 全绿 (3 PDF Overfull < 5 判据)
+
 ## [v1.5.2] - 2026-09-03
 
 **v1.5.2 阶段: fix(scripts) PyMuPDF ≥1.24 fitz deprecate 兼容 (1 commit, 2 文件)**
