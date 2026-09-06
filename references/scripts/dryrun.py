@@ -142,10 +142,15 @@ def check_pack():
     stdout_log = log_dir / "pack_stdout.log"
     stderr_log = log_dir / "pack_stderr.log"
     with open(stdout_log, "wb") as sout, open(stderr_log, "wb") as serr:
+        # 设 PYTHONIOENCODING=utf-8 防 Windows runner 默认 cp936 触发
+        # UnicodeEncodeError (pack.py print 中文/特殊字符崩溃, exit 1 无 stderr)
+        env = os.environ.copy()
+        env["PYTHONIOENCODING"] = "utf-8"
+        env["PYTHONUTF8"] = "1"
         try:
             r = subprocess.run([sys.executable, "-u", str(pack_py)],
                                stdout=sout, stderr=serr, timeout=120,
-                               cwd=SKILL_ROOT)
+                               cwd=SKILL_ROOT, env=env)
         except subprocess.TimeoutExpired:
             return ("red", "pack.py 超时 (>120s)",
                     f"查 {stdout_log} 和 {stderr_log}")
