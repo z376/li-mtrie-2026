@@ -140,12 +140,14 @@ def check_pack():
                        capture_output=True, text=True, timeout=120,
                        cwd=SKILL_ROOT, encoding="utf-8", errors="replace")
     if r.returncode != 0:
-        return ("red", "pack.py 失败",
-                f"查 stdout/stderr (returncode={r.returncode})")
+        # 暴露 stdout/stderr 末尾 (PackError 实际原因)
+        tail = (r.stdout or "")[-300:] + " | " + (r.stderr or "")[-300:]
+        return ("red", f"pack.py 失败 (exit {r.returncode})",
+                f"stdout/stderr 末尾: {tail}")
     zips = list(SKILL_ROOT.parent.glob("li-mtrie-2026-*.zip"))
     if len(zips) != 2:
         return ("red", f"zip 数 = {len(zips)} (期望 2: 完整包 + 轻量包)",
-                "查 pack.py 输出")
+                f"pack.py stdout 末尾: {(r.stdout or '')[-300:]}")
     # 验证排除敏感文件
     bad_patterns = [
         (r"\.aux$", ".aux"),
@@ -314,7 +316,9 @@ def check_5step_checkable():
             m = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(m)
         except Exception as e:
-            failed.append(f"{s} import 失败: {e}")
+            import traceback
+            tb = traceback.format_exc()
+            failed.append(f"{s} import 失败: {type(e).__name__}: {e} | tb: {tb.splitlines()[-3:]}")
     if failed:
         return ("red", f"7 脚本 {len(failed)} 失败", "; ".join(failed[:3]))
     return ("green", "5 步状态机 checkable green (装包 + 7 脚本 import + profile_data)", None)
