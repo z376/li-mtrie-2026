@@ -140,14 +140,14 @@ def check_pack():
                        capture_output=True, text=True, timeout=120,
                        cwd=SKILL_ROOT, encoding="utf-8", errors="replace")
     if r.returncode != 0:
-        # 暴露 stdout/stderr 末尾 (PackError 实际原因)
-        tail = (r.stdout or "")[-300:] + " | " + (r.stderr or "")[-300:]
+        # 暴露 stdout/stderr 末尾 (PackError 实际原因). 1500 字符, 包含完整 2 zip 报告.
+        tail = (r.stdout or "")[-1500:] + " || STDERR: " + (r.stderr or "")[-500:]
         return ("red", f"pack.py 失败 (exit {r.returncode})",
-                f"stdout/stderr 末尾: {tail}")
+                f"stdout 末尾 1500 字符: {tail}")
     zips = list(SKILL_ROOT.parent.glob("li-mtrie-2026-*.zip"))
     if len(zips) != 2:
         return ("red", f"zip 数 = {len(zips)} (期望 2: 完整包 + 轻量包)",
-                f"pack.py stdout 末尾: {(r.stdout or '')[-300:]}")
+                f"pack.py stdout 末尾: {(r.stdout or '')[-1500:]}")
     # 验证排除敏感文件
     bad_patterns = [
         (r"\.aux$", ".aux"),
