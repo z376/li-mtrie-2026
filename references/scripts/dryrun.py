@@ -383,7 +383,11 @@ def main():
                 green_count += 1
             elif info["status"] == "red":
                 red_items.append(name)
-                print(f"::error::{name}: {info['msg']}")
+                # 把 fix 也拼进 ::error:: 注释, annotations API 能看到完整
+                err_line = f"::error::{name}: {info['msg']}"
+                if info["fix"]:
+                    err_line += f" | 修复: {info['fix'][:200]}"  # 截断 200 字符防超限
+                print(err_line)
         # 写到 GITHUB_STEP_SUMMARY (UI 可见, 即使 step fail 也能看)
         summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
         if summary_path:
