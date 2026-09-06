@@ -1,0 +1,16 @@
+name: test-minimal
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  hello:
+    runs-on: windows-latest
+    timeout-minutes: 5
+    steps:
+      - name: Hello
+        run: Write-Host "hello world"
