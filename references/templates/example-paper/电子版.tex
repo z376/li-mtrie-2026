@@ -1,40 +1,5 @@
-\PassOptionsToPackage{quiet}{xeCJK}
-%% === v1.4.4 借鉴自 数模陪跑独家 模板：教学开关 + 占位符宏 ===
-%% 在文档任意位置可用 \Teach{...} 写红色填写提示，\TeachExample{...} 写红色示例。
-%% \Placeholder{...} 用黑色加粗显示【】占位符，便于交稿前搜索替换。
-%% 默认 \showteachingfalse：教学提示不显示（不影响现有 PDF 输出）。
-%% 想看教学提示：把下面 \showteachingfalse 注释掉，把上面 \showteachingtrue 取消注释即可。
-\newif\ifshowteaching
-\showteachingfalse
-% \showteachingtrue
-
-\newcommand{\Placeholder}[1]{\textbf{#1}}
-
-\newcommand{\Teach}[1]{%
-  \ifshowteaching
-    \par\begingroup
-      \noindent\color{red!78!black}\bfseries
-      【填写提示（提交前自动隐藏）：#1】\par
-    \endgroup
-  \fi
-}
-
-%% === v1.5.7 兜底宏: 跑题用户忘删 *Slot 行不会编译失败 (空定义, 不影响输出) ===
-\newcommand{\AISlot}[1]{}
-\newcommand{\AppendixSlot}[1]{}
-\newcommand{\CodeSlot}[1]{}
-\newcommand{\RefSlot}[1]{}
-
-\newcommand{\TeachExample}[1]{%
-  \ifshowteaching
-    \par\begingroup
-      \noindent\color{red!78!black}\bfseries
-      【示例（仅供理解，提交前自动隐藏）：#1】\par
-    \endgroup
-  \fi
-}
-%% === v1.4.4 借鉴结束 ===
-
+%% v1.5.7.3 — preamble 拆 preamble-first.tex (前) + preamble.tex (后)
+\input{preamble-first}
 
 %% 2026 规范第十条：电子版论文不放承诺书和编号专用页，第一页必须为摘要专用页
 %% 本文件用 electronic 模式编译：跳过承诺书 + 编号专用页，第一页直接是摘要页（页码从 1 开始）
@@ -43,26 +8,8 @@
 %%   xelatex -interaction=nonstopmode 电子版.tex
 %% 输出文件名建议为 电子版.pdf，大小不超过 20MB，不要压缩
 \documentclass[electronic,bwprint]{format}
-\usepackage{etoolbox}
-\usepackage{ctex}
-\BeforeBeginEnvironment{tabular}{\zihao{-5}}
-\usepackage[framemethod=TikZ]{mdframed}
-\usepackage{url}
-\usepackage{array}
-\usepackage{tabularx}
-\usepackage{longtable}
-\newcolumntype{C}{>{\centering\arraybackslash}X}
-\newcolumntype{R}{>{\raggedleft\arraybackslash}X}
-\newcolumntype{L}{>{\raggedright\arraybackslash}X}
 
-\renewcommand{\textbf}[1]{{\song\bfseries #1}}
-
-\usepackage{tikz}
-\usetikzlibrary{arrows.meta}
-\tikzset{
-  box/.style={rectangle, draw, minimum width=3.2cm, minimum height=0.9cm, align=center},
-  arrow/.style={thick, -{Stealth}}
-}
+\input{preamble}
 
 \title{【论文题目, 跟 0.摘要.tex 标题一致】}
 

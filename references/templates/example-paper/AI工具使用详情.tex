@@ -1,65 +1,16 @@
-%% AI工具使用详情.tex (样例: 2025 A 题烟幕干扰弹)
+%% AI工具使用详情.tex (v1.5.7.3 通用模板)
 %% 2026 国赛 AI 工具使用规定第 4 条
-%% 配套 skill: li-mtrie-2026 v1.5.0
+%% 配套 skill: li-mtrie-2026 v1.5.7.3
 %% 编译: xelatex -interaction=nonstopmode AI工具使用详情.tex (×2)
-%% 输出: 支撑材料/AI工具使用详情.pdf (≈ 5 页)
-%% === v1.4.4 借鉴自 数模陪跑独家 模板：教学开关 + 占位符宏 ===
-%% 在文档任意位置可用 \Teach{...} 写红色填写提示，\TeachExample{...} 写红色示例。
-%% \Placeholder{...} 用黑色加粗显示【】占位符，便于交稿前搜索替换。
-%% 默认 \showteachingfalse：教学提示不显示（不影响现有 PDF 输出）。
-%% 想看教学提示：把下面 \showteachingfalse 注释掉，把上面 \showteachingtrue 取消注释即可。
-\newif\ifshowteaching
-\showteachingfalse
-% \showteachingtrue
-
-\newcommand{\Placeholder}[1]{\textbf{#1}}
-
-\newcommand{\Teach}[1]{%
-  \ifshowteaching
-    \par\begingroup
-      \noindent\color{red!78!black}\bfseries
-      【填写提示（提交前自动隐藏）：#1】\par
-    \endgroup
-  \fi
-}
-
-%% === v1.5.7 兜底宏: 跑题用户忘删 *Slot 行不会编译失败 ===
-\newcommand{\AISlot}[1]{}
-\newcommand{\AppendixSlot}[1]{}
-\newcommand{\CodeSlot}[1]{}
-\newcommand{\RefSlot}[1]{}
-
-\newcommand{\TeachExample}[1]{%
-  \ifshowteaching
-    \par\begingroup
-      \noindent\color{red!78!black}\bfseries
-      【示例（仅供理解，提交前自动隐藏）：#1】\par
-    \endgroup
-  \fi
-}
-%% === v1.4.4 借鉴结束 ===
+%% 输出: 支撑材料/AI工具使用详情.pdf (≈ 4-6 页)
+%% 模板: 所有具体内容用【】占位符 + \Placeholder{} 宏, 跑题用户复制后替换
+%% 评阅要求: 必须真实可查, 不能虚构 AI 用途或夸大 AI 占比, 否则按违规处理
+%% 2026 规范第十条: 本文件单独成 PDF 放支撑材料/, 跟 论文/电子版 平行提交
+\input{preamble-first}
 
 \documentclass[electronic]{format}
-\usepackage{etoolbox}
-\usepackage{ctex}
-\BeforeBeginEnvironment{tabular}{\zihao{-5}}
-\usepackage[framemethod=TikZ]{mdframed}
-\usepackage{url}
-\usepackage{array}
-\usepackage{tabularx}
-\usepackage{longtable}
-\newcolumntype{C}{>{\centering\arraybackslash}X}
-\newcolumntype{R}{>{\raggedleft\arraybackslash}X}
-\newcolumntype{L}{>{\raggedright\arraybackslash}X}
 
-\renewcommand{\textbf}[1]{{\song\bfseries #1}}
-
-\usepackage{tikz}
-\usetikzlibrary{arrows.meta}
-\tikzset{
-  box/.style={rectangle, draw, minimum width=3.2cm, minimum height=0.9cm, align=center},
-  arrow/.style={thick, -{Stealth}}
-}
+\input{preamble}
 
 \title{AI 工具使用详情}
 
@@ -69,181 +20,130 @@
 \thispagestyle{plain}
 \vspace{-2em}
 
+%% ====== §1 工具信息 (5-8 行表格, 每行可增减) ======
 \section{工具信息}
 
 \begin{longtable}{>{\centering\arraybackslash}p{0.25\textwidth}>{\raggedright\arraybackslash}p{0.70\textwidth}}
   \toprule
   项目 & 内容 \\
   \midrule
-  工具名称 & Mavis (MiniMax Code orchestrator) \\
-  提供方 & MiniMax \\
-  版本/型号 & MiniMax-M3 \\
-  接入方式 & 桌面应用 (Windows + PowerShell) \\
-  使用时间 & 2026-08-24 $\sim$ 2026-08-25 (赛题 2025 A 题烟幕干扰弹) \\
+  \Placeholder{【工具名称, 如 ChatGPT / Claude / DeepSeek / Mavis 等】} & \Placeholder{【填工具官方全名】} \\
+  \Placeholder{提供方} & \Placeholder{【填公司/组织全名】} \\
+  \Placeholder{版本/型号} & \Placeholder{【填模型版本号】} \\
+  \Placeholder{接入方式} & \Placeholder{【填 web/桌面/API/插件 等】} \\
+  \Placeholder{使用时间} & \Placeholder{【填 YYYY-MM-DD ~ YYYY-MM-DD (赛题时间窗)】} \\
+  \Placeholder{【其他, 如账号/付费情况/上下文长度】} & \Placeholder{【填】} \\
   \bottomrule
 \end{longtable}
 
-%% 借鉴 BZD 数模社 论文正文-AI工具使用声明 2026 规范: 5 项自检, 详细使用情况见支撑材料
+%% ====== §2 5 项自检 (2026 规范 5 项硬要求) ======
 \section{AI 参与边界自检}
+
+%% 借鉴 BZD 数模社 论文正文-AI工具使用声明 2026 规范: 5 项自检, 详细使用情况见支撑材料
 
 \begin{longtable}{>{\raggedright\arraybackslash}p{0.55\textwidth}>{\centering\arraybackslash}p{0.10\textwidth}>{\raggedright\arraybackslash}p{0.28\textwidth}}
   \toprule
   \textbf{自检项} & \textbf{是/否} & \textbf{说明} \\
   \midrule
-  AI 是否参与核心模型设计 & 否 & 视线-球-圆柱求交、差分进化均为本参赛队基于题面物理机理独立设计；AI 仅辅助代码实现 \\
-  AI 是否生成或修改程序代码 & 是 & 详见 §3.1 烟幕-视线求交、§3.2 差分进化参数、§3.3 摘要结构、§3.4 表格生成、§3.5 pack.py 整理、§3.6 GitHub 完善、§3.7 审计修复 \\
-  AI 输出是否经人工审查、修改与核验 & 是 & 详见 §4 核验情况表 + 单元测试 + 解析解对照 + 5 轮端到端 smoke test \\
-  AI 是否独立完成核心建模 / 公式推导 / 程序计算 / 最终结论 & 否 & 公式推导、参数选择、最终结论均由参赛队独立完成；AI 仅作为辅助参考 \\
-  AI 使用占比 (估算) & -- & 资料检索 $\sim 30\%$、代码编写 $\sim 40\%$、文档润色 $\sim 20\%$、其他 $\sim 10\%$；最终决策与判定 $100\%$ 由参赛队完成 \\
+  AI 是否参与核心模型设计 & \Placeholder{【是/否】} & \Placeholder{【填: 模型思路/公式推导/参数选择是否由本参赛队独立完成; AI 仅辅助代码实现/查资料 = 否; AI 直接给模型 = 是】} \\
+  AI 是否生成或修改程序代码 & \Placeholder{【是/否】} & \Placeholder{【填: 详见 §3 使用目的, 列出哪几个 Python 文件 AI 参与】} \\
+  AI 输出是否经人工审查、修改与核验 & \Placeholder{【是/否】} & \Placeholder{【填: 详见 §4 核验情况表, 至少 1 轮人工 review + 单元测试/解析解对照】} \\
+  AI 是否独立完成核心建模 / 公式推导 / 程序计算 / 最终结论 & \Placeholder{【是/否】} & \Placeholder{【填: 公式推导/参数选择/最终结论均由本参赛队完成; AI 仅辅助 = 否; 关键结论靠 AI = 是】} \\
+  AI 使用占比 (估算) & -- & \Placeholder{【填: 资料检索 X\% + 代码编写 Y\% + 文档润色 Z\% + 其他 W\% = 100\%; 最终决策与判定 100\% 由参赛队完成】} \\
   \bottomrule
 \end{longtable}
 
+%% ====== §3 三阶段使用目的 (BZD 数模社规范: 资料与思路 → 数据与程序 → 检验与写作) ======
 \section{使用目的与环节}
 
-本参赛队在以下环节使用了 AI 工具（按 BZD 规范分为"资料与思路 → 数据与程序 → 检验与写作"三阶段）：
+本参赛队在以下环节使用了 AI 工具（按 BZD 规范分为"资料与思路 → 数据与程序 → 检验与写作"三阶段）。\textbf{每一项条目都必须对应 §4 中一条具体 prompt}，不能空泛列项。
 
 \textbf{第一阶段：资料与思路}
 \begin{itemize}[itemindent=2em]
-  \item \textbf{题目理解}：辅助读题 (PyMuPDF 提取 PDF 文本)、识别问题数 (5 题)、判定题组与题号 (本科组 A)
-  \item \textbf{模型选择}：候选模型对比表初稿 (机理题 / 优化 / 灵敏度分析, 最终由队内讨论确认)
+  \item \textbf{\Placeholder{【环节名, 如: 题目理解】}}: \Placeholder{【填: AI 做了什么, 如辅助读题 (PyMuPDF 提取 PDF 文本)/ 识别问题数 / 判定题组与题号】}
+  \item \textbf{\Placeholder{【环节名, 如: 模型选择】}}: \Placeholder{【填: AI 做了什么, 如候选模型对比表初稿 / 文献综述 / 思路启发】}
+  \item \Placeholder{【可增删更多环节, 如: 文献检索 / 题意翻译 / 创新点挖掘】}
 \end{itemize}
 
 \textbf{第二阶段：数据与程序}
 \begin{itemize}[itemindent=2em]
-  \item \textbf{代码编写}：烟幕物理模块 (无人机 / 烟幕弹 / 导弹运动学 + 视线-球-圆柱求交)、差分进化求解器、matplotlib 3D 轨迹图
-  \item \textbf{数据预处理}：profile\_data.py 自动识别列类型、缺失率、分布
-  \item \textbf{结果可视化}：辅助生成 3D 轨迹图、遮蔽区间图, 调整字号 / 线宽 / DPI
+  \item \textbf{\Placeholder{【环节名, 如: 代码编写】}}: \Placeholder{【填: AI 写了哪几个 .py / 哪个函数 / 哪段算法, 如数据预处理 / 优化求解 / 灵敏度分析】}
+  \item \textbf{\Placeholder{【环节名, 如: 数据预处理】}}: \Placeholder{【填: AI 做了什么, 如 profile\_data.py 列类型识别 / 缺失值填补 / 异常值检测】}
+  \item \textbf{\Placeholder{【环节名, 如: 结果可视化】}}: \Placeholder{【填: AI 画了哪些图, 调整了什么参数 (DPI/字号/线宽)】}
+  \item \Placeholder{【可增删更多环节, 如: 公式排版 / 表格生成 / 参考文献格式化】}
 \end{itemize}
 
 \textbf{第三阶段：检验与写作}
 \begin{itemize}[itemindent=2em]
-  \item \textbf{文档润色}：辅助 LaTeX 公式排版、表格 longtable 格式、参考文献 GB/T 7714
-  \item \textbf{查重改写}：辅助问题重述改写、避免与赛题原文重复
-  \item \textbf{合规检查}：辅助按 \texttt{references/合规检查清单.md} 4 类硬规则逐项核对 (格式 / 内容 / AI / 纪律)
-  \item \textbf{端到端 smoke test}：用 2025 A 题真实数据跑通 5 步流程, 验证 skill 可复用性
+  \item \textbf{\Placeholder{【环节名, 如: 文档润色】}}: \Placeholder{【填: AI 做了什么, 如 LaTeX 公式排版 / longtable 格式 / GB/T 7714 参考文献】}
+  \item \textbf{\Placeholder{【环节名, 如: 查重改写】}}: \Placeholder{【填: AI 做了什么, 如问题重述改写 / 避免与赛题原文重复 / AIGC 痕迹降低】}
+  \item \textbf{\Placeholder{【环节名, 如: 合规检查】}}: \Placeholder{【填: AI 做了什么, 如按 references/合规检查清单.md 4 类硬规则逐项核对】}
+  \item \Placeholder{【可增删更多环节, 如: 摘要改写 / 答辩准备 / 5 步状态机 smoke test】}
 \end{itemize}
 
+%% ====== §4 主要 prompt 与过程 (节选) ======
 \section{主要 prompt 与过程 (节选)}
 
-\subsection{3.1 几何建模 prompt: 烟幕云团-导弹视线遮挡判定}
+%% 评阅只看 §4 验证 §3 真实性. §3 列的每条环节, §4 必须有对应 prompt 痕迹.
+%% 一条 prompt = 一个 \subsection. 删掉不用的, 复制现有格式加新的.
 
-\textbf{Prompt}: 建立烟幕云团 (球, r=10m) 与导弹 $\to$ 真目标 (圆柱, r=7m, h=10m) 视线段的几何遮挡判定模型, 写 Python 函数。
+\subsection{3.1 \Placeholder{【环节类型】} prompt: \Placeholder{【任务简述】}}
+
+\textbf{Prompt}: \Placeholder{【把发给 AI 的原始 prompt 完整贴这里, 1-3 行为佳; 不要改写, 评阅会查真实性】}
 
 \textbf{AI 响应}:
 \begin{itemize}
-  \item 视线段参数化: $P(t) = P_0 + t \cdot d$, $t \in [0, 1]$
-  \item 球求交: 解 $|P(t) - C|^2 = r^2$ 二次方程, 取 $[0,1]$ 区间内的根
-  \item 圆柱求交: 投影到 xy 平面 (圆) + z 范围约束
-  \item 遮挡判定: 两交区间是否有交集
+  \item \Placeholder{【AI 给了什么, 第 1 点】}
+  \item \Placeholder{【AI 给了什么, 第 2 点】}
+  \item \Placeholder{【AI 给了什么, 第 3 点】}
 \end{itemize}
 
 \textbf{采纳 / 修改}:
 \begin{itemize}
-  \item \textbf{采纳}: 球-视线求交、圆柱-视线求交的解析公式
-  \item \textbf{关键修改}: 发现并修复 bug --- 原 AI 代码 \texttt{sz0} 用绝对距离但 \texttt{s0} 用归一化参数, 导致结果差 17000 倍 (Q1 算出 0s 实际是物理错, 但代码 bug 掩盖了 17km 距离判据的失效)。改统一为归一化 $t \in [0,1]$
-  \item \textbf{关键修改}: 视线目标从假目标 $(0,0,0)$ 修正为真目标 $(0,200,0)$, 因为 Q1 题面给的是真目标, 假目标只用于引诱导弹
+  \item \textbf{采纳}: \Placeholder{【哪些点直接用】}
+  \item \textbf{关键修改}: \Placeholder{【哪些点改了, 改了之后怎样; 改 AI 代码 bug / 调整算法参数 / 修正公式 等】}
+  \item \textbf{效果}: \Placeholder{【改前 X / 改后 Y / 提升 Z\%; 用数据说话】}
 \end{itemize}
 
-\subsection{3.2 优化器选择 prompt: 烟幕 3 弹投放间隔}
+\subsection{3.2 \Placeholder{【环节类型】} prompt: \Placeholder{【任务简述】}}
 
-\textbf{Prompt}: 5-25 维分段不连续目标函数 (3 弹联合遮蔽时长, 每弹 1.67s 单弹覆盖), 推荐全局优化算法。
+\textbf{Prompt}: \Placeholder{【贴原始 prompt】}
 
-\textbf{AI 响应}: 差分进化 (Differential Evolution, DE), 推荐 \texttt{scipy.optimize.differential\_evolution}, \texttt{popsize=30, maxiter=100}
+\textbf{AI 响应}: \Placeholder{【贴 AI 主要回答, 1-3 行为佳; 长回答可摘关键句】}
 
-\textbf{采纳}: $\checkmark$ 全部采纳 (一维扫描也 OK, 验证用)
+\textbf{采纳}: \Placeholder{$\checkmark$ / $\times$ / 部分} \Placeholder{【填: 全部采纳 / 部分采纳 / 不用; 给出 1-2 句理由】}
 
-\textbf{优化结果}:
+\Placeholder{【如果此 prompt 直接产生了可量化的结果 (如优化提升/精度提升), 在此加一段:】}
+\textbf{\Placeholder{【结果】}}:
 \begin{itemize}
-  \item Baseline (间隔 1.0s): 5.42s
-  \item 优化 (间隔 3.0s, DE 自动): \textbf{8.25s} (+52\%)
+  \item \Placeholder{【Baseline: 数值】}
+  \item \Placeholder{【优化后: 数值】} (\Placeholder{【+/-X\%】})
 \end{itemize}
 
-\subsection{3.3 论文摘要 prompt: 5 段式结构}
+%% 如还有更多 prompt, 复制 3.1 / 3.2 格式继续加 3.3 / 3.4 / ...
 
-\textbf{Prompt}: 为 2025 A 题"烟幕干扰弹的投放策略"写一段约 850 字摘要, 涵盖 5 个子问题 (Q1=0s, Q2=3.36s, Q3 优化 8.25s, Q4 baseline 10.25s, Q5 baseline 20.49s)。
-
-\textbf{AI 响应}:
-\begin{itemize}
-  \item 提供了 5 段式摘要模板 (开头 + 5 问题 + 结尾)
-  \item 关键词建议: 烟幕干扰弹 / 视线遮蔽 / DE / 灵敏度分析
-\end{itemize}
-
-\textbf{采纳 / 修改}:
-\begin{itemize}
-  \item 采纳: 摘要 5 段式结构
-  \item 修改: 补充 5 个问题的具体数值结果
-  \item 修改: 根据 2026 规范第三条删除英文翻译
-\end{itemize}
-
-\subsection{3.4 结果表格 prompt: 与 result1.xlsx 数字一致}
-
-\textbf{Prompt}: 写 result1.xlsx 的 LaTeX 表格 longtable 段, 数字必须与 Python 实际输出完全一致。
-
-\textbf{AI 响应}: 用 \texttt{pd.read\_excel} + \texttt{df.to\_latex(index=False)} 复制粘贴, 禁止手抄。
-
-\textbf{采纳}: $\checkmark$ 全部采纳 (避免评审扣"数据不可信"分)
-
-\subsection{3.5 skill 复用性 prompt: 写给学生的轻量包}
-
-\textbf{Prompt}: 把 30+ dev 草稿和 7 个空目录 (题目 / 数据 / 求解) 整理成"纯 framework"学生包, 复用性要高。
-
-\textbf{AI 响应}:
-\begin{itemize}
-  \item 用 \texttt{tools/pack.py} v3 排除 dev 草稿 (\texttt{\_dbg.txt} / \texttt{\_q*\_stderr.txt} 等)
-  \item 删除 题目/数据/ 目录的 \texttt{D题.pdf} / \texttt{附件 xlsx}, 只留 \texttt{.gitkeep}
-  \item 删除 求解/ 11 个文件 (6 .py + 求解计划 + 4 问题), 只留 \texttt{.gitkeep} + \texttt{求解计划.md} 模板
-\end{itemize}
-
-\textbf{采纳}: $\checkmark$ 全部采纳 --- 学生拿到 v1.4.3 zip 后自己填题和数据, 跑自己的求解
-
-\subsection{3.6 仓库完善 prompt: GitHub 标准化}
-
-\textbf{Prompt}: 完善 GitHub 仓库: LICENSE / CHANGELOG / Issue 模板 / PR 模板 / CI / badges / Tag v1.4.3。
-
-\textbf{AI 响应}:
-\begin{itemize}
-  \item MIT License (1.1 KB)
-  \item CHANGELOG.md v1.0 $\to$ v1.4.3 完整历史 (5 KB)
-  \item \texttt{.github/ISSUE\_TEMPLATE/(bug,feature,question).md}
-  \item \texttt{.github/PULL\_REQUEST\_TEMPLATE.md}
-  \item \texttt{.github/workflows/smoke-test.yml} (7 步 CI 验证)
-  \item README 顶部 4 个 badge (License / Version / Smoke Test / 2026 规范)
-  \item \texttt{git tag -a v1.4.3} + \texttt{git push origin v1.4.3}
-\end{itemize}
-
-\textbf{采纳}: $\checkmark$ 全部采纳 + \texttt{pack.py} 排除 GitHub-only 文件 (\texttt{.github/} / CHANGELOG / CONTRIBUTING), 让学生 zip 干净 (43-45 文件)
-
-\subsection{3.7 writing-for-agents 审计 prompt: 6 维度}
-
-\textbf{Prompt}: 用 \texttt{writing-for-agents} skill 给 li-mtrie-2026 做 6 维度审计 (context pointer / 信息层级 / co-location / 完成判据 / 引导词 / 修剪)。
-
-\textbf{AI 响应}: v1.3.2 总评 6/10 $\to$ v1.4.0 总评 7.5/10 $\to$ v1.4.1 全部 P0 1 + P1 4 应用。
-
-\textbf{采纳}: $\checkmark$ --- 11 项修复 (9 处 negation 重写 + 5 处 red/green 锚 + 4 处 completion checkable + tracer bullet 概念 + §4.0 指针校准 + 求解/共享/ 删 + 板凳龙 doc 合并)
-
+%% ====== §5 核验情况表 (与 §3 环节对应, 评阅重点查真实性) ======
 \section{对 AI 输出的核验情况}
 
-所有 AI 生成的内容均经过人工核验和修改, 具体如下:
+所有 AI 生成的内容均经过人工核验和修改, 具体如下。\textbf{每一条核验条目必须能在 §3 / §4 找到对应来源}。
 
 \begin{longtable}{>{\raggedright\arraybackslash}p{0.32\textwidth}>{\raggedright\arraybackslash}p{0.63\textwidth}}
   \toprule
   \textbf{AI 输出} & \textbf{核验方式与修改内容} \\
   \midrule
-  烟幕-视线求交公式 & 单元测试 + 解析解对照; 修复归一化参数 bug (绝对距离 vs 归一化 $t$, 结果差 17000 倍) \\
-  DE 优化器 bounds & 多次运行检查; 调整 $\theta$/$\phi$ 范围以朝真目标方向, 避免飞向假目标 \\
-  摘要 5 段式 & 人工审阅 + 2026 规范第三条核对; 删除英文翻译, 补充数值结果 \\
-  论文 longtable & \texttt{pd.read\_excel} 自动生成 + 人工核对; 数字与 \texttt{resultX.xlsx} 完全一致 \\
-  参考文献 & 人工核对 GB/T 7714 格式; 补充最新 2024 获奖论文引用 (板凳龙国一) \\
-  \texttt{SKILL.md} 5 步状态机 & 5 轮端到端跑通 + pack.py 验证; 调整 step 顺序 (tracer bullet 探路) \\
-  pack.py v4 & zip 完整性 + 中间产物检查 (\texttt{.aux/.log/.pyc}) + 隐私脱敏 (开发日志 / 测试报告) \\
-  writing-for-agents 审计 & 两轮 6 维度评分 (6/10 $\to$ 7.5/10); 应用 11 项修复 \\
-  GitHub 仓库 & README badge + LICENSE + CHANGELOG + CI + Tag v1.4.3; pack.py 排除 GitHub-only 文件 \\
+  \Placeholder{【AI 输出 1, 对应 §3 第 X 阶段第 Y 条】} & \Placeholder{【填: 单元测试 + 解析解对照 / 多次运行检查 / 人工审阅 + 规范核对; 改了哪里, 为什么改】} \\
+  \Placeholder{【AI 输出 2】} & \Placeholder{【填核验方式】} \\
+  \Placeholder{【AI 输出 3】} & \Placeholder{【填核验方式】} \\
+  \Placeholder{【AI 输出 4】} & \Placeholder{【填核验方式】} \\
+  \Placeholder{【AI 输出 5】} & \Placeholder{【填核验方式】} \\
+  \Placeholder{【AI 输出 6】} & \Placeholder{【填核验方式】} \\
+  \Placeholder{【可增删更多核验条目, 每条对应 §3 一个环节】} & \Placeholder{【填】} \\
   \bottomrule
 \end{longtable}
 
-\textbf{核验流程}:
+\textbf{核验流程} (本参赛队通用流程, 所有 AI 输出必经):
 \begin{enumerate}
-  \item AI 给出代码 / 公式后, \textbf{手算} 1-2 个简单 case 验证
+  \item AI 给出代码 / 公式后, \textbf{手算} 1-2 个简单 case 验证 (边界条件 + 典型场景)
   \item 跑 \texttt{py} smoke test, 跑 \texttt{py tools/pack.py} 验证 zip
   \item 跑 \texttt{grep '! Error|Overfull'} 查 LaTeX 编译日志
   \item 与队友 / 教练讨论, 不通过就改
@@ -253,7 +153,7 @@
 
 \noindent\rule{\textwidth}{0.5pt}
 
-\noindent\textit{参赛队号: \rule{3cm}{0.4pt}\hfill 日期: 2026-08-25 \rule{0.5cm}{0.4pt}}
+\noindent\textit{参赛队号: \rule{3cm}{0.4pt}\hfill 日期: \rule{2cm}{0.4pt}}
 
 \noindent\textit{参赛队员: \rule{3cm}{0.4pt} \rule{3cm}{0.4pt} \rule{3cm}{0.4pt} \hfill 指导教师: \rule{2cm}{0.4pt}}
 
