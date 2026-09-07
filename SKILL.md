@@ -2,27 +2,18 @@
 name: li-mtrie
 description: |
   数学建模竞赛（国赛/美赛/MCM/ICM/CUMCM）端到端 skill。Use when the user pastes 数模赛题 PDF
-  并说"开始求解"/"跑题"/"做数模"，OR 求解后说"生成论文"/"出论文 PDF"，OR 验证本 skill 自身
-  ("smoke test"/"跑 test_run")。
+  并说"开始跑题"，或求解后说"出论文 PDF"，或验证本 skill ("smoke test")。
 
   Do NOT use for: general data analysis, one-off Python scripts, or research questions
   that don't lead to a `论文.pdf` deliverable.
 metadata:
-  version: "1.5.7.1"
+  version: "1.5.7.5"
   category: competition-workflow
   scope: user
   source_workspace: D:/MiniMax code/1/数建Skill模板
   spec_compliance: "全国大学生数学建模竞赛论文格式规范（2026年修订稿，2026-09-01起试行）+ 全国大学生数学建模竞赛人工智能工具使用规定（2026年试行）"
-  history:
-    - 1.5.6: 借鉴 BZD 数模社 12 个论文板块模板 (4 色教学法) — references/templates/example-paper/ 14 个 .tex 重写: 0.摘要 (4 段+关键词) / 1.引言 (3 子节: 背景+回顾+综述) / 2.总体分析 (5 段+框架图) / 3.模型假设 (9 类+引导语) / 4.符号说明 (三线表) / 5.1.1+5.1.2 (建模+求解) / 6.模型检验 (4 类) / 7.模型评价 (4 子节) / 8.改进推广 (4 层面) / 9.参考文献 (GB/T 7714) / 9.0.AI 声明 (二者择一) / 10.0 附录固定说明 (A-F 6 子节) / 10.附录 (核心源代码); dryrun.py check 16/17 加 template 状态 yellow 跳过 (跟 check 15 一致); 跑题用户复制 example-paper 整个目录到 跑题目录/论文/ 后, 按 BZD 4 色教学法 (黑=正文 / 蓝=操作 / 红=解释 / 绿=误区 / 黄=AI 提示词 / 灰=自查) 替换【】占位符
-    - 1.5.7.1: 外审修复 — P0 加 4 个 *Slot 宏空定义 (论文.tex/电子版.tex/AI详情.tex) 防 xelatex 编译崩; dryrun check 15 加 \*Slot 宏扫描; 创建 references/模型决策树.md (修复 4 处断裂引用); .gitignore 取消 求解/共享/*.py 排除; 创建 求解/共享/.gitkeep; README badge v1.5.6→v1.5.7 + 加 v1.5.7 段; dryrun 5 处版本号更新; check_overfull 改用 get_paper_dir(); check_fitz_compat 加 doc 长度守卫; SKILL.md 代码块格式修复; README 目录结构加 v1.5.7 新文件
-    - 1.5.7: 细化读题环节 — SKILL.md §Step 0 加 15 项读题清单 (防 2025C 3 P0 错位), 新增 references/读题清单.md (15 项空表模板), 新增 references/llm-prompts/05-读题提取.md (LLM 工具自动从 PDF 提取), dryrun.py check 19 验证 15 项全覆盖 (3 列: 题面原话 + 你的解读 + 对应代码/论文); 4 项跑题后对照 (项 4/5/7/14) 防 sheet 错/漏判据/自创分组/附录残留
-    - 1.5.4: 防"答非所问"强化 — SKILL.md §Step 0 加 题面 quote 锚定 + 题面关键判据 grep, §Step 1 加 数据 sheet 选错警示, §Step 3 加 占位符 grep 自检, §Step 4 加 附录文件存在性自检, 顶部加 4 大典型坑警示表; references/scripts/dryrun.py 加 3 checkable: 15 占位符未替换 (【 TODO) / 16 10.附录.tex 文件存在 / 17 \includegraphics 图引用存在; 2025C 跑题 other agent 踩 3 P0 错后增量补强
-    - 1.5.3: 借鉴 BZD 数模社 12 个论文自查类子 skill + bzd-problem-translator + bzd-cumcm-school-awards (核心理念) — 新增 references/板块自查/ (9 文件 + 1 README) + references/题意翻译.md + references/学校国奖画像.md; 借鉴源 9 → 18 (BZD 12 子 skill + bzd-problem-translator + bzd-cumcm-school-awards 核心理念); 不复制 BZD 累积数据 (版权)
-    - 1.5.2: fix(scripts) 兼容 PyMuPDF ≥1.24 的 fitz deprecate — verify_pdf_metrics.py + visual_qa.py 改 try/except 双 import
-    - 1.5.1: 借鉴 BZD 数模社 bzd-model-dictionary + bzd-paper-format-checker + bzd-review-paper v1.0 — 新增 3 个 references (模型字典使用指南 / 格式自查清单 / 百分制评审方法) + 1 个 LLM 工具 04 百分制评审 (3 模式 M1/M2/M3); 追加 refactor P0+P1+P2 13 项 (审计 6.83→7.5/10)
-    - 1.5.0: 新增 LLM 工具集成 (3 个结构化 prompt 工具) — 学生自用
-    - 1.4.4: 借鉴 6 个外部 skill (数模陪跑独家 + cumcm-live-workflow + aigc-reduce + scipilot-figure + bzd-modeling-ideas + mma v3.3)
+  last_update: 2026-09-07
+  changelog: CHANGELOG.md
 ---
 
 # Math Modeling
@@ -270,6 +261,8 @@ python -m pip download -d ./pkgs pandas numpy scipy matplotlib openpyxl PyMuPDF 
 | 装包超时 / ConnectionError | 离线/限网赛场 | 赛前 1 天预下载：`pip download -d ./pkgs pandas numpy scipy matplotlib openpyxl PyMuPDF pulp` |
 | **pd.read_excel 选错 sheet (v1.5.4 警示)** | 题面提到女胎但代码用 sheet_name=0 (男胎) | **Step 0 quote 表写明每问用哪个 sheet**, 跑题前对照 pd.read_excel 的 sheet_name 参数 |
 
+**🟢 Step 0 完成判据**: 15 项读题清单全填 (dryrun check 19 绿) + quote 锚定表 4 列齐 + 求解计划.md 头部 table 落盘 + 4 大典型坑自查 0 命中。
+
 ### Step 1：求解计划（先比选，再写完整计划）
 
 读题后**先**为每个问题列候选模型对比表，等用户选方案（避免 model mismatch 返工）。
@@ -291,6 +284,8 @@ python -m pip download -d ./pkgs pandas numpy scipy matplotlib openpyxl PyMuPDF 
 - 评价题：≥ 1 个主观赋权（AHP）+ ≥ 1 个客观赋权（熵权/CRITIC）
 
 **用户选定方案后**再写 `求解/求解计划.md`，按选定方案细化求解思路和参数。
+
+**🟢 Step 1 完成判据**: 候选模型对比表 4-5 行 (含 user 选定 ✓) + 求解计划.md 写完 (含 quote 锚定表 + 4-5 段求解思路 + 每问参数初值)。
 
 ### Step 1.5：Tracer bullet 探路（强烈建议, 30 分钟可省 5 小时返工）
 
@@ -495,6 +490,8 @@ Select-String -Path 论文\*.tex -Pattern '【|TODO|待填|未填|XXX' |
 
 **0 命中 = 绿**, 任 1 命中 = 立即修, 不进 Step 4. 为啥必做: 2025C 跑题 other agent 留了 9.0 AI 声明 + 10.0 附录固定说明的【】方括号占位符, 评委直接扣分。**dryrun.py check 15 自动扫这个, 红项 = 强制 sign-off 不过**。
 
+**🟢 Step 3 完成判据**: 14 个 .tex 写完 (含 0.摘要/5.1.1/5.1.2/9.0 AI 声明/10.0 附录固定说明) + 体检 4 项绿 (结构/越界/匿名/关键数字) + dryrun check 15/16/17/19 全绿。
+
 ### Step 4：编译 + 终态（合并自原 Step 5 + Step 5.5）
 
 **🧹 编译前先清理**（A3，96 小时赛场的 C 盘空间管理）：
@@ -640,16 +637,13 @@ if ($sizeMB -gt 20) { Write-Error "超过 20MB 限制！" }
 
 **不放**：承诺书 / 编号页 / 参赛队/学校/赛区信息（2026 规范第十一条硬性要求）。
 
+**🟢 Step 4 完成判据**: xelatex 论文.tex/电子版.tex/AI工具使用详情.tex 各 2 遍编译绿 + 论文 ~24 页 + 电子版 ~22 页 + AI 详情 ~6 页 + 支撑材料 .rar ≤ 20MB + 干 run 19 项全绿 sign-off。
+
 ---
 
-## Failure handling（求解/编译最常踩的 6 类）
+## 红线与失败模式 (3 类)
 
-- **数据缺失>20%**：KNN 插补或删除该特征，不静默丢
-- **XGBoost/GBR 过拟合**：降低 max_depth、增加正则化参数
-- **预测值异常**：检查特征是否存在数据泄露
-- **交叉验证方差过大**：增加折数或采用重复 CV
-- **LaTeX 编译 Error**：先 `Select-String -Path 论文.log -Pattern '! Error'` 看具体错，针对修；连续 2 次失败切换策略（改 `\caption` 转义 / 检查字体路径）
-- **Overfull/Underfull warning**：调整列宽比例 / 改换行位置；2 次修不好允许 `\\newline` 或 `\\sloppy`
+**完整 3 类红线 (求解/编译失败 + 跨平台代码 + 跑题纪律) + 修复命令 + 协同指针**在 `references/红线与失败模式.md` (权威源, 本节不重复列). 跑题遇错先查这里, 跑题前过一遍 §2 跨平台红线.
 
 ---
 
@@ -669,33 +663,6 @@ if ($sizeMB -gt 20) { Write-Error "超过 20MB 限制！" }
 - `支撑材料/AI工具使用详情.pdf` — 用 AI 必填（2026 AI 规定第 4 条）
 
 中间产物（不提交但要保留）：见 `README.md` 目录结构段。
-
----
-
-## 跨平台代码红线（借鉴 cumcm-live-workflow v5.0）
-
-> **附录代码 / 支撑材料 .py 必须跨 Windows / Linux / Overleaf 三平台可运行**
-
-- **路径用正斜杠** `'题号/xxx.py'`：Windows/Linux/Overleaf 通吃。自检命令 `Select-String -Path 求解/**/*.py -Pattern '\\\\'` 必须输出 0 行（实测漏网 62 处是为什么这条必看）
-- 提交前自检：
-  ```powershell
-  # PowerShell 查反斜杠残留
-  Select-String -Path 求解/**/*.py -Pattern '\\\\' -CaseSensitive:$false
-  # 输出应为 0 行; 出现任何行 = 有反斜杠
-  ```
-- 附录代码用 `black` 格式化（`pip install black` + `python -m black 求解/**/*.py`），格式化后**重跑验证**功能未破坏
-- 附录代码加文件头注释（Python 版本 / 依赖库版本 / 输入文件路径），方便评审 / 复现
-
-跟合规模块的协同:
-- `论文/10.附录.tex` 顶部已写"代码完整性铁律 + 文件列表一致性铁律"2 条
-- `references/题意红线.md` 第 1 条: 题面物理事实必须建模（避免代码缺关键逻辑）
-- `references/国奖级硬性指标.md` §3 自查表第 26 条: 全部路径用正斜杠
-
----
-
-## 跑题期间红线（参赛规则第 3/5 条）
-
-> 完整 8 条禁止/允许行为表 + 严重违规后果（取消评奖 + 指导教师 2 年禁赛）→ 见 `references/合规检查清单.md §4`
 
 ---
 
