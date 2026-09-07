@@ -660,6 +660,67 @@ def check_post_solution_audit():
             None)
 
 
+def check_reading_checklist():
+    """checkable 19: 读题清单 15 项全覆盖 (v1.5.7).
+
+    跑题前必填 `求解/读题清单.md` 15 项, 缺一项 RED (防 2025C 3 P0 错位).
+    每项需含: 题面原话 + 你的解读 + 对应代码/论文 (3 列).
+    """
+    paper_dir = get_paper_dir()
+    is_template = "templates" in str(paper_dir) or "example" in str(paper_dir)
+    # 跑题目录 = paper_dir 的父目录 (标准 skill 结构: 跑题目录/论文/ + 跑题目录/求解/)
+    solve_dir = paper_dir.parent / "求解"
+    checklist_path = solve_dir / "读题清单.md"
+    if not checklist_path.exists():
+        if is_template:
+            return ("yellow",
+                    "example 模板不含读题清单 (设计意图, 跑题用户从 references/读题清单.md 复制到 求解/ 目录)",
+                    f"跑题时: cp references/读题清单.md {solve_dir}/读题清单.md")
+        return ("red",
+                "读题清单.md 不存在 (防 2025C 3 P0 错位, 必填)",
+                f"在 {solve_dir}/ 复制 references/读题清单.md 模板, 跑题前填 15 项")
+    try:
+        content = checklist_path.read_text(encoding="utf-8", errors="replace")
+    except Exception as e:
+        return ("red", f"读读题清单失败: {e}", "查文件权限/编码")
+
+    is_template = "templates" in str(paper_dir) or "example" in str(paper_dir)
+    # 检查 15 项全覆盖 (15 个 ### N. 标题)
+    expected_items = [f"### {i}." for i in range(1, 16)]
+    missing = [it for it in expected_items if it not in content]
+    if missing:
+        if is_template:
+            return ("yellow",
+                    f"example 模板读题清单缺失 {len(missing)} 项 (设计意图, 跑题用户填了才 GREEN)",
+                    f"缺失: {missing[:3]}")
+        return ("red",
+                f"读题清单 {len(missing)} 项未填 (15 项必填)",
+                f"按 references/读题清单.md 模板补全. 缺失: {missing}")
+    # 检查每项都有 3 列内容 (题面原话 / 你的解读 / 对应)
+    for i in range(1, 16):
+        # 找 ### i. 段
+        start = content.find(f"### {i}.")
+        if start == -1:
+            continue
+        # 找下一个 ### j. 段
+        next_starts = [content.find(f"### {j}.", start + 1) for j in range(1, 17) if j != i]
+        next_starts = [n for n in next_starts if n != -1]
+        end = min(next_starts) if next_starts else len(content)
+        section = content[start:end]
+        # 检查 3 列
+        if "题面原话" not in section or "你的解读" not in section or "对应代码" not in section:
+            if is_template:
+                return ("yellow",
+                        f"example 模板读题清单项 {i} 缺列 (设计意图)",
+                        f"项 {i} 需含 '题面原话' + '你的解读' + '对应代码'")
+            return ("red",
+                    f"读题清单项 {i} 缺列 (需 '题面原话' + '你的解读' + '对应代码')",
+                    f"按 references/读题清单.md 模板补全项 {i}")
+    return ("green",
+            f"读题清单 15 项全覆盖 (3 列完整: 题面原话 / 你的解读 / 对应代码)",
+            None)
+
+
 CHECKS = [
     ("1. 装包 (核心包)", check_pkg),
     ("2. 10 Python 脚本", check_python_scripts),
@@ -679,6 +740,7 @@ CHECKS = [
     ("16. 10.附录.tex 文件存在", check_appendix_files),
     ("17. 图引用存在 (includegraphics)", check_figure_exists),
     ("18. Post-Solution Audit (必做 2+4)", check_post_solution_audit),
+    ("19. 读题清单 15 项全覆盖 (Step 0)", check_reading_checklist),
 ]
 
 
