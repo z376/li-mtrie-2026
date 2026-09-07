@@ -34,7 +34,6 @@ EXCLUDE_DIRS = {
     '.git', '.vscode', '.idea', '__pycache__', 'node_modules',
     '_archive',   # 历史归档（不参与分发）
     '.github',     # GitHub 模板 + CI（学生用不到, GitHub 网页端用）
-    'example-paper',  # v1.5.5 example 模板（含 22 MB fonts）, 学生自复制, 不打包
 }
 EXCLUDE_EXTS = {
     '.aux', '.log', '.out', '.toc',
