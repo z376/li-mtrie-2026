@@ -240,7 +240,7 @@ def check_skill_md_frontmatter():
         return ("red", "SKILL.md 缺 frontmatter (--- 开头)", "修 SKILL.md")
     if "name: li-mtrie" not in content[:500]:
         return ("red", "SKILL.md frontmatter 缺 name: li-mtrie", "修 SKILL.md")
-    ver_match = re.search(r'version:\s*"(\d+\.\d+\.\d+)"', content)
+    ver_match = re.search(r'version:\s*"(\d+\.\d+\.\d+(?:\.\d+)?)"', content)
     if not ver_match:
         return ("red", "SKILL.md frontmatter 缺 version 字段", "修 SKILL.md")
     return ("green", f"SKILL.md frontmatter 有效 (version={ver_match.group(1)})", None)
@@ -815,7 +815,7 @@ def main():
     else:
         # 友好 Markdown 输出 (学生本地用)
         print("=" * 60)
-        print("li-mtrie-2026 赛前 1 天 + CI smoke-test (v1.5.7)")
+        print("li-mtrie-2026 赛前 1 天 + CI smoke-test (v1.5.7.1)")
         print("=" * 60)
         green_count = 0
         for name, info in results.items():
