@@ -5,7 +5,7 @@
 读题 → 建模 → 求解 → 写论文 → 双版编译，一条龙。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Version v1.5.6](https://img.shields.io/badge/version-v1.5.6-blue.svg)](CHANGELOG.md)
+[![Version v1.5.7](https://img.shields.io/badge/version-v1.5.7-blue.svg)](CHANGELOG.md)
 [![Smoke Test](https://github.com/z376/li-mtrie-2026/actions/workflows/smoke-test.yml/badge.svg)](.github/workflows/smoke-test.yml)
 [![2026 Spec](https://img.shields.io/badge/2026%E8%A7%84%E8%8C%83-%E5%AF%B9%E9%BD%90-green.svg)](references/合规检查清单.md)
 
@@ -198,7 +198,10 @@ li-mtrie-2026/
 │   │   ├── 01-选题推荐.md     #   题面+数据 → 候选模型 Top-3 (JSON)
 │   │   ├── 02-代码修复.md     #   traceback → 根因 + 最小修复 + 验证
 │   │   ├── 03-自动审稿.md     #   5 维评分 + 改进建议 + AI 痕迹词
-│   │   └── 04-百分制评审.md   # ⚡ v1.5.1 3 模式 (M1字典预查/M2格式自查/M3百分制)
+│   │   ├── 04-百分制评审.md   # ⚡ v1.5.1 3 模式 (M1字典预查/M2格式自查/M3百分制)
+│   │   └── 05-读题提取.md     # ⚡ v1.5.7 LLM 自动从 PDF 提取 15 项读题清单
+│   ├── 读题清单.md            # ⚡ v1.5.7 15 项空表模板 (跑题前必填, 防 2025C 3 P0 错位)
+│   ├── 模型决策树.md          # ⚡ v1.5.7 6 大题型 × 3 层模型决策 (修复外审 P0-3 断裂引用)
 │   ├── 数模资料/              # ⚡ v1.5.1 BZD 数模社配套资源 (免费公开, 非商业自用)
 │   │   ├── README.md         #   12 文件索引 + 与 li-mtrie 其他文档协同地图
 │   │   ├── 5年16题训练-官方评阅细则评分要点.zip  # 5年国赛真题 + 评阅细则 + 评分要点
@@ -266,6 +269,7 @@ li-mtrie-2026/
 
 ## 版本
 
+- **v1.5.7**（2026-09-07, 在 v1.5.6 之上 + 2 commit 累计）— 细化读题环节. SKILL.md §Step 0 加 15 项读题清单 (防 2025C 3 P0 错位), 新增 references/读题清单.md (15 项空表模板) + references/llm-prompts/05-读题提取.md (LLM 工具自动从 PDF 提取), dryrun.py check 19 验证 15 项全覆盖. 包大小 23.91 MB (+0.01), 增量几乎无. 审计 8.0/10 不变.
 - **v1.5.6**（2026-09-07, 在 v1.5.5 之上 + 1 commit 累计）— 借鉴 BZD 数模社 12 个论文板块模板 (4 色教学法). 14 个 .tex 全部按 BZD 2026 规范重写: 0.摘要 (4 段+关键词) / 1.引言 (3 子节) / 2.总体分析 (5 段+框架图) / 3.模型假设 (9 类) / 4.符号说明 (三线表) / 5.1.1+5.1.2 (建模+求解) / 6.模型检验 (4 类) / 7.模型评价 (4 子节) / 8.改进推广 (4 层面) / 9.参考文献 / 9.0.AI 声明 / 10.0 附录固定说明 / 10.附录 (核心源代码). dryrun.py check 16/17 加 template 状态 yellow 跳过. 包大小 5.12 MB, 增量 < 0.1 MB. 审计 8.0/10 不变.
 - **v1.5.4**（2026-09-06, 在 v1.5.3 之上 + 1 commit 累计）— 防"答非所问"强化. 借 2025C 跑题
   失败案例 (other agent 踩 3 P0: 问题 4 选错 sheet / 问题 2-3 自创 BMI 分组 / 10.附录.tex

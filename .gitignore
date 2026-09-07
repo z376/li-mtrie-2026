@@ -47,7 +47,8 @@ _archive/**              # 子目录/文件也不分发 (v1.5.5 加, 强制排�
 求解/_*.py
 求解/_*.txt
 求解/profile_data_output.txt
-求解/共享/*.py            # 旧 D 题测试顶层模块, 已在 共享/ 有副本
+# 求解/共享/*.py - v1.5.7 改: 跨问题常量放 共享/ 是 SKILL.md Step 2.Gate 推荐的, 不要排除
+# (历史注: 旧 D 题顶层模块当时在 共享/, 现在跨问题常量都在 共享/constants.py 等)
 求解/共享/__pycache__/
 # 求解/根目录临时输出 (profile_data 等工具产生的)
 求解/*.txt

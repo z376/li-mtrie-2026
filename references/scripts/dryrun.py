@@ -1,4 +1,4 @@
-"""li-mtrie-2026 赛前 1 天必做 + CI smoke-test 一体化脚本 (v1.5.3 patch4).
+"""li-mtrie-2026 赛前 1 天必做 + CI smoke-test 一体化脚本 (v1.5.7).
 
 跟 CI smoke-test.yml 等价但本地可跑, 赛前 1 天手动验证全部 checkable 全 green,
 确保开赛当晚不踩"装包失败 / 模板坏 / LaTeX 不通 / 文件缺失"等灾难性坑.
@@ -81,7 +81,7 @@ def check_python_scripts():
             failed.append(f"{name} py_compile 失败: {r.stderr[:100]}")
     if failed:
         return ("red", f"{len(failed)}/10 脚本失败", "; ".join(failed[:3]))
-    return ("green", f"10/10 Python 脚本 py_compile OK (含 v1.5.0 data_utils + v1.5.2 dryrun)", None)
+    return ("green", f"10/10 Python 脚本 py_compile OK (含 v1.5.0 data_utils + v1.5.2 dryrun + v1.5.7 5 项 checkable)", None)
 
 
 def check_tex_compile():
@@ -126,7 +126,7 @@ def check_tex_compile():
 
 def check_overfull():
     """checkable 4: 论文 Overfull 数 (< 5 = sign-off 绿)."""
-    log_path = TEX_DIR / "论文.log"
+    log_path = get_paper_dir() / "论文.log"
     if not log_path.exists():
         return ("yellow", "论文.log 不存在 (跳过 Overfull 检查)",
                 "先跑 check_tex_compile")
@@ -247,7 +247,7 @@ def check_skill_md_frontmatter():
 
 
 def check_llm_tools():
-    """checkable 8: v1.5.0 LLM 工具 4 prompt + README 存在."""
+    """checkable 8: v1.5.0 LLM 工具 5 prompt + README 存在 (v1.5.7 加 05-读题提取)."""
     files = [
         "references/llm-prompts/README.md",
         "references/llm-prompts/01-选题推荐.md",
@@ -304,7 +304,9 @@ def check_fitz_compat():
     """checkable 11: PyMuPDF ≥1.24 pymupdf as fitz 兼容 (v1.5.2 fix)."""
     try:
         import pymupdf as fitz
-        ver = fitz.__doc__.split()[1] if fitz.__doc__ else "unknown"
+        # v1.5.7 修复外审 P1-4: doc 单词数 < 2 时 .split()[1] 抛 IndexError
+        doc = fitz.__doc__ or ""
+        ver = doc.split()[1] if len(doc.split()) >= 2 else "unknown"
         return ("green", f"pymupdf {ver} as fitz (PyMuPDF ≥1.24 推荐)", None)
     except ImportError:
         try:
@@ -424,6 +426,7 @@ def check_no_placeholder():
         (r"未填", "中文 未填"),
         (r"未替换", "未替换 标记"),
         (r"\bXXX\b", "XXX 占位符"),
+        (r"\\[A-Za-z]+Slot\{", "v1.5.7 *Slot 宏 (AISlot/AppendixSlot/CodeSlot/RefSlot)"),
     ]
     violations = []
     for tex_file in sorted(paper_dir.glob("*.tex")):
@@ -729,7 +732,7 @@ CHECKS = [
     ("5. pack.py + 2 zip", check_pack),
     ("6. AIGC 风险", check_aigc),
     ("7. SKILL.md frontmatter", check_skill_md_frontmatter),
-    ("8. v1.5.0 LLM 工具 4 prompt", check_llm_tools),
+    ("8. LLM 工具 5 prompt (v1.5.0+)", check_llm_tools),
     ("9. v1.5.1 BZD 借鉴 3 references", check_bzd_v151),
     ("10. v1.5.3 BZD 借鉴 11 新文件", check_bzd_v153),
     ("11. v1.5.2 fitz compat", check_fitz_compat),
@@ -812,7 +815,7 @@ def main():
     else:
         # 友好 Markdown 输出 (学生本地用)
         print("=" * 60)
-        print("li-mtrie-2026 赛前 1 天 + CI smoke-test (v1.5.3 patch4)")
+        print("li-mtrie-2026 赛前 1 天 + CI smoke-test (v1.5.7)")
         print("=" * 60)
         green_count = 0
         for name, info in results.items():

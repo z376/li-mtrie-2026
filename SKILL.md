@@ -8,13 +8,14 @@ description: |
   Do NOT use for: general data analysis, one-off Python scripts, or research questions
   that don't lead to a `论文.pdf` deliverable.
 metadata:
-  version: "1.5.7"
+  version: "1.5.7.1"
   category: competition-workflow
   scope: user
   source_workspace: D:/MiniMax code/1/数建Skill模板
   spec_compliance: "全国大学生数学建模竞赛论文格式规范（2026年修订稿，2026-09-01起试行）+ 全国大学生数学建模竞赛人工智能工具使用规定（2026年试行）"
   history:
     - 1.5.6: 借鉴 BZD 数模社 12 个论文板块模板 (4 色教学法) — references/templates/example-paper/ 14 个 .tex 重写: 0.摘要 (4 段+关键词) / 1.引言 (3 子节: 背景+回顾+综述) / 2.总体分析 (5 段+框架图) / 3.模型假设 (9 类+引导语) / 4.符号说明 (三线表) / 5.1.1+5.1.2 (建模+求解) / 6.模型检验 (4 类) / 7.模型评价 (4 子节) / 8.改进推广 (4 层面) / 9.参考文献 (GB/T 7714) / 9.0.AI 声明 (二者择一) / 10.0 附录固定说明 (A-F 6 子节) / 10.附录 (核心源代码); dryrun.py check 16/17 加 template 状态 yellow 跳过 (跟 check 15 一致); 跑题用户复制 example-paper 整个目录到 跑题目录/论文/ 后, 按 BZD 4 色教学法 (黑=正文 / 蓝=操作 / 红=解释 / 绿=误区 / 黄=AI 提示词 / 灰=自查) 替换【】占位符
+    - 1.5.7.1: 外审修复 — P0 加 4 个 *Slot 宏空定义 (论文.tex/电子版.tex/AI详情.tex) 防 xelatex 编译崩; dryrun check 15 加 \*Slot 宏扫描; 创建 references/模型决策树.md (修复 4 处断裂引用); .gitignore 取消 求解/共享/*.py 排除; 创建 求解/共享/.gitkeep; README badge v1.5.6→v1.5.7 + 加 v1.5.7 段; dryrun 5 处版本号更新; check_overfull 改用 get_paper_dir(); check_fitz_compat 加 doc 长度守卫; SKILL.md 代码块格式修复; README 目录结构加 v1.5.7 新文件
     - 1.5.7: 细化读题环节 — SKILL.md §Step 0 加 15 项读题清单 (防 2025C 3 P0 错位), 新增 references/读题清单.md (15 项空表模板), 新增 references/llm-prompts/05-读题提取.md (LLM 工具自动从 PDF 提取), dryrun.py check 19 验证 15 项全覆盖 (3 列: 题面原话 + 你的解读 + 对应代码/论文); 4 项跑题后对照 (项 4/5/7/14) 防 sheet 错/漏判据/自创分组/附录残留
     - 1.5.4: 防"答非所问"强化 — SKILL.md §Step 0 加 题面 quote 锚定 + 题面关键判据 grep, §Step 1 加 数据 sheet 选错警示, §Step 3 加 占位符 grep 自检, §Step 4 加 附录文件存在性自检, 顶部加 4 大典型坑警示表; references/scripts/dryrun.py 加 3 checkable: 15 占位符未替换 (【 TODO) / 16 10.附录.tex 文件存在 / 17 \includegraphics 图引用存在; 2025C 跑题 other agent 踩 3 P0 错后增量补强
     - 1.5.3: 借鉴 BZD 数模社 12 个论文自查类子 skill + bzd-problem-translator + bzd-cumcm-school-awards (核心理念) — 新增 references/板块自查/ (9 文件 + 1 README) + references/题意翻译.md + references/学校国奖画像.md; 借鉴源 9 → 18 (BZD 12 子 skill + bzd-problem-translator + bzd-cumcm-school-awards 核心理念); 不复制 BZD 累积数据 (版权)
@@ -107,11 +108,11 @@ pip install pandas numpy scipy matplotlib openpyxl PyMuPDF pulp
 ```powershell
 python -m pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
 python -m pip download -d ./pkgs pandas numpy scipy matplotlib openpyxl PyMuPDF pulp
-
-**赛前 1 天 dry-run 自动化** (v1.5.2 新增): 跑 `python references/scripts/dryrun.py` 一键验证 6 项 checkable:
-装包 / 6 脚本 / LaTeX 编译 / Overfull 数 / pack.py / AIGC 风险. **6/6 全 green = 赛前绿, 可安心参赛**. 跟 CI `smoke-test.yml` 等价, 但本地手动跑. 出 red 项时脚本给修复建议.
 # 比赛时: python -m pip install --no-index --find-links=./pkgs <pkgs>
 ```
+
+**赛前 1 天 dry-run 自动化** (v1.5.2 新增, v1.5.7 升级到 19 项): 跑 `python references/scripts/dryrun.py` 一键验证 19 项 checkable:
+装包 / Python 脚本 / LaTeX 编译 / Overfull 数 / pack.py / AIGC 风险 / SKILL.md frontmatter / LLM 工具 / BZD 借鉴 / 拟合兼容 / LICENSE / 5 步状态机 / LaTeX 可执行性 / 占位符 / 附录文件 / 图引用 / Post-Solution Audit / **读题清单 (v1.5.7 新增)**. **19/19 全 green = sign-off 绿, 可安心参赛**. 跟 CI `smoke-test.yml` 等价, 但本地手动跑. 出 red 项时脚本给修复建议.
 
 **checkable 绿 (赛前 1 天跑一次)**: `python -c "import pandas, numpy, scipy, matplotlib, openpyxl, fitz, pulp; print('core ok')"` → 输出 `core ok` = **绿**, 无输出 / ImportError = **红** (开赛当晚才修 = 灾难).
 
