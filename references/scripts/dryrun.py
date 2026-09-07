@@ -748,6 +748,50 @@ def check_reading_checklist():
             None)
 
 
+def check_v1575_polish():
+    """checkable 20: v1.5.7.5 writing-for-agents 修剪验证 (4 项)
+    1. SKILL.md description ≤ 6 行 (v1.5.7.5 合并 3 触发 → 1)
+    2. references/红线与失败模式.md 存在 (v1.5.7.5 推红线)
+    3. CHANGELOG.md 存在 (v1.5.7.5 推 history)
+    4. SKILL.md 含 4 个 🟢 Step X 完成判据 (v1.5.7.5 加完成判据)
+    """
+    skill_md = SKILL_ROOT / "SKILL.md"
+    if not skill_md.exists():
+        return ("red", "SKILL.md 不存在", "修 SKILL.md")
+    content = skill_md.read_text(encoding="utf-8", errors="replace")
+    # 1. description ≤ 6 行
+    if not content.startswith("---\n"):
+        return ("red", "SKILL.md 缺 frontmatter (--- 开头)", "修 SKILL.md")
+    end = content.find("\n---\n", 4)
+    if end == -1:
+        return ("red", "SKILL.md frontmatter 缺结尾 ---", "修 SKILL.md")
+    fm = content[4:end]
+    desc_match = re.search(r'description:\s*\|\n((?:[ \t]+.+\n)+)', fm)
+    if not desc_match:
+        return ("red", "SKILL.md frontmatter 缺 description", "修 SKILL.md")
+    desc_lines = [l for l in desc_match.group(1).split("\n") if l.strip()]
+    if len(desc_lines) > 6:
+        return ("red", f"SKILL.md description {len(desc_lines)} 行 (v1.5.7.5 修剪应 ≤ 6 行)",
+                "合并触发词 (开始求解/跑题/做数模 → 跑题)")
+    # 2. references/红线与失败模式.md 存在
+    redline = REFS_DIR / "红线与失败模式.md"
+    if not redline.exists():
+        return ("red", "references/红线与失败模式.md 缺失 (v1.5.7.5 推出)",
+                "把 SKILL.md §Failure handling + §跨平台代码红线 + §跑题期间红线 3 段推到 references/红线与失败模式.md")
+    # 3. CHANGELOG.md 存在
+    changelog = SKILL_ROOT / "CHANGELOG.md"
+    if not changelog.exists():
+        return ("red", "CHANGELOG.md 缺失 (v1.5.7.5 推出)",
+                "把 SKILL.md frontmatter history 9 entries 推到 CHANGELOG.md, frontmatter 留 1 行 changelog: CHANGELOG.md")
+    # 4. SKILL.md 含 4 个 🟢 Step X 完成判据 (Step 0/1/3/4)
+    expected = ["🟢 Step 0 完成判据", "🟢 Step 1 完成判据", "🟢 Step 3 完成判据", "🟢 Step 4 完成判据"]
+    missing = [e for e in expected if e not in content]
+    if missing:
+        return ("red", f"SKILL.md 缺 {len(missing)} 个完成判据 (v1.5.7.5 应 4 个): {missing}",
+                "在 §Step 0/1/3/4 末尾各加 1 行 '🟢 Step X 完成判据: ...'")
+    return ("green", f"description {len(desc_lines)} 行 + 红线 1 文件 + CHANGELOG 1 文件 + 4 完成判据全在", None)
+
+
 CHECKS = [
     ("1. 装包 (核心包)", check_pkg),
     ("2. 10 Python 脚本", check_python_scripts),
@@ -768,6 +812,7 @@ CHECKS = [
     ("17. 图引用存在 (includegraphics)", check_figure_exists),
     ("18. Post-Solution Audit (必做 2+4)", check_post_solution_audit),
     ("19. 读题清单 15 项全覆盖 (Step 0)", check_reading_checklist),
+    ("20. v1.5.7.5 writing-for-agents 修剪 (description/红线/CHANGELOG/4 完成判据)", check_v1575_polish),
 ]
 
 

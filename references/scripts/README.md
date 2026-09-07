@@ -240,6 +240,7 @@ pip install PyMuPDF
 | 17 | 图引用存在 (includegraphics) | v1.5.4+ | figures/ 目录的 .png 必须存在 |
 | 18 | Post-Solution Audit (必做 2+4) | v1.5.0+ | 跑 `py verify_pdf_metrics.py 论文.pdf` |
 | 19 | 读题清单 15 项全覆盖 | v1.5.7+ | 跑题前从 `references/读题清单.md` 复制到 `求解/读题清单.md` 填完 |
+| 20 | v1.5.7.5 writing-for-agents 修剪 (description/红线/CHANGELOG/4 完成判据) | v1.5.7.5+ | 验证 4 项: description ≤ 6 行 + references/红线与失败模式.md + CHANGELOG.md + 4 个 🟢 Step X 完成判据 |
 
 **常见 sign-off 状态**:
 - 🟢 **绿** (11-19 green, 0 red): 赛前 1 天跑一次安心参赛
