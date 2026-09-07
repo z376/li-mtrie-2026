@@ -133,7 +133,7 @@ def split_paragraphs(text: str) -> list[str]:
 
 def split_sentences(text: str) -> list[str]:
     """按句子拆分"""
-    sentences = re.split(r'[。！？!?\n]|(?<!\d)\.|\.(?!\d)', text)
+    sentences = re.split(r'[。！？!?\n]|(?<!\d)(?<!etc)(?<!\be)(?<!\bg)(?<!\bi)\.(?!\d)', text)
     return [s.strip() for s in sentences if s.strip() and len(s.strip()) > 5]
 
 

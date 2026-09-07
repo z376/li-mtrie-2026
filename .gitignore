@@ -71,7 +71,6 @@ desktop.ini
 *.bak
 *.tmp
 ~$*
-*.log
 nul
 li-mtrie-2026-*.zip
 

@@ -48,7 +48,12 @@ def check_pkg():
             import pulp
         except ImportError:
             pass
-        return ("green", f"pandas {pandas.__version__} + numpy + scipy + openpyxl + fitz", None)
+        try:
+            import seaborn
+            seaborn_ver = seaborn.__version__
+        except ImportError:
+            seaborn_ver = "未装 (画图库用 matplotlib 即可, seaborn 可选)"
+        return ("green", f"pandas {pandas.__version__} + numpy + scipy + openpyxl + fitz + seaborn {seaborn_ver}", None)
     except ImportError as e:
         return ("red", f"装包失败: {e.name}",
                 f"跑 `pip install pandas numpy scipy openpyxl pymupdf` (赛前 1 天)")
@@ -91,8 +96,8 @@ def check_tex_compile():
     is_template = "templates" in str(paper_dir) or "example" in str(paper_dir)
     if is_template:
         return ("yellow",
-                f"example 模板状态 (paper_dir={paper_dir.name}, 跳过 LaTeX 编译)",
-                "跑题用户复制 example-paper 到 跑题目录/论文/ 后再编译")
+                f"example 模板状态 (paper_dir={paper_dir.name}, 跳过 LaTeX 编译 = 设计意图, 不算 red)",
+                "跑题用户复制 example-paper 到 跑题目录/论文/ 后再编译 (那时 paper_dir 不是 templates/, 本检查会真跑 xelatex)")
     xelatex = shutil.which("xelatex")
     if not xelatex:
         return ("yellow", "xelatex 未安装 (跳过编译检查)",
@@ -390,6 +395,8 @@ def get_paper_dir():
         idx = sys.argv.index("--paper-dir")
         if idx + 1 < len(sys.argv):
             return Path(sys.argv[idx + 1])
+        else:
+            print(f"[WARN] --paper-dir 不带值, 静默 fallback 到自动检测 (请给: --paper-dir 跑题目录/论文)", file=sys.stderr)
     cwd = Path(os.getcwd())
     # 1. 跑题用户在跑题目录 (有 论文/ 子目录) 跑
     if (cwd / "论文").is_dir() and any((cwd / "论文").glob("*.tex")):
@@ -444,6 +451,23 @@ def check_no_placeholder():
                 line_text = content[line_start:line_end]
                 if line_text.lstrip().startswith("%"):
                     continue
+                # P2-9 (v1.5.7.4): 剥离行内 % 注释 (例如 "x = 1  % TODO: fix this" 不应误报)
+                pos = m.start() - line_start
+                if pos > 0:
+                    before = line_text[:pos]
+                    # 找最近非 \% 的 %
+                    i = len(before) - 1
+                    while i >= 0:
+                        if before[i] == "%":
+                            if i > 0 and before[i-1] == "\\":
+                                i -= 1
+                                continue
+                            break  # 找到真 %, 在 m 之前 = 行内注释
+                        i -= 1
+                    else:
+                        i = -1
+                    if i >= 0:
+                        continue  # 行内 % 注释, 跳过
                 violations.append(f"{tex_file.name}:L{line_no} {label} -> {m.group()[:30]}")
     if violations:
         if is_template:

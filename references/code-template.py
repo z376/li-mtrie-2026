@@ -5,6 +5,9 @@
 
 说明：本文件是求解代码模板，复制到 求解/问题X/ 下后，按 TODO 填充。
 绘图库不限制（matplotlib / seaborn / plotly / Pillow 均可）。
+⚠️ **不能直接运行**：本文件含 TODO 占位 (`# TODO: 加载数据` / `# TODO: 模型建立` 等)，
+   直接 `py code-template.py` 会因未填 TODO 报错。**必须**复制到 `求解/问题X/` 下后
+   按提示填完所有 TODO, 再 `py 求解/问题X/问题X_xxx.py` 跑。
 
 ═══════════════════════════════════════════════════════════════
 ⚠️ **数据驱动题模板** — 适用：评价/预测/分类/统计类题
@@ -194,8 +197,9 @@ plt.rcParams.update({
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FIG_DIR = os.path.join(BASE_DIR, '图片')
 OUT_DIR = os.path.join(BASE_DIR, '结果')
-os.makedirs(FIG_DIR, exist_ok=True)
-os.makedirs(OUT_DIR, exist_ok=True)
+if __name__ == "__main__":
+    os.makedirs(FIG_DIR, exist_ok=True)
+    os.makedirs(OUT_DIR, exist_ok=True)
 
 # ==================== 工具函数 ====================
 

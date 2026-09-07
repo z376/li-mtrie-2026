@@ -2,6 +2,9 @@
 """
 问题X：【问题简述 — 机理题】
 方法：【主要方法 — 几何/运动学/物理推导】
+⚠️ **不能直接运行**：本文件含 TODO 占位 + 占位参数 (`【问题简述】` / `L_HEAD = 0` / `t_end = 0` 等),
+   直接 `py mechanism-template.py` 会因占位未填报错。**必须**复制到 `求解/问题X/` 下后
+   按提示填完所有 TODO 和物理参数, 再 `py 求解/问题X/问题X_xxx.py` 跑。
 
 ═══════════════════════════════════════════════════════════════
 🆕 **机理题专用模板**（与 code-template.py 区别）
@@ -160,8 +163,9 @@ plt.rcParams.update({
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FIG_DIR = os.path.join(BASE_DIR, '图片')
 OUT_DIR = os.path.join(BASE_DIR, '结果')
-os.makedirs(FIG_DIR, exist_ok=True)
-os.makedirs(OUT_DIR, exist_ok=True)
+if __name__ == "__main__":
+    os.makedirs(FIG_DIR, exist_ok=True)
+    os.makedirs(OUT_DIR, exist_ok=True)
 
 
 # ==================== 数据目录自动扫描（备用，机理题通常无外部数据）====================

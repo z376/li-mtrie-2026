@@ -651,7 +651,7 @@ def _cli() -> int:
             # 保存为临时 csv 调 profile_data
             import tempfile, os
             with tempfile.NamedTemporaryFile(suffix='.csv', delete=False, mode='w', encoding='utf-8') as f:
-                df.to_csv(f.name if False else f.name, index=False, header=False)
+                df.to_csv(f.name, index=False, header=False)
                 tmp_path = f.name
             try:
                 info = profile_data(tmp_path, group_cols=args.group)

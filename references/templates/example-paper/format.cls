@@ -1,5 +1,5 @@
 ﻿\NeedsTeXFormat{LaTeX2e}[1995/12/01]
-\ProvidesClass{cumcmthesis}
+\ProvidesClass{format}
               [2017/09/16 v2.6 Standard LaTeX Template for CUMCM]
 %% Inital Code
 \newif\if@mcm@bwprint\@mcm@bwprintfalse

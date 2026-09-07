@@ -3,7 +3,7 @@
 > 借鉴自 `scipilot-figure-skill`（MIT 风格脚本）+ cumcm-live-workflow-skill v5.0 `verify_pdf_metrics.py`，改写为数学建模国赛工作流。
 > 原作者：[scipilot-figure-skill](https://github.com/scipilot/scipilot-figure-skill)
 
-6 个 Python 脚本（4 自检 + 1 AIGC + 1 跨题工具），覆盖「画图前数据剖析 → 出图后程序自检 → 提交前格式检查 → 终审前 PDF 体检 → AIGC 9 维度扫描 → 跨题 GBK 兼容」。
+7 个 Python 脚本（5 自检 + 1 AIGC + 1 跨题工具），覆盖「画图前数据剖析 → 出图后程序自检 → 提交前格式检查 → 终审前 PDF 体检 → AIGC 9 维度扫描 → 跨题 GBK 兼容 → **19 项 check 一体化 sign-off**」。
 **不依赖** skill 系统本身——独立可执行，`pip install pandas matplotlib Pillow numpy PyMuPDF` 后即用。
 
 ---
@@ -210,6 +210,41 @@ py verify_pdf_metrics.py 论文/论文.pdf 0.4503 412.47 8.25
 ```bash
 pip install PyMuPDF
 ```
+
+---
+
+## 8. `dryrun.py` — 19 项 check 清单 (v1.5.7+)
+
+`dryrun.py` 跑 `py dryrun.py` 一键验 19 项, sign-off 绿 = 赛前可安心参赛. 跟 CI `smoke-test.yml` 等价, 但本地手动跑.
+
+**19 项 check (按 sign-off 顺序)**:
+
+| # | check | v1.5.x | 触发 red 的常见原因 |
+|---|-------|--------|---------------------|
+| 1 | 装包 (核心包) | v1.5.0+ | `pip install pandas numpy scipy openpyxl pymupdf` |
+| 2 | 10 Python 脚本 py_compile | v1.5.0+ | 语法错, 看脚本 output |
+| 3 | LaTeX 编译 (xelatex × 2) | v1.5.0+ | 模板占位符未替换 / 语法错 / 缺图 |
+| 4 | Overfull 数 | v1.5.0+ | 论文.log 有 Overfull \\hbox/\\vbox |
+| 5 | pack.py + 2 zip | v1.5.0+ | 跑 `py tools/pack.py` 重打 |
+| 6 | AIGC 风险 | v1.5.0+ | `py aigc_scan.py 论文.pdf` 查 9 维度 |
+| 7 | SKILL.md frontmatter | v1.5.3+ | 修 SKILL.md `version: "x.y.z"` 字段 |
+| 8 | LLM 工具 5 prompt (v1.5.0+) | v1.5.0+ | 检查 `references/llm-prompts/` 5 个 .md |
+| 9 | v1.5.1 BZD 借鉴 3 references | v1.5.1+ | 3 个 .md + 1 个 README |
+| 10 | v1.5.3 BZD 借鉴 11 新文件 | v1.5.3+ | 9 板块自查 + 1 README + 题意翻译 + 学校国奖画像 |
+| 11 | v1.5.2 fitz compat | v1.5.2+ | `import pymupdf as fitz` 兼容 |
+| 12 | LICENSE = MIT | v1.5.0+ | 跑题不用管 |
+| 13 | 5 步状态机 checkable | v1.5.0+ | 装包 + 7 脚本 import + profile_data |
+| 14 | LaTeX 编译可执行性 | v1.5.0+ | xelatex 在 PATH (MiKTeX/TeX Live) |
+| 15 | 占位符未替换 (【 TODO) | v1.5.4+ | 搜索 `【` 找未填占位符 |
+| 16 | 10.附录.tex 文件存在 | v1.5.4+ | 跑 `py 求解/问题X/问题X_xxx.py` 生成结果 |
+| 17 | 图引用存在 (includegraphics) | v1.5.4+ | figures/ 目录的 .png 必须存在 |
+| 18 | Post-Solution Audit (必做 2+4) | v1.5.0+ | 跑 `py verify_pdf_metrics.py 论文.pdf` |
+| 19 | 读题清单 15 项全覆盖 | v1.5.7+ | 跑题前从 `references/读题清单.md` 复制到 `求解/读题清单.md` 填完 |
+
+**常见 sign-off 状态**:
+- 🟢 **绿** (11-19 green, 0 red): 赛前 1 天跑一次安心参赛
+- 🟡 **黄** (有 yellow, 0 red): 设计意图跳过, 不用管
+- 🔴 **红** (有 red): 必须修, 看每项的"修复:"提示
 
 ---
 
