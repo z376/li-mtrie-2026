@@ -1,0 +1,18 @@
+# 跨问题共享代码目录 (v1.5.7 修复外审 P0-5)
+#
+# SKILL.md Step 2.Gate: "跨问题常量放 求解/共享/constants.py"
+# references/导入规范.md: 详细说明 求解/共享/ 的导入规范
+#
+# 跑题用户: 把跨问题物理常量 (如 NIPT 问题的 BMI/Z 阈值)、复用工具函数
+# (如自定义异常检测、可视化函数) 放这里, 4 个问题 .py 都 import 同一份.
+#
+# 命名规范:
+#   - constants.py : 跨问题常量 (阈值/系数/边界)
+#   - params.py    : 跨问题超参数 (学习率/迭代次数)
+#   - utils.py     : 跨问题工具函数 (可视化/导出)
+#
+# 导入示例:
+#   import sys
+#   from pathlib import Path
+#   sys.path.insert(0, str(Path(__file__).parent.parent))
+#   from 共享.constants import BMI_BMI_GROUPS

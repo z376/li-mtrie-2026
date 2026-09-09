@@ -1,0 +1,72 @@
+%% preamble.tex (v1.5.7.3 — 抽自 论文.tex / 电子版.tex / AI工具使用详情.tex, 在 \documentclass 之后)
+%% 三个入口文件共享的 preamble 部分:
+%%   - 教学开关 (\Teach / \TeachExample / \Placeholder) + 默认隐藏
+%%   - 兜底宏 (*Slot 4 个空定义, 跑题用户忘删不编译失败)
+%%   - 公共包 (etoolbox / ctex / mdframed / url / array / tabularx / longtable / tikz)
+%%   - 公共列定义 (C / R / L for tabularx) + bold 字体重定义
+%% 3 个文件各自保留:
+%%   - 自己的 \documentclass[选项]{format} (withpreface / electronic / electronic)
+%%   - 自己的注释 (2026 规范说明)
+%%   - 自己的 \title{}
+%% 编译入口仍是 论文.tex / 电子版.tex / AI工具使用详情.tex, preamble-first.tex + preamble.tex 由 \input{} 拉入
+
+%% === v1.4.4 借鉴自 数模陪跑独家 模板：教学开关 + 占位符宏 ===
+%% 在文档任意位置可用 \Teach{...} 写红色填写提示，\TeachExample{...} 写红色示例。
+%% \Placeholder{...} 用黑色加粗显示方括号占位符，便于交稿前搜索替换。
+%% 默认 \showteachingfalse：教学提示不显示（不影响现有 PDF 输出）。
+%% 想看教学提示：把下面 \showteachingfalse 注释掉，把上面 \showteachingtrue 取消注释即可。
+\newif\ifshowteaching
+\showteachingfalse
+% \showteachingtrue
+
+\newcommand{\Placeholder}[1]{\textbf{#1}}
+
+\newcommand{\Teach}[1]{%
+  \ifshowteaching
+    \par\begingroup
+      \noindent\color{red!78!black}\bfseries
+      填写提示（提交前自动隐藏）：#1\par
+    \endgroup
+  \fi
+}
+
+%% === v1.5.7 兜底宏: 跑题用户忘删 *Slot 行不会编译失败 (空定义, 不影响输出) ===
+\newcommand{\AISlot}[1]{}
+\newcommand{\AppendixSlot}[1]{}
+\newcommand{\CodeSlot}[1]{}
+\newcommand{\RefSlot}[1]{}
+
+\newcommand{\TeachExample}[1]{%
+  \ifshowteaching
+    \par\begingroup
+      \noindent\color{red!78!black}\bfseries
+      示例（仅供理解，提交前自动隐藏）：#1\par
+    \endgroup
+  \fi
+}
+%% === v1.4.4 借鉴结束 ===
+
+%% === v1.5.7.3 公共包 + 列定义 + tikz (从原 3 文件 preamble 抽出) ===
+\usepackage{etoolbox}
+% ctex 已在 format.cls L45 \RequirePackage, 不重复加载
+\BeforeBeginEnvironment{tabular}{\zihao{-5}}
+\usepackage[framemethod=TikZ]{mdframed}
+\usepackage{url}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{adjustbox}
+\newcolumntype{C}{>{\centering\arraybackslash}X}
+\newcolumntype{R}{>{\raggedleft\arraybackslash}X}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+
+% 不重定义 \textbf: ctex 内部用 \setCJKfamilyfont{BoldFont=...} 处理中文粗体更安全
+% 中文加粗需要时用 \textbf{\song #1} 显式指定
+
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning}
+\tikzset{
+  box/.style={rectangle, draw, minimum width=3.2cm, minimum height=0.9cm, align=center},
+  arrow/.style={thick, -{Stealth}}
+}
+%% === v1.5.7.3 抽出结束 ===

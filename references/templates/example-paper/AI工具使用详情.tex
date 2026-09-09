@@ -1,0 +1,160 @@
+%% AI工具使用详情.tex (v1.5.7.3 通用模板)
+%% 2026 国赛 AI 工具使用规定第 4 条
+%% 配套 skill: li-mtrie-2026 v1.5.7.3
+%% 编译: xelatex -interaction=nonstopmode AI工具使用详情.tex (×2)
+%% 输出: 支撑材料/AI工具使用详情.pdf (≈ 4-6 页)
+%% 模板: 所有具体内容用【】占位符 + \Placeholder{} 宏, 跑题用户复制后替换
+%% 评阅要求: 必须真实可查, 不能虚构 AI 用途或夸大 AI 占比, 否则按违规处理
+%% 2026 规范第十条: 本文件单独成 PDF 放支撑材料/, 跟 论文/电子版 平行提交
+\input{preamble-first}
+
+\documentclass[electronic]{format}
+
+\input{preamble}
+
+\title{AI 工具使用详情}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{plain}
+\vspace{-2em}
+
+%% ====== §1 工具信息 (5-8 行表格, 每行可增减) ======
+\section{工具信息}
+
+\begin{longtable}{>{\centering\arraybackslash}p{0.25\textwidth}>{\raggedright\arraybackslash}p{0.70\textwidth}}
+  \toprule
+  项目 & 内容 \\
+  \midrule
+  \Placeholder{【工具名称, 如 ChatGPT / Claude / DeepSeek / Mavis 等】} & \Placeholder{【填工具官方全名】} \\
+  \Placeholder{提供方} & \Placeholder{【填公司/组织全名】} \\
+  \Placeholder{版本/型号} & \Placeholder{【填模型版本号】} \\
+  \Placeholder{接入方式} & \Placeholder{【填 web/桌面/API/插件 等】} \\
+  \Placeholder{使用时间} & \Placeholder{【填 YYYY-MM-DD ~ YYYY-MM-DD (赛题时间窗)】} \\
+  \Placeholder{【其他, 如账号/付费情况/上下文长度】} & \Placeholder{【填】} \\
+  \bottomrule
+\end{longtable}
+
+%% ====== §2 5 项自检 (2026 规范 5 项硬要求) ======
+\section{AI 参与边界自检}
+
+%% 借鉴 BZD 数模社 论文正文-AI工具使用声明 2026 规范: 5 项自检, 详细使用情况见支撑材料
+
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.55\textwidth}>{\centering\arraybackslash}p{0.10\textwidth}>{\raggedright\arraybackslash}p{0.28\textwidth}}
+  \toprule
+  \textbf{自检项} & \textbf{是/否} & \textbf{说明} \\
+  \midrule
+  AI 是否参与核心模型设计 & \Placeholder{【是/否】} & \Placeholder{【填: 模型思路/公式推导/参数选择是否由本参赛队独立完成; AI 仅辅助代码实现/查资料 = 否; AI 直接给模型 = 是】} \\
+  AI 是否生成或修改程序代码 & \Placeholder{【是/否】} & \Placeholder{【填: 详见 §3 使用目的, 列出哪几个 Python 文件 AI 参与】} \\
+  AI 输出是否经人工审查、修改与核验 & \Placeholder{【是/否】} & \Placeholder{【填: 详见 §4 核验情况表, 至少 1 轮人工 review + 单元测试/解析解对照】} \\
+  AI 是否独立完成核心建模 / 公式推导 / 程序计算 / 最终结论 & \Placeholder{【是/否】} & \Placeholder{【填: 公式推导/参数选择/最终结论均由本参赛队完成; AI 仅辅助 = 否; 关键结论靠 AI = 是】} \\
+  AI 使用占比 (估算) & -- & \Placeholder{【填: 资料检索 X\% + 代码编写 Y\% + 文档润色 Z\% + 其他 W\% = 100\%; 最终决策与判定 100\% 由参赛队完成】} \\
+  \bottomrule
+\end{longtable}
+
+%% ====== §3 三阶段使用目的 (BZD 数模社规范: 资料与思路 → 数据与程序 → 检验与写作) ======
+\section{使用目的与环节}
+
+本参赛队在以下环节使用了 AI 工具（按 BZD 规范分为"资料与思路 → 数据与程序 → 检验与写作"三阶段）。\textbf{每一项条目都必须对应 §4 中一条具体 prompt}，不能空泛列项。
+
+\textbf{第一阶段：资料与思路}
+\begin{itemize}[itemindent=2em]
+  \item \textbf{\Placeholder{【环节名, 如: 题目理解】}}: \Placeholder{【填: AI 做了什么, 如辅助读题 (PyMuPDF 提取 PDF 文本)/ 识别问题数 / 判定题组与题号】}
+  \item \textbf{\Placeholder{【环节名, 如: 模型选择】}}: \Placeholder{【填: AI 做了什么, 如候选模型对比表初稿 / 文献综述 / 思路启发】}
+  \item \Placeholder{【可增删更多环节, 如: 文献检索 / 题意翻译 / 创新点挖掘】}
+\end{itemize}
+
+\textbf{第二阶段：数据与程序}
+\begin{itemize}[itemindent=2em]
+  \item \textbf{\Placeholder{【环节名, 如: 代码编写】}}: \Placeholder{【填: AI 写了哪几个 .py / 哪个函数 / 哪段算法, 如数据预处理 / 优化求解 / 灵敏度分析】}
+  \item \textbf{\Placeholder{【环节名, 如: 数据预处理】}}: \Placeholder{【填: AI 做了什么, 如 profile\_data.py 列类型识别 / 缺失值填补 / 异常值检测】}
+  \item \textbf{\Placeholder{【环节名, 如: 结果可视化】}}: \Placeholder{【填: AI 画了哪些图, 调整了什么参数 (DPI/字号/线宽)】}
+  \item \Placeholder{【可增删更多环节, 如: 公式排版 / 表格生成 / 参考文献格式化】}
+\end{itemize}
+
+\textbf{第三阶段：检验与写作}
+\begin{itemize}[itemindent=2em]
+  \item \textbf{\Placeholder{【环节名, 如: 文档润色】}}: \Placeholder{【填: AI 做了什么, 如 LaTeX 公式排版 / longtable 格式 / GB/T 7714 参考文献】}
+  \item \textbf{\Placeholder{【环节名, 如: 查重改写】}}: \Placeholder{【填: AI 做了什么, 如问题重述改写 / 避免与赛题原文重复 / AIGC 痕迹降低】}
+  \item \textbf{\Placeholder{【环节名, 如: 合规检查】}}: \Placeholder{【填: AI 做了什么, 如按 references/合规检查清单.md 4 类硬规则逐项核对】}
+  \item \Placeholder{【可增删更多环节, 如: 摘要改写 / 答辩准备 / 5 步状态机 smoke test】}
+\end{itemize}
+
+%% ====== §4 主要 prompt 与过程 (节选) ======
+\section{主要 prompt 与过程 (节选)}
+
+%% 评阅只看 §4 验证 §3 真实性. §3 列的每条环节, §4 必须有对应 prompt 痕迹.
+%% 一条 prompt = 一个 \subsection. 删掉不用的, 复制现有格式加新的.
+
+\subsection{3.1 \Placeholder{【环节类型】} prompt: \Placeholder{【任务简述】}}
+
+\textbf{Prompt}: \Placeholder{【把发给 AI 的原始 prompt 完整贴这里, 1-3 行为佳; 不要改写, 评阅会查真实性】}
+
+\textbf{AI 响应}:
+\begin{itemize}
+  \item \Placeholder{【AI 给了什么, 第 1 点】}
+  \item \Placeholder{【AI 给了什么, 第 2 点】}
+  \item \Placeholder{【AI 给了什么, 第 3 点】}
+\end{itemize}
+
+\textbf{采纳 / 修改}:
+\begin{itemize}
+  \item \textbf{采纳}: \Placeholder{【哪些点直接用】}
+  \item \textbf{关键修改}: \Placeholder{【哪些点改了, 改了之后怎样; 改 AI 代码 bug / 调整算法参数 / 修正公式 等】}
+  \item \textbf{效果}: \Placeholder{【改前 X / 改后 Y / 提升 Z\%; 用数据说话】}
+\end{itemize}
+
+\subsection{3.2 \Placeholder{【环节类型】} prompt: \Placeholder{【任务简述】}}
+
+\textbf{Prompt}: \Placeholder{【贴原始 prompt】}
+
+\textbf{AI 响应}: \Placeholder{【贴 AI 主要回答, 1-3 行为佳; 长回答可摘关键句】}
+
+\textbf{采纳}: \Placeholder{$\checkmark$ / $\times$ / 部分} \Placeholder{【填: 全部采纳 / 部分采纳 / 不用; 给出 1-2 句理由】}
+
+\Placeholder{【如果此 prompt 直接产生了可量化的结果 (如优化提升/精度提升), 在此加一段:】}
+\textbf{\Placeholder{【结果】}}:
+\begin{itemize}
+  \item \Placeholder{【Baseline: 数值】}
+  \item \Placeholder{【优化后: 数值】} (\Placeholder{【+/-X\%】})
+\end{itemize}
+
+%% 如还有更多 prompt, 复制 3.1 / 3.2 格式继续加 3.3 / 3.4 / ...
+
+%% ====== §5 核验情况表 (与 §3 环节对应, 评阅重点查真实性) ======
+\section{对 AI 输出的核验情况}
+
+所有 AI 生成的内容均经过人工核验和修改, 具体如下。\textbf{每一条核验条目必须能在 §3 / §4 找到对应来源}。
+
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.32\textwidth}>{\raggedright\arraybackslash}p{0.63\textwidth}}
+  \toprule
+  \textbf{AI 输出} & \textbf{核验方式与修改内容} \\
+  \midrule
+  \Placeholder{【AI 输出 1, 对应 §3 第 X 阶段第 Y 条】} & \Placeholder{【填: 单元测试 + 解析解对照 / 多次运行检查 / 人工审阅 + 规范核对; 改了哪里, 为什么改】} \\
+  \Placeholder{【AI 输出 2】} & \Placeholder{【填核验方式】} \\
+  \Placeholder{【AI 输出 3】} & \Placeholder{【填核验方式】} \\
+  \Placeholder{【AI 输出 4】} & \Placeholder{【填核验方式】} \\
+  \Placeholder{【AI 输出 5】} & \Placeholder{【填核验方式】} \\
+  \Placeholder{【AI 输出 6】} & \Placeholder{【填核验方式】} \\
+  \Placeholder{【可增删更多核验条目, 每条对应 §3 一个环节】} & \Placeholder{【填】} \\
+  \bottomrule
+\end{longtable}
+
+\textbf{核验流程} (本参赛队通用流程, 所有 AI 输出必经):
+\begin{enumerate}
+  \item AI 给出代码 / 公式后, \textbf{手算} 1-2 个简单 case 验证 (边界条件 + 典型场景)
+  \item 跑 \texttt{py} smoke test, 跑 \texttt{py tools/pack.py} 验证 zip
+  \item 跑 \texttt{grep '! Error|Overfull'} 查 LaTeX 编译日志
+  \item 与队友 / 教练讨论, 不通过就改
+\end{enumerate}
+
+\vspace{2em}
+
+\noindent\rule{\textwidth}{0.5pt}
+
+\noindent\textit{参赛队号: \rule{3cm}{0.4pt}\hfill 日期: \rule{2cm}{0.4pt}}
+
+\noindent\textit{参赛队员: \rule{3cm}{0.4pt} \rule{3cm}{0.4pt} \rule{3cm}{0.4pt} \hfill 指导教师: \rule{2cm}{0.4pt}}
+
+\end{document}

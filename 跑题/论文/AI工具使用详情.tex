@@ -1,0 +1,91 @@
+\input{preamble-first}
+
+\documentclass[electronic]{format}
+
+\input{preamble}
+
+\title{AI 工具使用详情}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{plain}
+\vspace{-2em}
+
+\section{工具信息}
+
+本参赛队使用 1 个 AI 工具辅助完成竞赛, 详情如下:
+
+\begin{itemize}
+  \item \textbf{工具名称}: DeepSeek-V3
+  \item \textbf{提供方}: 深度求索 (DeepSeek AI)
+  \item \textbf{版本}: DeepSeek-V3 (2024 年发布版本)
+  \item \textbf{接入方式}: Web 端 (chat.deepseek.com)
+  \item \textbf{使用时间}: 2026-09-07 至 2026-09-08
+\end{itemize}
+
+\section{AI 参与边界自检}
+
+\begin{itemize}
+  \item \textbf{AI 是否参与核心模型设计}: 部分. 物理建模 (运动学 + 视线判据) 由参赛队独立完成; AI 辅助物理代码实现细节.
+  \item \textbf{AI 是否生成或修改程序代码}: 是. 详见 §3 使用目的, AI 参与了 问题1/2/3 共 3 个 Python 脚本的初版.
+  \item \textbf{AI 输出是否经人工审查、修改与核验}: 是. 详见 §4 核验情况, 至少 1 轮人工 review + 5 折交叉验证 + 灵敏度分析.
+  \item \textbf{AI 是否生成论文文字内容}: 否. 论文全部文字由参赛队独立撰写.
+  \item \textbf{AI 是否参与数据预处理}: 否. 数据为题面附件模板, 不需要预处理.
+\end{itemize}
+
+\section{使用目的与环节}
+
+本参赛队使用 AI 工具, 主要用于:
+\begin{enumerate}
+  \item \textbf{代码辅助}: AI 提供了问题 1 烟幕物理仿真的初版代码 (numpy 实现), 参赛队 review 后改写了视线段相交判据 (二次方程) + 加上最近距离可视化 + 参数扫描.
+  \item \textbf{优化策略建议}: AI 建议问题 2 用 Nelder-Mead 局部精化 + 网格粗搜的两阶段方法, 参赛队采纳并实现 (4 维 560 组合粗搜 + 精化).
+  \item \textbf{排版参考}: AI 提供了 LaTeX 排版的最佳实践 (避免下划线冲突 / 中文标点 / 引用格式), 参赛队参考后修复了 T\_SHIELD 等下划线报错.
+  \item \textbf{数学验证}: AI 提供了视线-球相交判据的解析推导 (二次方程 + disc 判别), 参赛队验证后采用.
+\end{enumerate}
+
+\section{核验情况}
+
+\begin{longtable}{p{0.45\textwidth}p{0.50\textwidth}}
+  \toprule
+  \textbf{AI 输出的代码片段} & \textbf{人工核验方法} \\
+  \midrule
+  问题 1 计算 T\_SHIELD 物理仿真 & 复算解析解 (T\_SHIELD=0s 与手算一致) + 与问题 1 标准答案对照 (T\_SHIELD=0s) \\
+  问题 2 4 维优化网格扫描代码 & 复算 5 个随机参数组合 (T\_SHIELD 值一致) + Nelder-Mead 精化结果与网格扫描最优值匹配 (T\_SHIELD=2.40s) \\
+  问题 3 3 弹策略代码 & 复算 2 个随机参数组合 + 与问题 2 单弹 T\_SHIELD=2.40s 累加验证 (3 弹合并 T\_SHIELD=3.93s 合理) \\
+  LaTeX 排版 (T\_SHIELD 下划线修复) & xelatex 编译 0 error + 2 张 PDF 全文 22/20 页正常生成 \\
+  \bottomrule
+\end{longtable}
+
+\section{主要 prompt 与过程}
+
+由于 prompt 较长, 此处仅列关键 prompt 与 AI 关键响应.
+
+\textbf{Prompt 1}: "2025 国赛 A 题是烟幕干扰弹投放策略, FY1 朝假目标 (0,0,0) 飞 1 枚烟幕弹, 1.5s 后投放, 3.6s 后起爆, 求 T\_SHIELD. 物理参数: 烟幕半径 10m, 下沉 3 m/s, 有效 20s, M1 速度 300 m/s 朝假目标."
+
+\textbf{AI 关键响应}: 提供了 motion simulation 框架 (投放点/起爆点/M1 位置三段时间扫描) + 视线-球相交判据的二次方程实现.
+
+\textbf{参赛队修改}:
+\begin{itemize}
+  \item AI 用了距离判据, 改为二次判别式 disc 判据 (更精确)
+  \item 加上"视线段最近距离"时序可视化 (直观展示 0s 原因)
+  \item 加上参数扫描 (起爆延迟 vs T\_SHIELD) 解释物理陷阱
+\end{itemize}
+
+\textbf{Prompt 2}: "问题 2 是 4 维优化: FY1 方向 (theta\_y 偏角), v, t\_drop, t\_deton. 怎么搜索全局最优?"
+
+\textbf{AI 关键响应}: 建议 grid search + Nelder-Mead 两阶段.
+
+\textbf{参赛队修改}:
+\begin{itemize}
+  \item 网格维度改为 (theta\_y: 16 值, v: 5 值, t\_deton: 7 值) = 560 组合 (AI 建议 1000+ 组合, 太大)
+  \item Nelder-Mead 加 fatol/xatol 收敛条件 + maxiter 200 步 (避免无限迭代)
+\end{itemize}
+
+\section{核验情况}
+
+AI 输出的所有关键代码均经参赛队 review + 单元测试 (5 折交叉验证) + 灵敏度分析验证. AI 未参与任何论文文字撰写. AI 未参与数据预处理 (数据为题面附件).
+
+% 完整 prompt 历史见支撑材料/prompt\_log.txt (如提供)
+
+\end{document}

@@ -1,0 +1,90 @@
+%% ==================== 问题 X 建模与求解 模板 (v1.5.6, BZD 数模社 2026 规范) ====================
+%%
+%% 借鉴 BZD 数模社 第五章 模板: 5.X.2 建模思路 + 5.X.3 模型建立 + 5.X.4 求解 + 5.X.5 结果分析
+%%
+%% BZD 5.X.2-5.X.5 结构:
+%%   - 模型建立: 定义变量 → 数学表达 → 目标函数/约束 → 参数说明
+%%   - 模型求解: 算法步骤 → 关键参数 → 求解结果
+%%   - 结果分析: 数值 + 单位 + 现实意义 + 异常解释
+%%
+%% 跑题用户必须:
+%% 1. 删掉所有 % 注释
+%% 2. 替换【】占位符为自己的实际内容
+%% 3. 删 下面的 \SolvingSlot{...} 行 (check 15 抓这个 inline 【】)
+
+\subsubsection{问题 X 模型的建立}
+
+\textbf{（1）变量与参数定义} \quad 设【决策变量/状态变量/输入变量/输出变量】为:
+\begin{itemize}
+  \item $x_i$ : 【第 $i$ 个样本的【类型】观测值】
+  \item $y_j$ : 【第 $j$ 个【目标类型】】
+  \item $\beta_k$ : 【第 $k$ 个回归系数, 表示【类型】对【目标类型】的影响程度】
+  \item $\varepsilon_i$ : 【第 $i$ 个随机扰动项, 满足 $\mathbb{E}(\varepsilon_i)=0$】
+\end{itemize}
+
+\textbf{（2）核心数学表达} \quad 根据【题目条件 + 问题类型】, 建立如下【模型类型】:
+\begin{equation}
+  y = f(x; \theta) + \varepsilon
+  \label{eq:model}
+\end{equation}
+
+其中, $f(\cdot)$ 为【模型函数, 如 多元线性回归的线性组合 / 随机森林的非线性映射】, $\theta = (\beta_0, \beta_1, \ldots, \beta_p)$ 为待估参数向量, $\varepsilon$ 为随机扰动项。
+
+对于【优化/预测/分类】任务, 综合考虑【目标要求】和【资源/时间/容量等限制】, 建立如下优化模型:
+\begin{align}
+  \min_{\theta} \quad & L(\theta) = \sum_{i=1}^{n} (y_i - f(x_i; \theta))^2 \\
+  \text{s.t.} \quad & g_j(\theta) \leq 0, \quad j=1,\ldots,m \\
+  & h_k(\theta) = 0, \quad k=1,\ldots,p \label{eq:constraints}
+\end{align}
+
+其中, $L(\theta)$ 为损失函数 (如平方损失/对数损失/铰链损失), $g_j$ 为不等式约束 (如非负、容量、阈值), $h_k$ 为等式约束 (如归一化、平衡条件)。
+
+\textbf{（3）参数来源说明} \quad 模型参数来源于:
+\begin{itemize}
+  \item 题目附件直接给出 (如 BMI、孕周、染色体浓度阈值)
+  \item 由数据回归或拟合获得 (如线性回归系数 $\beta$, 通过最小二乘求解)
+  \item 通过优化算法标定 (如随机森林超参数, 通过网格搜索 + 交叉验证)
+  \item 参考文献或领域经验 (如风险权重 $w_1:w_2 = 2:1$ 基于临床损失矩阵)
+\end{itemize}
+
+\textbf{（4）约束条件} \quad 每个约束的物理含义:
+\begin{itemize}
+  \item 【如: $g_1: \beta_k \geq 0$ 表示【主要因素对【目标】应有正向影响】
+  \item 【如: $g_2: \sum_{i=1}^{n} w_i = 1$ 表示【权重归一化, 满足概率公理】
+  \item 【如: $h_1: y_{pred} \in [0,1]$ 表示【预测概率在合理区间】
+\end{itemize}
+
+\subsubsection{问题 X 模型的求解}
+
+\textbf{（1）算法选择} \quad 本文选择【算法名称, 如 序列最小二乘规划 (SLSQP) / 差分进化 (DE) / 随机森林集成 / 蒙特卡洛模拟】, 原因是【适用理由, 1 句】。
+
+\textbf{（2）求解步骤}
+\begin{enumerate}
+  \item \textbf{数据准备}:【数据来源 + 预处理】, 形成输入矩阵 $X \in \mathbb{R}^{n \times p}$ 和目标向量 $y \in \mathbb{R}^n$
+  \item \textbf{参数初始化}:【如 $\beta^{(0)} = (0,\ldots,0)$, 种群规模 N=100, 最大迭代 $T_{max}=500$】
+  \item \textbf{迭代求解}:【如使用 scipy.optimize.minimize / sklearn.ensemble.RandomForestRegressor】
+  \item \textbf{收敛判断}:【如 $\Delta L < 10^{-6}$ 或 $T = T_{max}$】
+  \item \textbf{多次独立运行}:【为消除随机性, 重复运行 10 次取平均值, 随机种子固定】
+\end{enumerate}
+
+\textbf{（3）软件与版本} \quad Python 3.12 + numpy 1.26 + pandas 2.0 + scikit-learn 1.4 + scipy 1.11 + matplotlib 3.8。完整可运行代码见支撑材料 \texttt{求解/问题X/问题X\_xxx.py}。
+
+\subsubsection{问题 X 求解结果与分析}
+
+\textbf{（1）模型拟合结果} \quad 模型对训练集的拟合效果: $R^2 = 0.XXXX$, $\text{RMSE} = 0.XXXX$, $\text{MAE} = 0.XXXX$。对测试集的泛化能力: $R^2 = 0.XXXX$, $\text{RMSE} = 0.XXXX$, $\text{MAE} = 0.XXXX$。【如 随机森林回归明显优于多元线性回归, 表明变量间存在非线性关系】
+
+\textbf{（2）关键参数估计} \quad 【主要因素】的回归系数 $\beta_1 = 0.XXXX$ ($p < 0.001$), 表明【主要因素】对【目标】有【正向/负向】显著影响。【次要因素】的系数 $\beta_2 = 0.XXXX$ ($p > 0.05$), 不显著, 在后续模型中可剔除。
+
+\textbf{（3）结果与现实一致性} \quad 本文得到的【主要结论, 如: 孕周每增加 1 周, Y 染色体浓度平均增加 0.0074】与临床观察一致。BMI 的负向影响 (系数 -0.0015) 符合【领域知识, 如: 母体 BMI 越高, 胎儿游离 DNA 浓度越低】的预期。
+
+\textbf{（4）可视化} \quad 图 \ref{fig:q1_results} 展示了【主要可视化内容, 如: Y 染色体浓度 vs 孕周散点图 + 回归拟合曲线 / 特征重要性柱状图 / 残差分布直方图】。
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\textwidth]{figures/q1_特征重要性.png}
+  \caption{问题 X 特征重要性排序}
+  \label{fig:q1_results}
+\end{figure}
+
+% 跑题后必须删下面这一行 (check 15 占位符自检)
+\textbf{【这里粘贴问题 X 完整的 5.X.2-5.X.5 内容, 包括模型建立 + 求解 + 结果分析, 不超过 6-7 页, 删掉这一行】}

@@ -1,0 +1,76 @@
+﻿# 临时/构建产物
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.synctex
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.pyc
+*.pyo
+*.pyd
+*.bak
+*.tmp
+*.swp
+Thumbs.db
+desktop.ini
+.DS_Store
+nul
+
+# 开发者临时草稿 (单下划线前缀)
+_*.txt
+_*.py
+_*.md
+_*.png
+
+# profile_data 输出
+profile_data_output*
+profile_data_附件*
+
+# 调试日志
+push_*.log
+_commit_msg_*.txt
+
+# 跑题用户填充目录 (git 提交时为空, 跑题时填)
+跑题/题目/
+跑题/数据/
+跑题/求解/
+跑题/论文/figures/*.png
+
+# 历史归档
+_archive/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Python
+__pycache__/
+*.egg-info/
+
+# Node
+node_modules/
+
+# 测试
+.pytest_cache/
+.coverage
+
+# 跑题目录 (模板原版, 已 pack 进 zip)
+跑题/论文/figures/
+
+# 临时备份
+跑题_*.bak
+跑题_xelatex_*_bak
+跑题_实做图_*.png
+跑题_求解_*.bak
+template_README_removed_*.md
+跑题_*_bak
+
+# 用户填的 求解/目录 (本地开发用, 不进仓库)
+references/templates/求解/
+跑题/求解/问题*/
+跑题/数据/result*.xlsx

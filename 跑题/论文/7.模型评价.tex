@@ -1,0 +1,86 @@
+%% ==================== 模型检验 模板 (v1.5.6, BZD 数模社 2026 规范) ====================
+%%
+%% 借鉴 BZD 数模社 模型检验模板: 误差分析 + 交叉验证 + 灵敏度 + 稳健性
+%%
+%% BZD 模型检验 4 大类:
+%%  1. 误差分析: MAE/RMSE/MAPE/R² + 残差分布
+%%  2. 交叉验证: K 折 (通常 K=5 或 K=10) 验证泛化能力
+%%  3. 灵敏度分析: 关键参数 ±10-20% 变化对结果影响
+%%  4. 稳健性: 改变输入数据/异常值处理/参数初值, 看结论是否改变
+%%
+%% 跑题用户必须:
+%% 1. 删掉所有 % 注释
+%% 2. 替换【】占位符为自己的实际内容
+%% 3. 删 下面的 \CheckSlot{...} 行 (check 15 抓这个 inline 【】)
+
+\section{模型检验}
+
+\subsection{误差分析}
+
+为评估各模型的预测精度, 本文采用 MAE (平均绝对误差)、RMSE (均方根误差)、MAPE (平均绝对百分比误差) 和 $R^2$ (决定系数) 四个指标, 在测试集上对各模型进行评价, 结果如表 \ref{tab:error_metrics} 所示。
+
+\begin{table}[htbp]
+  \centering
+  \caption{各模型在测试集上的误差指标}
+  \label{tab:error_metrics}
+  \begin{tabular}{lcccc}
+    \toprule
+    \textbf{模型} & \textbf{MAE} & \textbf{RMSE} & \textbf{MAPE (\%)} & \textbf{$R^2$} \\
+    \midrule
+    【主模型 (问题一)】 & 【0.0XXX】 & 【0.0XXX】 & 【X.XX】 & 【0.XXXX】 \\
+    【主模型 (问题二)】 & 【0.0XXX】 & 【0.0XXX】 & 【X.XX】 & 【0.XXXX】 \\
+    【主模型 (问题三)】 & 【0.0XXX】 & 【0.0XXX】 & 【X.XX】 & 【0.XXXX】 \\
+    【主模型 (问题四)】 & 【0.0XXX】 & 【0.0XXX】 & 【X.XX】 & 【0.XXXX】 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+从表 \ref{tab:error_metrics} 可以看出, 【主结论, 如: 本文建立的【模型名】在【数据范围】内具有较好的预测精度, 各项误差指标均处于可接受水平, $R^2$ 均在 0.XX 以上, 表明模型能够解释【目标变量】约 XX\% 的变异】。
+
+\subsection{交叉验证}
+
+为验证模型的泛化能力, 本文采用 5 折交叉验证 (K=5), 将【总样本量 N】个样本随机划分为 5 个子集, 每次以 4 个子集训练、1 个子集测试, 循环 5 次, 取平均结果。交叉验证结果如表 \ref{tab:cv} 所示。
+
+\begin{table}[htbp]
+  \centering
+  \caption{5 折交叉验证结果}
+  \label{tab:cv}
+  \begin{tabular}{cccccc}
+    \toprule
+    \textbf{折次} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} \\
+    \midrule
+    $R^2$ & 【0.XXXX】 & 【0.XXXX】 & 【0.XXXX】 & 【0.XXXX】 & 【0.XXXX】 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+5 折交叉验证的 $R^2$ 标准差为 【0.0XX】, 表明模型在【数据规模】下具有良好的稳定性和泛化能力, 不存在明显过拟合。
+
+\subsection{灵敏度分析}
+
+为检验模型对关键参数的敏感程度, 本文选取【主要参数, 2-3 个】, 在【基准值 $\pm 20\%$】范围内逐步变化, 观察模型输出的变化情况, 结果如图 \ref{fig:sensitivity} 所示。
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\textwidth]{figures/sensitivity_关键参数.png}
+  \caption{关键参数灵敏度分析 (基准值 ± 20\%)}
+  \label{fig:sensitivity}
+\end{figure}
+
+灵敏度分析表明:
+\begin{itemize}
+  \item 【参数 1】在【区间】内变化时, 模型结果保持稳定, 相对灵敏度系数 $|S| < 0.1$, 表明模型对该参数不敏感
+  \item 【参数 2】在【区间】内变化时, 模型结果变化明显, 相对灵敏度系数 $|S| > 1.0$, 表明模型对该参数较为敏感, 在实际应用中应【提高该参数的估计精度 / 增加额外验证 / 设置保守阈值】
+\end{itemize}
+
+\subsection{稳健性检验}
+
+为检验模型对数据扰动的稳健性, 本文采用以下方式:
+\begin{itemize}
+  \item \textbf{异常值处理方法变化}: 分别使用 3$\sigma$ 准则和 IQR 准则 (四分位距) 剔除异常值, 重新训练模型, 主要结论保持不变
+  \item \textbf{样本规模变化}: 随机抽取 70\% 和 50\% 的样本重新训练, 关键参数的相对变化均小于 10\%, 表明模型对样本规模不敏感
+  \item \textbf{参数初值变化}: 对随机算法 (如随机森林、差分进化) 使用不同随机种子重复运行 10 次, 关键结果的标准差均小于 5\%, 表明算法具有较好的稳定性
+\end{itemize}
+
+% 跑题后必须删下面这一行 (check 15 占位符自检)
+\textbf{【这里粘贴完整的 4 类检验结果, 不超过 2-3 页, 删掉这一行】}
