@@ -1013,6 +1013,32 @@ def check_v15713_category_adaptation():
     return ("green", "5道防线自检清单 + 信息边界原则 + 题目设计意图 §6/§7 都含类目适配说明", None)
 
 
+def check_v15714_category_references():
+    """checkable 26: v1.5.7.14 4 类目专属 references (物理/数据/优化/调度) 全在
+    1. references/物理机理类典型反模式.md 存在 + 含 §1 反模式 + §3 期望对照
+    2. references/数据分析类典型反模式.md 存在 + 含 §1 反模式 + §4 时序严格
+    3. references/优化类典型反模式.md 存在 + 含 §1 反模式 + §3 期望对照
+    """
+    cat_files = [
+        (REFS_DIR / "物理机理类典型反模式.md", ["## 1.", "网格收敛"], "物理机理类典型反模式.md 缺 §1 反模式或网格收敛段"),
+        (REFS_DIR / "数据分析类典型反模式.md", ["## 1.", "训练-测试", "时序"], "数据分析类典型反模式.md 缺 §1 反模式或训练-测试/时序段"),
+        (REFS_DIR / "优化类典型反模式.md", ["## 1.", "gap", "灵敏度"], "优化类典型反模式.md 缺 §1 反模式或 gap/灵敏度段"),
+    ]
+    missing = []
+    for path, required_kws, fix in cat_files:
+        if not path.exists():
+            missing.append(f"{path.name} 不存在")
+            continue
+        content = path.read_text(encoding="utf-8", errors="replace")
+        for kw in required_kws:
+            if kw not in content:
+                missing.append(f"{path.name} 缺 '{kw}' 段")
+    if missing:
+        return ("red", f"v1.5.7.14 类目 references 缺: {'; '.join(missing)}",
+                "补齐 3 份类目 references (§1 反模式 + 类目专属术语: 物理=网格收敛/数据=训练-测试/优化=gap)")
+    return ("green", "物理机理/数据分析/优化 3 类目 references 全在 + 类目专属术语齐", None)
+
+
 CHECKS = [
     ("1. 装包 (核心包)", check_pkg),
     ("2. 10 Python 脚本", check_python_scripts),
@@ -1039,6 +1065,7 @@ CHECKS = [
     ("23. v1.5.7.9 三口径铁律 + 数据物理真实性", check_v1579_three_modes_and_data),
     ("24. v1.5.7.11 5 道防线自检清单 (中心索引 + 反模式 + checklist)", check_v15711_five_lines_index),
     ("25. v1.5.7.13 类目适配说明 (防通用性陷阱, 3 references 顶部标 [调度类]/[通用])", check_v15713_category_adaptation),
+    ("26. v1.5.7.14 4 类目 references (物理/数据/优化 + 调度, 类目专属术语)", check_v15714_category_references),
 ]
 
 
