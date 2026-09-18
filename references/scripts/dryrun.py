@@ -1039,6 +1039,32 @@ def check_v15714_category_references():
     return ("green", "物理机理/数据分析/优化 3 类目 references 全在 + 类目专属术语齐", None)
 
 
+def check_v15715_more_category_references():
+    """checkable 27: v1.5.7.15 7 类目 references 全在 (扩 3 类: 经济/生物/交通)
+    1. references/经济金融类典型反模式.md 存在 + 含 §1 反模式 + 类目专属术语 (基点/风险度量/压力测试)
+    2. references/生物医疗类典型反模式.md 存在 + 含 §1 反模式 + 类目专属术语 (机理引用/多重校正/伦理)
+    3. references/交通运筹类典型反模式.md 存在 + 含 §1 反模式 + 类目专属术语 (网络结构/Pareto/时空约束)
+    """
+    cat_files = [
+        (REFS_DIR / "经济金融类典型反模式.md", ["## 1.", "基点", "压力测试"], "经济金融类典型反模式.md 缺 §1 反模式或基点/压力测试段"),
+        (REFS_DIR / "生物医疗类典型反模式.md", ["## 1.", "机理引用", "多重校正"], "生物医疗类典型反模式.md 缺 §1 反模式或机理引用/多重校正段"),
+        (REFS_DIR / "交通运筹类典型反模式.md", ["## 1.", "网络结构", "Pareto"], "交通运筹类典型反模式.md 缺 §1 反模式或网络结构/Pareto段"),
+    ]
+    missing = []
+    for path, required_kws, fix in cat_files:
+        if not path.exists():
+            missing.append(f"{path.name} 不存在")
+            continue
+        content = path.read_text(encoding="utf-8", errors="replace")
+        for kw in required_kws:
+            if kw not in content:
+                missing.append(f"{path.name} 缺 '{kw}' 段")
+    if missing:
+        return ("red", f"v1.5.7.15 新增 3 类目 references 缺: {'; '.join(missing)}",
+                "补齐 3 份新类目 references (§1 反模式 + 类目专属术语: 经济=基点/生物=多重校正/交通=Pareto)")
+    return ("green", "经济金融/生物医疗/交通运筹 3 类目 references 全在 + 类目专属术语齐", None)
+
+
 CHECKS = [
     ("1. 装包 (核心包)", check_pkg),
     ("2. 10 Python 脚本", check_python_scripts),
@@ -1066,6 +1092,7 @@ CHECKS = [
     ("24. v1.5.7.11 5 道防线自检清单 (中心索引 + 反模式 + checklist)", check_v15711_five_lines_index),
     ("25. v1.5.7.13 类目适配说明 (防通用性陷阱, 3 references 顶部标 [调度类]/[通用])", check_v15713_category_adaptation),
     ("26. v1.5.7.14 4 类目 references (物理/数据/优化 + 调度, 类目专属术语)", check_v15714_category_references),
+    ("27. v1.5.7.15 7 类目 references (扩 3 类: 经济/生物/交通, 类目专属术语)", check_v15715_more_category_references),
 ]
 
 
