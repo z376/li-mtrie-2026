@@ -793,8 +793,8 @@ def check_v1575_polish():
 
 
 def check_v1576_data_isolation():
-    """checkable 21: v1.5.7.6 数据隔离原则 — 0:00 计划不能用当天实际 (评阅要点 §2.6)
-    1. SKILL.md 含 "0:00 信息边界原则" 章节 (强制锚定)
+    """checkable 21: v1.5.7.6 数据隔离原则 — 周期起点计划不能用当期实际 (评阅要点对应章节 "数据使用" 条款)
+    1. SKILL.md 含 "周期起点信息边界" 章节 (v1.5.7.16 升级: 0:00 决策 → 周期起点决策, 调度类专属例子保留)
     2. references/信息边界原则.md 存在 (核心规则文档)
     3. references/读题清单.md 含 "题面禁项" 第 4 列
     4. 跑题目录 .py 文件不含 "loads_actual[day_idx]" (无 -1) 数据泄露模式
@@ -803,10 +803,10 @@ def check_v1576_data_isolation():
     if not skill_md.exists():
         return ("red", "SKILL.md 不存在", "修 SKILL.md")
     content = skill_md.read_text(encoding="utf-8", errors="replace")
-    # 1. SKILL.md 含 "0:00 信息边界原则" 章节
-    if "0:00 信息边界原则" not in content:
-        return ("red", "SKILL.md 缺 '0:00 信息边界原则' 章节 (v1.5.7.6 必加, 防数据泄露)",
-                "在 §Step 0 15 项表格后加 '📌 0:00 信息边界原则 (v1.5.7.6 新增)' 章节, 列三类信息边界")
+    # 1. SKILL.md 含 "周期起点信息边界" 章节 (v1.5.7.16 升级)
+    if "周期起点信息边界" not in content:
+        return ("red", "SKILL.md 缺 '周期起点信息边界' 章节 (v1.5.7.6 必加 + v1.5.7.16 升级概念, 防数据泄露)",
+                "在 §Step 0 15 项表格后加 '📌 周期起点信息边界 (v1.5.7.6 新增, v1.5.7.16 概念升级)' 章节, 列三类信息边界 (历史/预报/当期实际)")
     # 2. references/信息边界原则.md 存在
     boundary_doc = REFS_DIR / "信息边界原则.md"
     if not boundary_doc.exists():
@@ -1065,6 +1065,37 @@ def check_v15715_more_category_references():
     return ("green", "经济金融/生物医疗/交通运筹 3 类目 references 全在 + 类目专属术语齐", None)
 
 
+def check_v15716_period_start_concept():
+    """checkable 28: v1.5.7.16 周期起点决策概念升级 (防 0:00 锚定陷阱)
+    1. references/信息边界原则.md 核心规则用 '周期起点' (不锚定 0:00)
+    2. SKILL.md §Step 0/1 含 '周期起点' 概念
+    3. 5道防线自检清单.md 自检 checklist 用 '周期起点' (而非 0:00)
+    """
+    # 1. 信息边界原则.md 核心规则用 周期起点
+    boundary_doc = REFS_DIR / "信息边界原则.md"
+    if not boundary_doc.exists():
+        return ("red", "references/信息边界原则.md 缺失", "不可用")
+    boundary_content = boundary_doc.read_text(encoding="utf-8", errors="replace")
+    if "周期起点" not in boundary_content:
+        return ("red", "references/信息边界原则.md 缺 '周期起点' 概念 (v1.5.7.16 升级)",
+                "把 '0:00 决策' 改为 '周期起点决策 (e.g. 每日 0:00 调度)', 概念通用化, 0:00 仅作调度类例子")
+    # 2. SKILL.md 含 周期起点
+    skill_md = SKILL_ROOT / "SKILL.md"
+    skill_content = skill_md.read_text(encoding="utf-8", errors="replace")
+    if "周期起点" not in skill_content:
+        return ("red", "SKILL.md 缺 '周期起点' 概念 (v1.5.7.16 升级)",
+                "把 '0:00 LP' / '0:00 决策' 改为 '周期起点 LP' / '周期起点决策'")
+    # 3. 5道防线自检清单.md 含 周期起点
+    five_lines_doc = REFS_DIR / "5道防线自检清单.md"
+    if five_lines_doc.exists():
+        five_content = five_lines_doc.read_text(encoding="utf-8", errors="replace")
+        if "周期起点" not in five_content:
+            return ("yellow",
+                    "5道防线自检清单.md 缺 '周期起点' 概念 (可忽略, 已大部分替换",
+                    "把 §3 自检中 '0:00 信息边界列表' 改为 '周期起点信息边界列表 (历史/预报/当期)'")
+    return ("green", "信息边界原则.md + SKILL.md + 5道防线自检清单 都用 '周期起点决策' 概念, 0:00 仅作调度类例子", None)
+
+
 CHECKS = [
     ("1. 装包 (核心包)", check_pkg),
     ("2. 10 Python 脚本", check_python_scripts),
@@ -1086,13 +1117,14 @@ CHECKS = [
     ("18. Post-Solution Audit (必做 2+4)", check_post_solution_audit),
     ("19. 读题清单 15 项全覆盖 (Step 0)", check_reading_checklist),
     ("20. v1.5.7.5 writing-for-agents 修剪 (description/红线/CHANGELOG/4 完成判据)", check_v1575_polish),
-    ("21. v1.5.7.6 数据隔离原则 (0:00 不用当天实际)", check_v1576_data_isolation),
+    ("21. v1.5.7.6 数据隔离原则 (周期起点不用当期实际, v1.5.7.16 升级 0:00 概念)", check_v1576_data_isolation),
     ("22. v1.5.7.7 题目设计意图分析 (递进关系 + 期望方向)", check_v1577_design_intent),
     ("23. v1.5.7.9 三口径铁律 + 数据物理真实性", check_v1579_three_modes_and_data),
     ("24. v1.5.7.11 5 道防线自检清单 (中心索引 + 反模式 + checklist)", check_v15711_five_lines_index),
     ("25. v1.5.7.13 类目适配说明 (防通用性陷阱, 3 references 顶部标 [调度类]/[通用])", check_v15713_category_adaptation),
     ("26. v1.5.7.14 4 类目 references (物理/数据/优化 + 调度, 类目专属术语)", check_v15714_category_references),
     ("27. v1.5.7.15 7 类目 references (扩 3 类: 经济/生物/交通, 类目专属术语)", check_v15715_more_category_references),
+    ("28. v1.5.7.16 周期起点决策概念升级 (防 0:00 锚定陷阱)", check_v15716_period_start_concept),
 ]
 
 
