@@ -13,7 +13,7 @@ description: |
 
 metadata:
 
-  version: "1.5.7.17"
+  version: "1.5.7.18"
 
   category: competition-workflow
 
@@ -1087,9 +1087,7 @@ CUMCM 题目是**研究性问题**, 不是"按字面跑 LP". 题目设计有**�
 
 - **3 轮协议**（结构化降重流程）：第 1 轮 减法（划禁改 → 扫描 → 词级 → 句级 → 段落）→ 第 2 轮 加法（节奏工程 + 审慎推断 + 具体化）→ 第 3 轮 Anti-AI 审计
 
-- **5 类禁改片段** → `references/受保护片段.md`（引用/公式/数据/术语/引语）
-
-- **4 平台检测弱点** → `references/检测平台弱点.md`（知网 3.0 / PaperPure / 万方 / PaperPass + 3 档修改率）
+- **5 类禁改片段 + 4 平台检测弱点 + 3 档修改率 + 实战策略** → `references/AIGC降重策略.md` (v1.5.7.18 合并自 `受保护片段.md` + `检测平台弱点.md`)
 
 - **9 维度自动扫描** → `references/scripts/aigc_scan.py`（借鉴 aigc-reduce，含 GBK 兼容 patch）
 

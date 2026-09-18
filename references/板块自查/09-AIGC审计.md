@@ -70,8 +70,7 @@
 - `references/scripts/aigc_scan.py` — 第 1 层 9 维度自动扫描
 - `references/llm-prompts/03-自动审稿.md` — LLM 5 维评分
 - `references/去AIGC指南.md` — 4 层降重法 + 9 类痕迹 + 6 类代码 AI 特征
-- `references/受保护片段.md` — 5 类禁改
-- `references/检测平台弱点.md` — 4 平台对比
+- `references/AIGC降重策略.md` (v1.5.7.18 合并) — 5 类禁改 + 4 平台对比 + 3 档修改率 + 实战策略
 
 ## 更新记录
 

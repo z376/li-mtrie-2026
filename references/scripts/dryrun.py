@@ -1125,6 +1125,41 @@ def check_v15717_consolidation():
     return ("green", "信息边界 + 题目设计意图 重复段合并: §2 反模式 2 引用 §7, §7 是唯一完整版", None)
 
 
+def check_v15718_aigc_merge():
+    """checkable 30: v1.5.7.18 AIGC 文档合并 (受保护片段 + 检测平台弱点 → AIGC降重策略.md)
+    1. references/AIGC降重策略.md 存在 + 含 §1 核心铁律 + §2 5 类禁改 + §3 4 平台 + §7 实战策略
+    2. references/受保护片段.md 已删除 (不应存在)
+    3. references/检测平台弱点.md 已删除 (不应存在)
+    """
+    # 1. AIGC降重策略.md 存在 + 4 关键章节
+    aigc_doc = REFS_DIR / "AIGC降重策略.md"
+    if not aigc_doc.exists():
+        return ("red", "references/AIGC降重策略.md 缺失 (v1.5.7.18 合并必须新建)",
+                "新建 references/AIGC降重策略.md, 合并 受保护片段 + 检测平台弱点")
+    aigc_content = aigc_doc.read_text(encoding="utf-8", errors="replace")
+    required_sections = [
+        ("§1 核心铁律", "绝不为降重补进原文没有的事实"),
+        ("§2 5 类禁改", "5 类禁改片段"),
+        ("§3 4 大检测平台", "4 大检测平台对比"),
+        ("§7 实战策略", "实战策略"),
+    ]
+    missing = [name for name, kw in required_sections if kw not in aigc_content]
+    if missing:
+        return ("red", f"references/AIGC降重策略.md 缺章节 ({', '.join(missing)})",
+                "合并 受保护片段 + 检测平台弱点, 至少保留 4 章节: 核心铁律/5 类禁改/4 平台/实战策略")
+    # 2 & 3. 受保护片段.md + 检测平台弱点.md 不应存在
+    legacy_files = [
+        REFS_DIR / "受保护片段.md",
+        REFS_DIR / "检测平台弱点.md",
+    ]
+    still_exists = [p.name for p in legacy_files if p.exists()]
+    if still_exists:
+        return ("yellow",
+                f"v1.5.7.18 合并后旧文件仍存在 ({', '.join(still_exists)})",
+                f"删除 {'/'.join(still_exists)} — 内容已合并到 references/AIGC降重策略.md")
+    return ("green", "AIGC 文档合并: 受保护片段 + 检测平台弱点 → AIGC降重策略.md (4 章节齐, 旧文件已删)", None)
+
+
 CHECKS = [
     ("1. 装包 (核心包)", check_pkg),
     ("2. 10 Python 脚本", check_python_scripts),
@@ -1155,6 +1190,7 @@ CHECKS = [
     ("27. v1.5.7.15 7 类目 references (扩 3 类: 经济/生物/交通, 类目专属术语)", check_v15715_more_category_references),
     ("28. v1.5.7.16 周期起点决策概念升级 (防 0:00 锚定陷阱)", check_v15716_period_start_concept),
     ("29. v1.5.7.17 信息边界 + 题目设计意图 重复段合并 (防内容重复)", check_v15717_consolidation),
+    ("30. v1.5.7.18 AIGC 文档合并 (受保护片段 + 检测平台弱点 → AIGC降重策略.md)", check_v15718_aigc_merge),
 ]
 
 
