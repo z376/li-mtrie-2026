@@ -1,6 +1,29 @@
-# CHANGELOG (v1.5.7.11 — 5 道防线集中索引, 反模式对照表 + 自检 checklist)
+# CHANGELOG (v1.5.7.12 — description 锐化, 5 道防线锚定 + 必读 3 文件)
 
 > v1.5.7.11 实战索引化: 5 道防线 (v1.5.7.5 ~ v1.5.7.10) 分散在 SKILL.md 和多个 references/. 新建 `references/5道防线自检清单.md` (6.5 KB) 做**集中索引 + 反模式对照表 (12 行) + 跑题前 checklist (10 项) + 跑完后对照表 (5 项)**, AI 一处拿到全貌, 避免"知道有但漏了".
+
+---
+
+## v1.5.7.12 — description 锐化 (v1.5.7.11 hotfix)
+
+**核心**: 按 writing-for-agents 6 维度审计 v1.5.7.11 的 SKILL.md description (7 行), 锐化到 4 行:
+
+- **必读指针扩 2 → 3**: 加 v1.5.7.11 新增的 `references/5道防线自检清单.md` (中心索引 + 反模式 + checklist)
+- **5 道防线锚定**: 新增 1 行明确列 5 个防线 + 版本号, 让 AI 第一眼知道"5 道防线"框架
+- **触发器尖锐化**: "pastes 数模赛题 PDF 并说开始跑题" → "用户贴题目 PDF + '开始跑题'/求解后'出论文 PDF'/验本 skill"
+- **反 trigger 收紧**: "general data analysis, one-off Python scripts" → "普通数据分析 / one-off Python / 非论文交付的研究问题"
+
+**审计 6 维度** (writing-for-agents 原则):
+1. **触发清晰**: ✓ "用户贴 PDF + 3 个动作" 一行讲清
+2. **必读指针**: ✓ 3 references + 各自用途
+3. **核心规则**: ✓ 5 道防线 + 版本号 (强化防线 4)
+4. **反 trigger**: ✓ "非论文交付"
+5. **行数**: ✓ 4 行 (≤ 6 约束)
+6. **尖锐度**: ✓ "防数据泄露 / 防按字面跑不解题 / 5 道防线"
+
+**影响文件**: SKILL.md (description + metadata.version 1.5.7.9 → 1.5.7.12).
+
+**dryrun**: 17/24 green + 7 yellow + 0 red (check 7 frontmatter + check 20 description ≤ 6 行 全绿).
 
 ---
 

@@ -1,14 +1,12 @@
 ---
 name: li-mtrie
 description: |
-  数学建模竞赛（国赛/美赛/MCM/ICM/CUMCM）端到端 skill。Use when the user pastes 数模赛题 PDF
-  并说"开始跑题"，或求解后说"出论文 PDF"，或验证本 skill ("smoke test")。
-  **AI 跑题前必读** `references/信息边界原则.md` (防数据泄露) + `references/题目设计意图分析.md` (防按字面跑不解题).
-
-  Do NOT use for: general data analysis, one-off Python scripts, or research questions
-  that don't lead to a `论文.pdf` deliverable.
+  数模竞赛 (CUMCM/MCM/ICM/美赛) 端到端 skill。Use when: 用户贴题目 PDF + "开始跑题"/求解后"出论文 PDF"/验本 skill。
+  **AI 跑题前必读 3 references**: 信息边界原则 (防数据泄露) + 题目设计意图分析 (防按字面跑不解题) + 5道防线自检清单 (中心索引 + 反模式 + 自检 checklist).
+  **5 道防线**: 流程修剪 (v1.5.7.5) / 数据隔离 (v1.5.7.6) / 设计意图 (v1.5.7.7) / 指针强化 (v1.5.7.8) / 三口径+物理 (v1.5.7.9).
+  Do NOT use: 普通数据分析 / one-off Python / 非论文交付的研究问题.
 metadata:
-  version: "1.5.7.9"
+  version: "1.5.7.12"
   category: competition-workflow
   scope: user
   source_workspace: D:/MiniMax code/1/数建Skill模板
