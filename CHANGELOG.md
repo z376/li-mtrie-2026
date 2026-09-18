@@ -4,6 +4,14 @@
 
 ---
 
+## v1.5.7.8 — references/ 指针强化 (v1.5.7.7 hotfix)
+
+**核心**: v1.5.7.7 新增的 references/信息边界原则.md 和 references/题目设计意图分析.md 是**被动文档**, AI 跑题时**不一定主动读**. 按 writing-for-agents "sharpen wording" 原则, 必须**显式强制** AI 必读.
+
+- SKILL.md frontmatter description 加 1 行 "**AI 跑题前必读 references/信息边界原则.md + 题目设计意图分析.md, 否则会数据泄露 + 误读题面**" (always-loaded, AI 第一眼看到)
+- SKILL.md §Step 0 顶部加 "AI 跑题前必读 3 文件" 提示段 (含 description 触发 + 3 文件 + 建议执行顺序)
+- description 行数: 2 → 3 (符合 ≤ 6 行约束)
+
 ## v1.5.7.7 — 题目设计意图分析 (hotfix on v1.5.7.6)
 
 **核心**: 跑题前必识别 **N 个问题间的递进关系 + 每个问题测什么 + 期望结果方向**, 跑完后**对照期望**, 不达预期 = 方法错, 回头改.
