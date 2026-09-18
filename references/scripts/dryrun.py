@@ -1096,6 +1096,35 @@ def check_v15716_period_start_concept():
     return ("green", "信息边界原则.md + SKILL.md + 5道防线自检清单 都用 '周期起点决策' 概念, 0:00 仅作调度类例子", None)
 
 
+def check_v15717_consolidation():
+    """checkable 29: v1.5.7.17 信息边界 + 题目设计意图 重复段合并 (防内容重复)
+    1. 信息边界原则.md §2 反模式 2 不含完整缩 g 代码 (应引用 §7, 不重复)
+    2. 信息边界原则.md §2 反模式 2 引用 '题目设计意图分析.md §7'
+    3. 题目设计意图分析.md §7 仍存在 + 含 §7 数据物理真实性
+    """
+    boundary_doc = REFS_DIR / "信息边界原则.md"
+    if not boundary_doc.exists():
+        return ("red", "references/信息边界原则.md 缺失", "不可用")
+    boundary_content = boundary_doc.read_text(encoding="utf-8", errors="replace")
+    # 1. 信息边界 §2 反模式 2 不含完整缩 g 代码 (应该引用 §7)
+    if "LpVariable" in boundary_content and "P_step" in boundary_content:
+        # 检查是否在 反模式 2 段含这些
+        if "反模式 2" in boundary_content and boundary_content.find("反模式 2") < boundary_content.find("LpVariable"):
+            return ("red", "信息边界原则.md §2 反模式 2 含完整缩 g 代码 (v1.5.7.17 合并后应引用 §7, 不重复)",
+                    "把 §2 反模式 2 的缩 g 代码块替换为 '→ 见 references/题目设计意图分析.md §7' 引用")
+    # 2. 信息边界 §2 反模式 2 引用 §7
+    if "§7" not in boundary_content or "题目设计意图分析" not in boundary_content:
+        return ("red", "信息边界原则.md 缺 §7 引用 (v1.5.7.17 合并后必须引用)",
+                "在 §2 反模式 2 加 '→ 见 references/题目设计意图分析.md §7 数据物理真实性标注' 引用")
+    # 3. 题目设计意图 §7 仍存在
+    intent_doc = REFS_DIR / "题目设计意图分析.md"
+    intent_content = intent_doc.read_text(encoding="utf-8", errors="replace")
+    if "数据物理真实性" not in intent_content:
+        return ("red", "题目设计意图分析.md 缺 §7 数据物理真实性 (v1.5.7.17 合并后必须保留)",
+                "保留 §7, 它是合并后唯一含完整缩 g/Luca 反模式 + 何时举例的章节")
+    return ("green", "信息边界 + 题目设计意图 重复段合并: §2 反模式 2 引用 §7, §7 是唯一完整版", None)
+
+
 CHECKS = [
     ("1. 装包 (核心包)", check_pkg),
     ("2. 10 Python 脚本", check_python_scripts),
@@ -1125,6 +1154,7 @@ CHECKS = [
     ("26. v1.5.7.14 4 类目 references (物理/数据/优化 + 调度, 类目专属术语)", check_v15714_category_references),
     ("27. v1.5.7.15 7 类目 references (扩 3 类: 经济/生物/交通, 类目专属术语)", check_v15715_more_category_references),
     ("28. v1.5.7.16 周期起点决策概念升级 (防 0:00 锚定陷阱)", check_v15716_period_start_concept),
+    ("29. v1.5.7.17 信息边界 + 题目设计意图 重复段合并 (防内容重复)", check_v15717_consolidation),
 ]
 
 
