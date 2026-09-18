@@ -903,6 +903,54 @@ def check_v1577_design_intent():
     return ("green", f"SKILL.md 设计意图章节 + references/题目设计意图 + 读题清单 5 列 + 跑题 .py 含递进/设计意图注释", None)
 
 
+def check_v1579_three_modes_and_data():
+    """checkable 23: v1.5.7.9 三口径铁律 + 数据物理真实性
+    1. references/题目设计意图分析.md 含 §6 三口径铁律
+    2. references/题目设计意图分析.md 含 §7 数据物理真实性
+    3. SKILL.md description 提到 v1.5.7.9 (隐含)
+    4. 跑题目录 .py 文件不含物理造假关键词 (yellow 警告)
+    """
+    intent_doc = REFS_DIR / "题目设计意图分析.md"
+    if not intent_doc.exists():
+        return ("red", "references/题目设计意图分析.md 缺失", "不可用")
+    intent_content = intent_doc.read_text(encoding="utf-8", errors="replace")
+    # 1. §6 三口径铁律
+    if "三口径铁律" not in intent_content or "计划购电费" not in intent_content:
+        return ("red", "references/题目设计意图分析.md 缺 §6 三口径铁律 (v1.5.7.9 必加)",
+                "加 §6 三口径铁律: 计划购电费 (预测电价) + 紧急购电费 (当天实际电价 × 5) + 调整偏差费 (0.5/1.5x × c_t)")
+    # 2. §7 数据物理真实性
+    if "数据物理真实性" not in intent_content:
+        return ("red", "references/题目设计意图分析.md 缺 §7 数据物理真实性 (v1.5.7.9 必加)",
+                "加 §7 数据物理真实性: 标注附件 2 全年无阴雨, 论文 §5.2.2 诚实说, 不能'修正数据'")
+    # 4. 跑题目录 .py 不含物理造假关键词 (yellow 警告)
+    paper_dir = get_paper_dir()
+    fake_warnings = []
+    if paper_dir:
+        solve_dir = paper_dir.parent / "求解"
+        if solve_dir.exists():
+            for py_file in solve_dir.rglob("*.py"):
+                if py_file.name.startswith("_") or "/共享/" in str(py_file) or "\\共享\\" in str(py_file):
+                    continue
+                try:
+                    py_content = py_file.read_text(encoding="utf-8", errors="replace")
+                except:
+                    continue
+                # 检测物理造假关键词
+                bad_patterns = [
+                    (r'人造.*雨|人工.*雨|梅雨.*季', '# 人造梅雨季'),
+                    (r'缩.*g.*上界|上界.*P_step\s*\*\s*0\.[1-5]', '# 缩 g 上界'),
+                    (r'np\.random.*normal.*noise|np\.random.*uniform.*sigma', '# 加随机噪声'),
+                ]
+                for pat, desc in bad_patterns:
+                    if re.search(pat, py_content):
+                        fake_warnings.append(f'{py_file.name}: {desc}')
+    if fake_warnings:
+        return ("yellow",
+                f"v1.5.7.9 物理造假检测: {len(fake_warnings)} 个潜在风险 ({'; '.join(fake_warnings[:3])})",
+                "不能人造数据/缩 g 上界/加噪声 — 题面附件 2 是出题组给定数据, 不修正. 论文 §5.2.2 诚实标注数据物理不真实.")
+    return ("green", f"references/题目设计意图 §6 三口径 + §7 数据物理真实性 + 跑题 .py 无物理造假关键词", None)
+
+
 CHECKS = [
     ("1. 装包 (核心包)", check_pkg),
     ("2. 10 Python 脚本", check_python_scripts),
@@ -926,6 +974,7 @@ CHECKS = [
     ("20. v1.5.7.5 writing-for-agents 修剪 (description/红线/CHANGELOG/4 完成判据)", check_v1575_polish),
     ("21. v1.5.7.6 数据隔离原则 (0:00 不用当天实际)", check_v1576_data_isolation),
     ("22. v1.5.7.7 题目设计意图分析 (递进关系 + 期望方向)", check_v1577_design_intent),
+    ("23. v1.5.7.9 三口径铁律 + 数据物理真实性", check_v1579_three_modes_and_data),
 ]
 
 

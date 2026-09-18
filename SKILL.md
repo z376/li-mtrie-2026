@@ -8,7 +8,7 @@ description: |
   Do NOT use for: general data analysis, one-off Python scripts, or research questions
   that don't lead to a `论文.pdf` deliverable.
 metadata:
-  version: "1.5.7.8"
+  version: "1.5.7.9"
   category: competition-workflow
   scope: user
   source_workspace: D:/MiniMax code/1/数建Skill模板
@@ -181,7 +181,7 @@ python -m pip download -d ./pkgs pandas numpy scipy matplotlib openpyxl PyMuPDF 
 **📌 AI 跑题前必读 3 文件 (v1.5.7.7 强化, 不读可能踩 v1.5.7.6/1.5.7.7 反模式)**:
 
 1. **`references/信息边界原则.md`** (5.9 KB) — 三类信息边界 + 4 反模式. **不读 → 90% 会数据泄露** (用附件 2 当天实际做 0:00 计划, 评阅 §2.6 违规)
-2. **`references/题目设计意图分析.md`** (6.6 KB) — 4 步法 + 反模式 + 实战复盘. **不读 → 90% 按字面跑, 不知道 Q3 应**比 Q2 紧急购电低
+2. **`references/题目设计意图分析.md`** (8.5 KB, v1.5.7.9 加 §6 三口径 + §7 数据物理真实性) — 4 步法 + 反模式 + 实战复盘 + 三口径铁律 + 数据物理真实性标注. **不读 → 90% 按字面跑, 不知道 Q3 应**比 Q2 紧急购电低, **不知道总费 ≠ 紧急购电费 ≠ 调整偏差**
 3. **`references/读题清单.md`** (5 列模板) — 题面原话 + 解读 + 代码 + **题面禁项** + **题目设计意图**. 跑题前必填 15 项
 
 **建议执行顺序**: ① 看 description 触发 → ② 读这 3 文件 (5-10 min) → ③ 进 §Step 0 填 15 项清单 → ④ 进 §Step 1 写求解计划 (含递进关系 + 期望方向) → ⑤ 跑题 → ⑥ 对照期望验证, 不达预期回头改
