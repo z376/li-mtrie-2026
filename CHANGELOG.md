@@ -1,8 +1,21 @@
-# CHANGELOG (v1.5.7.5 — 从 SKILL.md frontmatter 拆出)
+# CHANGELOG (v1.5.7.6 — 数据隔离原则, 防 0:00 数据泄露)
 
-> v1.5.7.5 writing-for-agents 6 维度审计后, history 9 entries 从 SKILL.md frontmatter 推到本文件, 减轻 SKILL.md context load. GitHub release notes 同源, 网页端也能看.
+> v1.5.7.6 2026 C 题实战暴露: 我 (Mavis) 之前 Q2 3 次方案全错 (用附件 2 当天实际 / 用附件 3 预报 / 缩 g 上界). 评阅要点 §2.6 明确禁止 "使用当天及以后的实际数据". 这是 CUMCM 历年最大踩坑之一, 必须文档化作为跑题核心规则.
 
 ---
+
+## v1.5.7.6 — 数据隔离原则 (hotfix on v1.5.7.5)
+
+**核心**: 0:00 制定计划时, **只能**基于已知信息 (历史数据 / 预报), **不能**用当天及以后实际数据 (评阅要点 §2.6).
+
+- SKILL.md §Step 0 加 "0:00 信息边界原则" 章节 (三类信息边界表 + 反模式 + dryrun check 21 引用)
+- SKILL.md §Step 1 加 "预测方法选择" 表格 (前一天实际 / N 天平均 / 同类型日平均 / ARIMA / 附件 M 预报 5 种 + 评阅要点 §2.4 分类要求)
+- references/信息边界原则.md (新, 5.9 KB) — 核心规则文档化: 三类信息 + 4 反模式 + 实战案例 (2026 C Q2 踩坑复盘)
+- references/读题清单.md 改 4 列 (加 "题面禁项", 防 0:00 数据泄露)
+- dryrun.py 加 check 21 (扫描 .py 检测 `loads_actual[day_idx]` 无 -1 修饰, yellow 警告)
+- 实战成果: 2026 C 题工作区 Q1+Q2+Q3 跑通, Q1 跟官方评阅要点参考结果一致 (59482.70 kWh, 35126.95 元)
+
+## v1.5.7.5 — writing-for-agents 修剪 (从 SKILL.md frontmatter 拆 history)
 
 ## v1.5.7.1 — 外审 P0 + P1 修复 (hotfix on v1.5.7)
 

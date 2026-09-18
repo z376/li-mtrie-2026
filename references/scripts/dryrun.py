@@ -792,6 +792,63 @@ def check_v1575_polish():
     return ("green", f"description {len(desc_lines)} 行 + 红线 1 文件 + CHANGELOG 1 文件 + 4 完成判据全在", None)
 
 
+def check_v1576_data_isolation():
+    """checkable 21: v1.5.7.6 数据隔离原则 — 0:00 计划不能用当天实际 (评阅要点 §2.6)
+    1. SKILL.md 含 "0:00 信息边界原则" 章节 (强制锚定)
+    2. references/信息边界原则.md 存在 (核心规则文档)
+    3. references/读题清单.md 含 "题面禁项" 第 4 列
+    4. 跑题目录 .py 文件不含 "loads_actual[day_idx]" (无 -1) 数据泄露模式
+    """
+    skill_md = SKILL_ROOT / "SKILL.md"
+    if not skill_md.exists():
+        return ("red", "SKILL.md 不存在", "修 SKILL.md")
+    content = skill_md.read_text(encoding="utf-8", errors="replace")
+    # 1. SKILL.md 含 "0:00 信息边界原则" 章节
+    if "0:00 信息边界原则" not in content:
+        return ("red", "SKILL.md 缺 '0:00 信息边界原则' 章节 (v1.5.7.6 必加, 防数据泄露)",
+                "在 §Step 0 15 项表格后加 '📌 0:00 信息边界原则 (v1.5.7.6 新增)' 章节, 列三类信息边界")
+    # 2. references/信息边界原则.md 存在
+    boundary_doc = REFS_DIR / "信息边界原则.md"
+    if not boundary_doc.exists():
+        return ("red", "references/信息边界原则.md 缺失 (v1.5.7.6 核心规则文档)",
+                "写 references/信息边界原则.md (三类信息边界 + 反模式 + 实战案例)")
+    # 3. references/读题清单.md 含 "题面禁项" 第 4 列
+    checklist_md = REFS_DIR / "读题清单.md"
+    if checklist_md.exists():
+        ck_content = checklist_md.read_text(encoding="utf-8", errors="replace")
+        if "题面禁项" not in ck_content:
+            return ("red", "references/读题清单.md 缺 '题面禁项' 第 4 列 (v1.5.7.6 必加)",
+                    "改读题清单模板: 3 列 → 4 列, 加 '题面禁项' 列")
+    # 4. 跑题目录 .py 文件不含 day_idx 数据泄露模式 (yellow, 不 red, 因执行阶段可能正确)
+    paper_dir = get_paper_dir()
+    py_violations = []
+    if paper_dir:
+        solve_dir = paper_dir.parent / "求解"
+        if solve_dir.exists():
+            for py_file in solve_dir.rglob("*.py"):
+                if py_file.name.startswith("_") or "/共享/" in str(py_file) or "\\共享\\" in str(py_file):
+                    continue
+                try:
+                    py_content = py_file.read_text(encoding="utf-8", errors="replace")
+                except:
+                    continue
+                # 检测 "loads_actual[day_idx]" 或 "pv_actual[day_idx]" 无 -1 修饰 (潜在数据泄露)
+                bad_patterns = [
+                    (r'loads_actual\[day_idx\](?![\-_])', 'loads_actual[day_idx]'),
+                    (r'pv_actual\[day_idx\](?![\-_])', 'pv_actual[day_idx]'),
+                    (r'data\[day_idx\](?![\-_])', 'data[day_idx]'),
+                ]
+                for pat, desc in bad_patterns:
+                    matches = re.findall(pat, py_content)
+                    if matches:
+                        py_violations.append(f'{py_file.name}: {desc} 出现 {len(matches)} 次 (可能的数据泄露)')
+    if py_violations:
+        return ("yellow",
+                f"v1.5.7.6 数据隔离检测: {len(py_violations)} 个潜在风险 ({'; '.join(py_violations[:3])})",
+                "0:00 LP 用前一天实际 (loads_actual[day_idx-1]) 或历史平均, 不用当天实际")
+    return ("green", f"SKILL.md 信息边界章节 + references/信息边界 + 读题清单 4 列 + 跑题 .py 无 day_idx 数据泄露", None)
+
+
 CHECKS = [
     ("1. 装包 (核心包)", check_pkg),
     ("2. 10 Python 脚本", check_python_scripts),
@@ -813,6 +870,7 @@ CHECKS = [
     ("18. Post-Solution Audit (必做 2+4)", check_post_solution_audit),
     ("19. 读题清单 15 项全覆盖 (Step 0)", check_reading_checklist),
     ("20. v1.5.7.5 writing-for-agents 修剪 (description/红线/CHANGELOG/4 完成判据)", check_v1575_polish),
+    ("21. v1.5.7.6 数据隔离原则 (0:00 不用当天实际)", check_v1576_data_isolation),
 ]
 
 
