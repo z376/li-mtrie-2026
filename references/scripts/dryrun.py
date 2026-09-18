@@ -1160,6 +1160,40 @@ def check_v15718_aigc_merge():
     return ("green", "AIGC 文档合并: 受保护片段 + 检测平台弱点 → AIGC降重策略.md (4 章节齐, 旧文件已删)", None)
 
 
+def check_v15719_plot_merge():
+    """checkable 31: v1.5.7.19 绘图文档合并 (绘图规范 + 绘图避坑 → 绘图规范与避坑.md)
+    1. references/绘图规范与避坑.md 存在 + 含 §1 决策三轴 + §2 18 条陷阱 + §3 matplotlib 设置
+    2. references/绘图规范.md 已删除 (不应存在)
+    3. references/绘图避坑.md 已删除 (不应存在)
+    """
+    # 1. 新文件存在 + 3 关键章节
+    plot_doc = REFS_DIR / "绘图规范与避坑.md"
+    if not plot_doc.exists():
+        return ("red", "references/绘图规范与避坑.md 缺失 (v1.5.7.19 合并必须新建)",
+                "新建 references/绘图规范与避坑.md, 合并 绘图规范 + 绘图避坑")
+    plot_content = plot_doc.read_text(encoding="utf-8", errors="replace")
+    required_sections = [
+        ("§1 决策三轴", "决策三轴"),
+        ("§2 18 条陷阱", "18 条画图陷阱"),
+        ("§3 matplotlib 设置", "matplotlib"),
+    ]
+    missing = [name for name, kw in required_sections if kw not in plot_content]
+    if missing:
+        return ("red", f"references/绘图规范与避坑.md 缺章节 ({', '.join(missing)})",
+                "合并 绘图规范 + 绘图避坑, 至少保留 3 章节: 决策三轴/18 条陷阱/matplotlib 设置")
+    # 2 & 3. 旧文件不应存在
+    legacy_files = [
+        REFS_DIR / "绘图规范.md",
+        REFS_DIR / "绘图避坑.md",
+    ]
+    still_exists = [p.name for p in legacy_files if p.exists()]
+    if still_exists:
+        return ("yellow",
+                f"v1.5.7.19 合并后旧文件仍存在 ({', '.join(still_exists)})",
+                f"删除 {'/'.join(still_exists)} — 内容已合并到 references/绘图规范与避坑.md")
+    return ("green", "绘图文档合并: 绘图规范 + 绘图避坑 → 绘图规范与避坑.md (3 章节齐, 旧文件已删)", None)
+
+
 CHECKS = [
     ("1. 装包 (核心包)", check_pkg),
     ("2. 10 Python 脚本", check_python_scripts),
@@ -1191,6 +1225,7 @@ CHECKS = [
     ("28. v1.5.7.16 周期起点决策概念升级 (防 0:00 锚定陷阱)", check_v15716_period_start_concept),
     ("29. v1.5.7.17 信息边界 + 题目设计意图 重复段合并 (防内容重复)", check_v15717_consolidation),
     ("30. v1.5.7.18 AIGC 文档合并 (受保护片段 + 检测平台弱点 → AIGC降重策略.md)", check_v15718_aigc_merge),
+    ("31. v1.5.7.19 绘图文档合并 (绘图规范 + 绘图避坑 → 绘图规范与避坑.md)", check_v15719_plot_merge),
 ]
 
 
