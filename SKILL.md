@@ -6,7 +6,7 @@ description: |
   **5 道防线**: 流程修剪 (v1.5.7.5) / 数据隔离 (v1.5.7.6) / 设计意图 (v1.5.7.7) / 指针强化 (v1.5.7.8) / 三口径+物理 (v1.5.7.9).
   Do NOT use: 普通数据分析 / one-off Python / 非论文交付的研究问题.
 metadata:
-  version: "1.5.7.12"
+  version: "1.5.7.13"
   category: competition-workflow
   scope: user
   source_workspace: D:/MiniMax code/1/数建Skill模板

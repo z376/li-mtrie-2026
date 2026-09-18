@@ -982,6 +982,37 @@ def check_v15711_five_lines_index():
     return ("green", "references/5道防线自检清单.md 存在 + 4 章节齐全 + SKILL.md §Step 0 速查表引用", None)
 
 
+def check_v15713_category_adaptation():
+    """checkable 25: v1.5.7.13 类目适配说明 (防通用性陷阱)
+    1. references/5道防线自检清单.md 顶部含 '类目适配' 段
+    2. references/信息边界原则.md 顶部含 '适用题类' 段
+    3. references/题目设计意图分析.md §6 三口径 顶部含 '适用题类' 段
+    4. references/题目设计意图分析.md §7 数据物理真实性 顶部含 '通用' 段
+    """
+    required = [
+        (REFS_DIR / "5道防线自检清单.md", "类目适配", "5道防线自检清单.md 缺类目适配段"),
+        (REFS_DIR / "信息边界原则.md", "适用题类", "信息边界原则.md 缺适用题类说明"),
+        (REFS_DIR / "题目设计意图分析.md", "适用题类", "题目设计意图分析.md §6 缺适用题类说明"),
+    ]
+    missing = []
+    for path, kw, fix in required:
+        if not path.exists():
+            missing.append(f"{path.name} (文件不存在)")
+            continue
+        content = path.read_text(encoding="utf-8", errors="replace")
+        if kw not in content:
+            missing.append(fix)
+    # §7 必须含 '通用' 字样
+    intent_doc = REFS_DIR / "题目设计意图分析.md"
+    intent_content = intent_doc.read_text(encoding="utf-8", errors="replace")
+    if "通用" not in intent_content[intent_content.find("§7"):] if "§7" in intent_content else "":
+        missing.append("题目设计意图分析.md §7 缺 '通用' 标注")
+    if missing:
+        return ("red", f"v1.5.7.13 类目适配说明缺: {'; '.join(missing)}",
+                "在 3 份 references 顶部加 '类目适配 / 适用题类' 段 (防通用性陷阱, 标 [调度类]/[通用]/[物理]/[数据] tag)")
+    return ("green", "5道防线自检清单 + 信息边界原则 + 题目设计意图 §6/§7 都含类目适配说明", None)
+
+
 CHECKS = [
     ("1. 装包 (核心包)", check_pkg),
     ("2. 10 Python 脚本", check_python_scripts),
@@ -1007,6 +1038,7 @@ CHECKS = [
     ("22. v1.5.7.7 题目设计意图分析 (递进关系 + 期望方向)", check_v1577_design_intent),
     ("23. v1.5.7.9 三口径铁律 + 数据物理真实性", check_v1579_three_modes_and_data),
     ("24. v1.5.7.11 5 道防线自检清单 (中心索引 + 反模式 + checklist)", check_v15711_five_lines_index),
+    ("25. v1.5.7.13 类目适配说明 (防通用性陷阱, 3 references 顶部标 [调度类]/[通用])", check_v15713_category_adaptation),
 ]
 
 
