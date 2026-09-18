@@ -951,6 +951,37 @@ def check_v1579_three_modes_and_data():
     return ("green", f"references/题目设计意图 §6 三口径 + §7 数据物理真实性 + 跑题 .py 无物理造假关键词", None)
 
 
+def check_v15711_five_lines_index():
+    """checkable 24: v1.5.7.11 5 道防线集中索引 + 自检清单
+    1. references/5道防线自检清单.md 存在
+    2. 含 §1 总览 + §2 反模式速查 + §3 跑题前自检 + §4 跑完后对照
+    3. SKILL.md §Step 0 顶部含"5 道防线速查表"
+    """
+    index_doc = REFS_DIR / "5道防线自检清单.md"
+    if not index_doc.exists():
+        return ("red", "references/5道防线自检清单.md 缺失 (v1.5.7.11 必加)",
+                "新建 references/5道防线自检清单.md, 含 §1 5 道防线总览 + §2 反模式对照表 (12 行) + §3 跑题前自检 + §4 跑完后对照 checklist + §5/§6 引用与版本")
+    index_content = index_doc.read_text(encoding="utf-8", errors="replace")
+    required_sections = [
+        ("§1 总览", "5 道防线总览"),
+        ("§2 反模式", "反模式速查表"),
+        ("§3 自检", "跑题前自检 checklist"),
+        ("§4 对照", "跑完后期望对照"),
+    ]
+    missing = [name for name, kw in required_sections if kw not in index_content]
+    if missing:
+        return ("red", f"references/5道防线自检清单.md 缺章节 ({', '.join(missing)})",
+                "补齐 §1/§2/§3/§4 章节, 让 AI 一处调取 5 道防线")
+    # SKILL.md §Step 0 顶部含速查表
+    skill_doc = REFS_DIR.parent / "SKILL.md"
+    skill_content = skill_doc.read_text(encoding="utf-8", errors="replace")
+    if "5 道防线速查表" not in skill_content or "check 24" not in skill_content:
+        return ("yellow",
+                "SKILL.md §Step 0 顶部含 5 道防线速查表 但未提到 'check 24' (可忽略, 不影响 green)",
+                "在 §Step 0 顶部 '5 道防线速查表' 末尾加 '| 24. 检查 | 中心索引 | references/5道防线自检清单.md | check 24 |' (可选)")
+    return ("green", "references/5道防线自检清单.md 存在 + 4 章节齐全 + SKILL.md §Step 0 速查表引用", None)
+
+
 CHECKS = [
     ("1. 装包 (核心包)", check_pkg),
     ("2. 10 Python 脚本", check_python_scripts),
@@ -975,6 +1006,7 @@ CHECKS = [
     ("21. v1.5.7.6 数据隔离原则 (0:00 不用当天实际)", check_v1576_data_isolation),
     ("22. v1.5.7.7 题目设计意图分析 (递进关系 + 期望方向)", check_v1577_design_intent),
     ("23. v1.5.7.9 三口径铁律 + 数据物理真实性", check_v1579_three_modes_and_data),
+    ("24. v1.5.7.11 5 道防线自检清单 (中心索引 + 反模式 + checklist)", check_v15711_five_lines_index),
 ]
 
 
