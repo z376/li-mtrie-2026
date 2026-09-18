@@ -849,6 +849,60 @@ def check_v1576_data_isolation():
     return ("green", f"SKILL.md 信息边界章节 + references/信息边界 + 读题清单 4 列 + 跑题 .py 无 day_idx 数据泄露", None)
 
 
+def check_v1577_design_intent():
+    """checkable 22: v1.5.7.7 题目设计意图分析 — 跑题前必识别递进关系 + 每个问题测什么 + 期望方向
+    1. SKILL.md 含 "题目设计意图分析" 章节 (强制锚定)
+    2. references/题目设计意图分析.md 存在 (核心方法论文档)
+    3. references/读题清单.md 含 "题目设计意图" 第 5 列
+    4. 跑题目录 .py 文件含 "递进 / 设计意图 / 期望" 注释 (yellow 警告, 防"按字面跑不解题")
+    """
+    skill_md = SKILL_ROOT / "SKILL.md"
+    if not skill_md.exists():
+        return ("red", "SKILL.md 不存在", "修 SKILL.md")
+    content = skill_md.read_text(encoding="utf-8", errors="replace")
+    # 1. SKILL.md 含 "题目设计意图分析" 章节
+    if "题目设计意图分析" not in content:
+        return ("red", "SKILL.md 缺 '题目设计意图分析' 章节 (v1.5.7.7 必加, 防按字面跑不解题)",
+                "在 §Step 0 信息边界章节后加 '📌 题目设计意图分析 (v1.5.7.7 新增)' 章节, 列递进关系 + 期望方向")
+    # 2. references/题目设计意图分析.md 存在
+    intent_doc = REFS_DIR / "题目设计意图分析.md"
+    if not intent_doc.exists():
+        return ("red", "references/题目设计意图分析.md 缺失 (v1.5.7.7 核心方法论)",
+                "写 references/题目设计意图分析.md (4 步法 + 反模式 + 2026 C 题实战复盘)")
+    # 3. references/读题清单.md 含 "题目设计意图" 第 5 列
+    checklist_md = REFS_DIR / "读题清单.md"
+    if checklist_md.exists():
+        ck_content = checklist_md.read_text(encoding="utf-8", errors="replace")
+        if "题目设计意图" not in ck_content:
+            return ("red", "references/读题清单.md 缺 '题目设计意图' 第 5 列 (v1.5.7.7 必加)",
+                    "改读题清单模板: 4 列 → 5 列, 加 '题目设计意图' 列")
+    # 4. 跑题目录 .py 含 "递进 / 设计意图 / 期望" 注释 (yellow 警告)
+    paper_dir = get_paper_dir()
+    py_missing = []
+    if paper_dir:
+        solve_dir = paper_dir.parent / "求解"
+        if solve_dir.exists():
+            for py_file in solve_dir.rglob("*.py"):
+                if py_file.name.startswith("_") or "/共享/" in str(py_file) or "\\共享\\" in str(py_file):
+                    continue
+                try:
+                    py_content = py_file.read_text(encoding="utf-8", errors="replace")
+                except:
+                    continue
+                # 检测是否有"递进 / 设计意图 / 期望方向" 注释
+                has_intent = any(kw in py_content for kw in [
+                    "递进", "设计意图", "期望方向", "期望", "递进关系",
+                    "Q3 应", "Q3 应该", "Q3 测", "Q3 期望",
+                ])
+                if not has_intent:
+                    py_missing.append(py_file.name)
+    if py_missing:
+        return ("yellow",
+                f"v1.5.7.7 设计意图检测: {len(py_missing)} 个 .py 缺 '递进/设计意图/期望方向' 注释 ({', '.join(py_missing[:3])})",
+                "在 .py 顶部加 '## 递进关系 + 期望方向' 注释 (e.g. 'Q3 期望紧急购电 < Q2, 否则方法错')")
+    return ("green", f"SKILL.md 设计意图章节 + references/题目设计意图 + 读题清单 5 列 + 跑题 .py 含递进/设计意图注释", None)
+
+
 CHECKS = [
     ("1. 装包 (核心包)", check_pkg),
     ("2. 10 Python 脚本", check_python_scripts),
@@ -871,6 +925,7 @@ CHECKS = [
     ("19. 读题清单 15 项全覆盖 (Step 0)", check_reading_checklist),
     ("20. v1.5.7.5 writing-for-agents 修剪 (description/红线/CHANGELOG/4 完成判据)", check_v1575_polish),
     ("21. v1.5.7.6 数据隔离原则 (0:00 不用当天实际)", check_v1576_data_isolation),
+    ("22. v1.5.7.7 题目设计意图分析 (递进关系 + 期望方向)", check_v1577_design_intent),
 ]
 
 
