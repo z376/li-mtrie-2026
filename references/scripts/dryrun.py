@@ -1144,6 +1144,21 @@ def check_v15728_nine_subdirs():
     return ("green", f"references/ 18 sub-directory 全在 (v1.5.7.25-26 拆分 10 + 原有 8), 都非空", None)
 
 
+def check_v15732_skill_md_lines():
+    """checkable 35: v1.5.7.32 writing-for-agents 约束 — SKILL.md ≤ 1500 行
+    防止 SKILL.md 后续 hotfix 加 inline reference 致 sprawl (>1500 行), 应拆到 references/
+    """
+    skill_md = SKILL_ROOT / "SKILL.md"
+    if not skill_md.exists():
+        return ("red", "SKILL.md 不存在", "修 SKILL.md")
+    n_lines = sum(1 for _ in skill_md.open(encoding="utf-8", errors="replace"))
+    if n_lines > 1500:
+        return ("red",
+                f"SKILL.md {n_lines} 行 (writing-for-agents 硬约束 ≤ 1500 行, v1.5.7.32 修复后已 1464 行, 现在又膨胀了)",
+                "拆 inline reference 段到 references/<sub-dir>/<topic>.md, SKILL.md 留指针 + 1 行说明. 范本: v1.5.7.32 把 §Step 3 + §Step 4.1 117 行拆到 references/paper/写作与附录检查.md")
+    return ("green", f"SKILL.md {n_lines} 行 ≤ 1500 (writing-for-agents 约束满足, v1.5.7.32 拆后 1464 行)", None)
+
+
 def check_v15716_period_start_concept():
     """checkable 28: v1.5.7.16 周期起点决策概念升级 (防 0:00 锚定陷阱)
     1. references/信息边界原则.md 核心规则用 '周期起点' (不锚定 0:00)
@@ -1308,6 +1323,7 @@ CHECKS = [
     ("32. v1.5.7.28 SKILL.md description ≤ 6 行 (writing-for-agents 约束)", check_v15728_description_six_lines),
     ("33. v1.5.7.28 SKILL.md leading words 锚定 10 词全在 (green/red/sign-off/checkable/探路弹/check N/5 道防线/反模式/陷阱/踩坑/避坑)", check_v15728_leading_words_table),
     ("34. v1.5.7.31 references/ 18 sub-directory 全在 (10 拆分 + 8 原有: 2026官方答疑/examples/llm-prompts/scripts/templates/数模资料/板块自查/获奖论文 + 1 新建 技能总结)", check_v15728_nine_subdirs),
+    ("35. v1.5.7.32 SKILL.md ≤ 1500 行 (writing-for-agents 硬约束, 防止 6 维度 sprawl)", check_v15732_skill_md_lines),
 ]
 
 

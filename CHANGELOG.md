@@ -1,10 +1,29 @@
-# CHANGELOG (v1.5.7.32 — SKILL.md 1581 → 1464 行 (-117), §Step 3 + §Step 4.1 inline reference 拆到 references/paper/写作与附录检查.md)
+# CHANGELOG (v1.5.7.33 — check 35 加 SKILL.md ≤ 1500 行护栏, 防 6 维度 sprawl)
 
 > **v1.5.7.20 之前 15 个 hotfix** (v1.5.7.5 ~ v1.5.7.19) → [`CHANGELOG-archive.md`](CHANGELOG-archive.md).
 >
 > **拆分原因**: 392 行累积, human 翻历史困难. 主文件只留最新 4 个 (writing-for-agents 审计 hotfix).
 >
 > **查找旧版本**: 用 grep 搜 `CHANGELOG-archive.md` (e.g. `grep -n v1.5.7.10 CHANGELOG-archive.md`).
+
+## v1.5.7.33 — check 35 加 SKILL.md ≤ 1500 行护栏 (v1.5.7.32 hotfix)
+
+**核心**: writing-for-agents 6 维度全 green 后, **加 check 35 防止 sprawl 回腐** (后续 hotfix 加 inline reference 又把 SKILL.md 撑 > 1500 行).
+
+- **check 35** (v1.5.7.33): SKILL.md 行数 ≤ 1500
+  - ≤ 1500 → green
+  - > 1500 → red + 提示"拆 inline reference 到 references/<sub-dir>/<topic>.md, 范本: v1.5.7.32 把 §Step 3 + §Step 4.1 117 行拆到 references/paper/写作与附录检查.md"
+
+**影响文件**: dryrun.py (check 35 + CHECKS 1 行).
+
+**dryrun**: 27/35 green + 7 yellow + 0 red (check 35 green, 当前 SKILL.md 1464 行).
+
+**check 32/34/35 现状** (v1.5.7.28 + v1.5.7.31 + v1.5.7.33 三个 writing-for-agents 护栏):
+- check 32: SKILL.md description ≤ 6 行 (always-loaded 体积)
+- check 34: references/ 18 sub-dir 全在 (架构)
+- check 35: SKILL.md ≤ 1500 行 (Two loads)
+
+---
 
 ## v1.5.7.32 — SKILL.md 1581 → 1464 行 (-117, 拆 inline reference 到 references/paper/) (v1.5.7.31 hotfix)
 
