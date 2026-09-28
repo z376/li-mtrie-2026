@@ -1,6 +1,22 @@
-# CHANGELOG (v1.5.7.22 — writing-for-agents 审计 P2 收尾: leading words 锚定)
+# CHANGELOG (v1.5.7.23 — 扫 stale references, 修 2 处引用已删除文件)
 
 > v1.5.7.11 实战索引化: 5 道防线 (v1.5.7.5 ~ v1.5.7.10) 分散在 SKILL.md 和多个 references/. 新建 `references/5道防线自检清单.md` (6.5 KB) 做**集中索引 + 反模式对照表 (12 行) + 跑题前 checklist (10 项) + 跑完后对照表 (5 项)**, AI 一处拿到全貌, 避免"知道有但漏了".
+
+## v1.5.7.23 — stale references 清理 (v1.5.7.22 hotfix)
+
+**核心**: 扫描所有 .md 文件找 stale references (引用已删除的旧文件), 修 2 处:
+
+- **SKILL.md line 1130**: 引用 `references/绘图避坑.md` (v1.5.7.19 已合并删除) → 改 `references/绘图规范与避坑.md §2`
+- **绘图规范与避坑.md line 9-12**: 顶部 "与 references/绘图避坑.md 显式分工" (文件已不存在, "显式分工" 不再成立) → 加 "(v1.5.7.23 已废弃 — 两文件合并到本文件, 此段留作版本历史)"
+
+**未动 stale (归因保留, 非 stale)**:
+- AIGC降重策略.md "来自 受保护片段.md §X" — 这是合并过程的归因 (类似参考文献), 保留说明来源
+
+**影响文件**: SKILL.md (-1 行) + 绘图规范与避坑.md (+1 段说明).
+
+**dryrun 不变**: 24/31 green + 7 yellow + 0 red.
+
+---
 
 ## v1.5.7.22 — writing-for-agents 审计 P2 收尾 (v1.5.7.21 hotfix)
 
