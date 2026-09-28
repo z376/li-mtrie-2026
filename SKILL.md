@@ -13,7 +13,7 @@ description: |
 
 metadata:
 
-  version: "1.5.7.19"
+  version: "1.5.7.20"
 
   category: competition-workflow
 
@@ -627,9 +627,7 @@ CUMCM 题目是**研究性问题**, 不是"按字面跑 LP". 题目设计有**�
 
 | 4 | **图引用找不到文件** | \includegraphics 写了但跑题没生成该图, 编译报 missing | dryrun check 17 (Step 4 前) |
 
-
-
-**为啥现在补这 4 条**: 2025C 跑题 other agent 踩了 1+2+3 共 3 个, 整论文 P0 重写。`references/scripts/dryrun.py` 17 项 checkable 中 15/16/17 就是这 3 道防线的程序化实现, sign-off 红 = 必修。
+> **完整经验 + 求解/编译失败 6 类 + 跨平台红线** → `references/红线与失败模式.md` §1. 4 大坑 (跑题前防) + §1 6 类 (跑题中修) 互补, **不在 SKILL.md 重复列**.
 
 
 
@@ -825,7 +823,7 @@ CUMCM 题目是**研究性问题**, 不是"按字面跑 LP". 题目设计有**�
 
 **踩坑教训**（2024 调度类测试）: 没跑 tracer, 5 个问题都解完后才发现 `论文/format.cls` 的思源宋体路径写错, 整套重编译 3 小时。
 
-
+**🟢 Step 1.5 完成判据**: 数据读入 + 计算 + 出图 + 论文占位 + 编译 0 error, 全流程 ≤ 30 min (任一 ≥ 60 min 卡住 = `red`).
 
 ### Step 2：逐题求解
 
@@ -926,6 +924,10 @@ CUMCM 题目是**研究性问题**, 不是"按字面跑 LP". 题目设计有**�
 
 
 **全部勾完才能 next**。如果某项不勾，意味着这一问有未解决的硬问题，下一问会踩同样的坑。
+
+**🟢 Step 2 完成判据**: 5 问题 `求解/问题X/问题X_xxx.py` 全部 py_compile OK + `result.xlsx` 落盘 + 每问题都进 §Step 2.Gate 8 项 (`references/paper-spec.md §2 8 项自检`) 全勾.
+
+**🟢 Step 2.Gate 完成判据**: 8 项 (`references/paper-spec.md §2 8 项自检`) 全 `green` + 上面的 3 条跨问题常量反问全勾 (constants.py / params.py / 命名一致). 任 1 项空 = `red` = 返工本问题.
 
 
 
@@ -1221,35 +1223,8 @@ Select-String -Path 论文\*.tex -Pattern '【|TODO|待填|未填|XXX' |
 
 ### Step 4：编译 + 终态（合并自原 Step 5 + Step 5.5）
 
+> **编译命令 (xelatex 论文版/电子版/AI 详情) + 清理临时文件命令 + 5GB 工作空间清单** → `references/scripts/check_tex_compile.md` (v1.5.7.20 新增). 本节只留 why + 红/绿判据.
 
-
-**🧹 编译前先清理**（A3，96 小时赛场的 C 盘空间管理）：
-
-
-
-```powershell
-
-# 每次 xelatex 编译会产生 .aux/.log/.synctex.gz 临时文件，跑 5+ 次会堆 50+ 个
-
-# 正式编译前清一次（这些已在 .gitignore，不影响提交）
-
-Remove-Item 论文\*.aux, 论文\*.log, 论文\*.synctex.gz, 论文\*.toc, 论文\*.out -ErrorAction SilentlyContinue
-
-```
-
-
-
-**赛前 1 天**自检清单加一条：**预留 ≥ 5 GB 工作空间**
-
-
-
-- 求解/ 中间 PNG + xlsx ≈ 100-500 MB
-
-- 论文/ 编译 5+ 次临时文件 ≈ 50-100 MB
-
-- 支撑材料.rar 副本（重打包 3 次会堆 100MB+）≈ 300 MB
-
-- 提交后剩余空间留 ≥ 4 GB 给系统应急
 
 
 
@@ -1325,29 +1300,7 @@ foreach ($r in $refs) {
 
 
 
-```powershell
-
-Set-Location 论文
-
-# 论文版（含承诺书+编号页）
-
-xelatex -interaction=nonstopmode 论文.tex
-
-xelatex -interaction=nonstopmode 论文.tex
-
-
-
-# 电子版（不含承诺书+编号页，第一页直接是摘要页）
-
-xelatex -interaction=nonstopmode 电子版.tex
-
-xelatex -interaction=nonstopmode 电子版.tex
-
-
-
-# AI 工具使用详情在 Step 4.4 子步骤 1 编译（需先填写 4 节占位符）
-
-```
+> **完整 xelatex 命令 + 子步骤 (论文版/电子版/AI 详情)** → `references/scripts/check_tex_compile.md` (v1.5.7.20 新增). 本节不重复命令块, 只留红/绿判据 + 为什么 ×2.
 
 
 
@@ -1361,21 +1314,7 @@ xelatex -interaction=nonstopmode 电子版.tex
 
 - **红**: `! Error` ≥ 1 → 修 LaTeX; `Overfull` ≥ 5 → 调列宽比例 (paper-spec §4.1 公式 1.04−0.04N)
 
-
-
-```powershell
-
-# 一行 grep 警告 (PowerShell)
-
-Select-String -Path 论文.log, 电子版.log -Pattern 'Overfull|Underfull|Float too large'
-
-
-
-# 修复：调整列宽比例 / 改换行位置
-
-# 2 次修不好允许 \\newline 或 \\sloppy
-
-```
+- 修复：调整列宽比例 / 改换行位置; 2 次修不好允许 `\\newline` 或 `\\sloppy`
 
 
 

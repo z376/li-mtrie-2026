@@ -1,6 +1,29 @@
-# CHANGELOG (v1.5.7.19 — 绘图文档合并, 绘图规范 + 绘图避坑 → 绘图规范与避坑.md)
+# CHANGELOG (v1.5.7.20 — writing-for-agents 审计 P0 修复: SKILL.md sprawl 拆 + 补 3 完成判据)
 
 > v1.5.7.11 实战索引化: 5 道防线 (v1.5.7.5 ~ v1.5.7.10) 分散在 SKILL.md 和多个 references/. 新建 `references/5道防线自检清单.md` (6.5 KB) 做**集中索引 + 反模式对照表 (12 行) + 跑题前 checklist (10 项) + 跑完后对照表 (5 项)**, AI 一处拿到全貌, 避免"知道有但漏了".
+
+## v1.5.7.20 — writing-for-agents 审计 P0 修复 (v1.5.7.19 hotfix)
+
+**核心**: 用户用 `writing-for-agents` skill 审计 li-mtrie-2026 skill, 报告 6 维度 12 项问题 (P0/P1/P2). 用户选 P0 全修: **拆 SKILL.md 1609 行 → 1549 行 (-60 行) + 补 3 个缺失的完成判据**.
+
+**P0 拆 SKILL.md 3 处**:
+- **§Step 0 4 大典型坑自查** (line 614-632): 表格 + 说明保留 (brief 经验 cache), 但补指针 → `references/红线与失败模式.md` (互补不重复)
+- **§Step 4.1/4.2 xelatex 编译命令** (line 1304-1376): 命令块 (~50 行) 推进新文件 `references/scripts/check_tex_compile.md` (2.6 KB). SKILL.md 只留红/绿判据 + why ×2 解释.
+- **§Step 4 开头清理命令 + 5GB 空间清单** (line 1228-1254, ~27 行): 推进 `references/scripts/check_tex_compile.md` §0 (清理命令) + §5 (空间清单, 隐含在 §1 上下文). SKILL.md 只留指针.
+
+**P0 补 3 个完成判据** (之前缺,AI 跑题时"以为完结"风险):
+- **🟢 Step 1.5 完成判据** (Tracer bullet): 数据读入 + 计算 + 出图 + 论文占位 + 编译 0 error, 全流程 ≤ 30 min. 任一 ≥ 60 min 卡住 = `red`.
+- **🟢 Step 2 完成判据** (逐题求解): 5 问题 `result.xlsx` 落盘 + 每问题都进 §Step 2.Gate 8 项全勾.
+- **🟢 Step 2.Gate 完成判据** (门控): 8 项 (`references/paper-spec.md §2 8 项自检`) 全 `green` + 3 条跨问题常量反问全勾. 任 1 项空 = `red` = 返工本问题.
+
+**影响文件**:
+- 新建 `references/scripts/check_tex_compile.md` (2.6 KB)
+- 改 SKILL.md (-60 行)
+- 整 CHANGELOG + version bump 1.5.7.19 → 1.5.7.20
+
+**dryrun 不变**: 24/31 green + 7 yellow + 0 red (没破坏任何 check).
+
+---
 
 ## v1.5.7.19 — 绘图文档合并 (v1.5.7.18 hotfix)
 
