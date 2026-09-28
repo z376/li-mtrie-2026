@@ -1,6 +1,19 @@
-# CHANGELOG (v1.5.7.20 — writing-for-agents 审计 P0 修复: SKILL.md sprawl 拆 + 补 3 完成判据)
+# CHANGELOG (v1.5.7.21 — writing-for-agents 审计 P1 收尾: description 砍 5 道防线行 + references/ 索引表)
 
 > v1.5.7.11 实战索引化: 5 道防线 (v1.5.7.5 ~ v1.5.7.10) 分散在 SKILL.md 和多个 references/. 新建 `references/5道防线自检清单.md` (6.5 KB) 做**集中索引 + 反模式对照表 (12 行) + 跑题前 checklist (10 项) + 跑完后对照表 (5 项)**, AI 一处拿到全貌, 避免"知道有但漏了".
+
+## v1.5.7.21 — writing-for-agents 审计 P1 收尾 (v1.5.7.20 hotfix)
+
+**核心**: v1.5.7.20 P0 修复后的 3 项 P1:
+- **description 砍 "5 道防线" 行** — 该行是 cache (版本号串 v1.5.7.5-9), AI 决策不需要. description 从 5 行内容变 4 行内容, ~200 chars 节省.
+- **"4 处 注意: no-op 删" — 实际不存在**. v1.5.7.5 修剪已清掉大部分 no-op 标签 (注意/警告/重要), 搜了 6 种模式无结果. 跳过该项.
+- **加 references/ 索引表** — §Step 0 末尾加 10 类用途索引 (数据使用/设计意图/7 类题专属/跑题前自检/跑题中参考/写论文/绘图/AIGC/赛后验收/模板+脚本), human 索引负担 ↓↓↓.
+
+**影响文件**: SKILL.md (description -200 chars + 索引表 +16 行).
+
+**dryrun 不变**: 24/31 green + 7 yellow + 0 red.
+
+---
 
 ## v1.5.7.20 — writing-for-agents 审计 P0 修复 (v1.5.7.19 hotfix)
 

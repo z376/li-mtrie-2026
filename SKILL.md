@@ -7,13 +7,11 @@ description: |
 
   **AI 跑题前必读 3 references**: 信息边界原则 (防数据泄露) + 题目设计意图分析 (防按字面跑不解题) + 5道防线自检清单 (中心索引 + 反模式 + 自检 checklist).
 
-  **5 道防线**: 流程修剪 (v1.5.7.5) / 数据隔离 (v1.5.7.6) / 设计意图 (v1.5.7.7) / 指针强化 (v1.5.7.8) / 三口径+物理 (v1.5.7.9).
-
   Do NOT use: 普通数据分析 / one-off Python / 非论文交付的研究问题.
 
 metadata:
 
-  version: "1.5.7.20"
+  version: "1.5.7.21"
 
   category: competition-workflow
 
@@ -656,6 +654,25 @@ CUMCM 题目是**研究性问题**, 不是"按字面跑 LP". 题目设计有**�
 
 
 **🟢 Step 0 完成判据**: 15 项读题清单全填 (dryrun check 19 绿) + quote 锚定表 4 列齐 + 求解计划.md 头部 table 落盘 + 4 大典型坑自查 0 命中。
+
+---
+
+**📚 §Step 0 跑题前必读 references/ 索引表** (v1.5.7.21 新增, 按用途分类, human 索引负担 ↓):
+
+| 用途类 | 文件 (按需读) |
+|-------|-------------|
+| **数据使用纪律** | `references/信息边界原则.md` (周期起点决策信息边界 + 反模式) · `references/合规检查清单.md` (§1.4 数据使用纪律) |
+| **设计意图 + 期望** | `references/题目设计意图分析.md` (§1-5 4 步法 + §6 三口径 + §7 数据物理) · `references/5道防线自检清单.md` (§0 类目适配 + §1 总览) |
+| **7 类题专属** | `references/{物理机理/数据分析/优化/经济金融/生物医疗/交通运筹}类典型反模式.md` (按本题类型选 1 份) |
+| **跑题前自检** | `references/读题清单.md` (15 项模板) · `references/红线与失败模式.md` (§1 失败 handling 6 类 + §2 跨平台红线) |
+| **跑题中参考** | `references/workflow.md` (工作流) · `references/模型字典使用指南.md` · `references/模型决策树.md` · `references/整题建模模式.md` |
+| **写论文** | `references/paper-spec.md` (权威源) · `references/国奖级硬性指标.md` · `references/格式自查清单.md` |
+| **绘图规范** | `references/绘图规范与避坑.md` (§1 决策三轴 + §2 18 条陷阱 + §3 matplotlib 设置) |
+| **AIGC 降重** | `references/AIGC降重策略.md` (§1-2 禁改 + §3-7 实战) · `references/去AIGC指南.md` |
+| **赛后验收** | `references/验收清单.md` · `references/post-solution-audit.md` (Step 2.Gate 8 项权威源) |
+| **模板 + 脚本** | `references/templates/example-paper/` (18 .tex + format.cls) · `references/scripts/` (8 个 .py + check_tex_compile.md) · `references/llm-prompts/` (5 prompt) |
+
+> **9 板块快速自查** (跑题中"还差什么"快速扫) → `references/板块自查/` (9 板块 markdown) + `README.md` 索引.
 
 
 
