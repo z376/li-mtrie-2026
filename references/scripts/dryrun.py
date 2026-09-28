@@ -1067,6 +1067,73 @@ def check_v15715_more_category_references():
     return ("green", "by-category/ 经济金融/生物医疗/交通运筹 3 类目 references 全在 + 类目专属术语齐 (v1.5.7.25 移到 sub-directory)", None)
 
 
+def check_v15728_description_six_lines():
+    """checkable 32: v1.5.7.28 writing-for-agents 约束 — SKILL.md description ≤ 6 行
+    description 是 always-loaded, 行数过多 = context load 失控
+    """
+    skill_md = SKILL_ROOT / "SKILL.md"
+    if not skill_md.exists():
+        return ("red", "SKILL.md 不存在", "修 SKILL.md")
+    content = skill_md.read_text(encoding="utf-8", errors="replace")
+    if not content.startswith("---\n"):
+        return ("red", "SKILL.md 缺 frontmatter (--- 开头)", "修 SKILL.md")
+    end = content.find("\n---\n", 4)
+    if end == -1:
+        return ("red", "SKILL.md frontmatter 缺结尾 ---", "修 SKILL.md")
+    fm = content[4:end]
+    desc_match = re.search(r'description:\s*\|\n((?:[ \t]+.+\n)+)', fm)
+    if not desc_match:
+        return ("red", "SKILL.md frontmatter 缺 description", "修 SKILL.md")
+    desc_lines = [l for l in desc_match.group(1).split("\n") if l.strip()]
+    n = len(desc_lines)
+    if n > 6:
+        return ("red", f"SKILL.md description {n} 行 (writing-for-agents 硬约束 ≤ 6 行, v1.5.7.28 加)",
+                "合并触发器 (跑题/出论文/验本 skill) + 砍冗余 (5 道防线版本号串)")
+    return ("green", f"SKILL.md description {n} 行 ≤ 6 (writing-for-agents 约束满足)", None)
+
+
+def check_v15728_leading_words_table():
+    """checkable 33: v1.5.7.28 writing-for-agents 约束 — leading words 锚定表全在
+    v1.5.7.22 + v1.5.7.27 累计加 10 个核心 leading word, 全部应在 SKILL.md 锚定段
+    """
+    skill_md = SKILL_ROOT / "SKILL.md"
+    if not skill_md.exists():
+        return ("red", "SKILL.md 不存在", "修 SKILL.md")
+    content = skill_md.read_text(encoding="utf-8", errors="replace")
+    required_words = [
+        # v1.5.7.22 加
+        "green", "red", "sign-off", "checkable", "探路弹", "check N", "5 道防线",
+        # v1.5.7.27 加
+        "反模式", "陷阱", "踩坑", "避坑",
+    ]
+    missing = [w for w in required_words if w not in content]
+    if missing:
+        return ("red", f"SKILL.md leading words 锚定段缺 {len(missing)} 个 ({', '.join(missing)})",
+                f"在 SKILL.md §Step 0 顶部 '📌 核心 leading words' 表加这 {len(missing)} 个词")
+    return ("green", f"SKILL.md leading words 锚定 {len(required_words)} 个全在 (green/red/sign-off/checkable/探路弹/check N/5 道防线/反模式/陷阱/踩坑/避坑)", None)
+
+
+def check_v15728_nine_subdirs():
+    """checkable 34: v1.5.7.28 (v1.5.7.26 + v1.5.7.25) — references/ 10 sub-directory 全在
+    9 新建 (data-usage/design-intent/read-checklist/workflow/paper/plot/aigc/audit/preparation)
+    + 1 已存在 (by-category)
+    """
+    expected = [
+        "by-category", "data-usage", "design-intent", "read-checklist",
+        "workflow", "paper", "plot", "aigc", "audit", "preparation",
+    ]
+    missing = [s for s in expected if not (REFS_DIR / s).is_dir()]
+    if missing:
+        return ("red", f"references/ 缺 {len(missing)} 个 sub-directory ({', '.join(missing)})",
+                f"创建这些 sub-directory 并按 v1.5.7.25-26 拆分方案移动文件")
+    # 验证每个 sub-directory 至少 1 个文件
+    empty = [s for s in expected if not any((REFS_DIR / s).iterdir())]
+    if empty:
+        return ("yellow", f"{len(empty)} 个 sub-directory 空 ({', '.join(empty)})",
+                f"空目录没人用, 删除或补文件")
+    return ("green", f"references/ 10 sub-directory 全在 (v1.5.7.25-26 拆分), 都非空", None)
+
+
 def check_v15716_period_start_concept():
     """checkable 28: v1.5.7.16 周期起点决策概念升级 (防 0:00 锚定陷阱)
     1. references/信息边界原则.md 核心规则用 '周期起点' (不锚定 0:00)
@@ -1228,6 +1295,9 @@ CHECKS = [
     ("29. v1.5.7.17 信息边界 + 题目设计意图 重复段合并 (防内容重复)", check_v15717_consolidation),
     ("30. v1.5.7.18 AIGC 文档合并 (受保护片段 + 检测平台弱点 → AIGC降重策略.md)", check_v15718_aigc_merge),
     ("31. v1.5.7.19 绘图文档合并 (绘图规范 + 绘图避坑 → 绘图规范与避坑.md)", check_v15719_plot_merge),
+    ("32. v1.5.7.28 SKILL.md description ≤ 6 行 (writing-for-agents 约束)", check_v15728_description_six_lines),
+    ("33. v1.5.7.28 SKILL.md leading words 锚定 10 词全在 (green/red/sign-off/checkable/探路弹/check N/5 道防线/反模式/陷阱/踩坑/避坑)", check_v15728_leading_words_table),
+    ("34. v1.5.7.28 references/ 10 sub-directory 全在 (by-category/data-usage/design-intent/read-checklist/workflow/paper/plot/aigc/audit/preparation)", check_v15728_nine_subdirs),
 ]
 
 
