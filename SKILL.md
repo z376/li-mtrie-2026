@@ -11,7 +11,7 @@ description: |
 
 metadata:
 
-  version: "1.5.7.26"
+  version: "1.5.7.27"
 
   category: competition-workflow
 
@@ -53,6 +53,10 @@ metadata:
 | **`探路弹`** (tracer bullet) | 先打一发试路径, 早暴露问题 (借鉴自 *The Practice of Programming*) | 替换"试点/试运行/探路" |
 | **`check N`** | dryrun 第 N 项检查 | 编号做 prior, 跑前看哪些红 |
 | **`5 道防线`** | v1.5.7.5-9 五道防线总称 (流程修剪/数据隔离/设计意图/指针强化/三口径+物理) | 全文统一, 不展开版本号 |
+| **`反模式`** (anti-pattern) | 技术/BZD 文档, 描述抽象方法错误 | 替换"踩坑/避坑/陷阱"中抽象方法场景 |
+| **`陷阱`** (trap) | 可视化/scipilot, 描述具体可视化错误 | 替换"踩坑/避坑"中绘图场景 |
+| **`踩坑`** | 历史**案例** (e.g. "踩坑案例/教训") | 替代"过去反例/真实失败" |
+| **`避坑`** | 前瞻**体系** (e.g. "避坑体系/规范") | 替代"防错指南" |
 
 
 
@@ -80,13 +84,13 @@ metadata:
 
 | 2024（上一版） | ⚠️ 部分适配 | 摘要可中英、≤35 页、AI 工具相关要求未规定 |
 
-| 2027+（新规出台时） | ⚠️ 待重新验证 | 跑题前用 `references/合规检查清单.md` §1 重新确认, 重点看 §1.3 AI + §1.4 纪律 |
+| 2027+（新规出台时） | ⚠️ 待重新验证 | 跑题前用 `references/data-usage/合规检查清单.md` §1 重新确认, 重点看 §1.3 AI + §1.4 纪律 |
 
 
 
 **跨版本使用检查清单**：
 
-1. 打开 `references/合规检查清单.md` §1，对照规范版本逐项打勾
+1. 打开 `references/data-usage/合规检查清单.md` §1，对照规范版本逐项打勾
 
 2. 重点看 §1.3（AI 工具类）和 §1.4（纪律类）—— 这两块近 2 年变化大
 
@@ -94,7 +98,7 @@ metadata:
 
 4. **页数限制变了立刻改**（2024 是 ≤35 页，2026 是 ≤30 页）
 
-5. 跑 `references/合规检查清单.md §2 一键验证命令` 跑一遍
+5. 跑 `references/data-usage/合规检查清单.md §2 一键验证命令` 跑一遍
 
 
 
@@ -312,7 +316,7 @@ python -m pip download -d ./pkgs pandas numpy scipy matplotlib openpyxl PyMuPDF 
 
 │  动作 1: xelatex 编译论文版 × 2 + 电子版 × 2            │
 
-│  动作 2: 跑合规检查命令 (references/合规检查清单.md §2) │
+│  动作 2: 跑合规检查命令 (references/data-usage/合规检查清单.md §2) │
 
 │  动作 3: 打包 支撑材料.rar (≤ 20 MB)                   │
 
@@ -332,7 +336,7 @@ python -m pip download -d ./pkgs pandas numpy scipy matplotlib openpyxl PyMuPDF 
 
 
 
-**sign-off 锚定**: Step 4 `green` = 全 skill 5 步状态机可闭环, 学生/团队可交卷. **sign-off 之前 = 仍在开发态**, 任何"差不多"都是 `red`. 详见 `references/验收清单.md` 终审段.
+**sign-off 锚定**: Step 4 `green` = 全 skill 5 步状态机可闭环, 学生/团队可交卷. **sign-off 之前 = 仍在开发态**, 任何"差不多"都是 `red`. 详见 `references/audit/验收清单.md` 终审段.
 
 
 
@@ -372,19 +376,19 @@ python -m pip download -d ./pkgs pandas numpy scipy matplotlib openpyxl PyMuPDF 
 
 | 1. **流程修剪** (v1.5.7.5) | 跑题前 | writing-for-agents 4 步完成判据 + 红线 → references/ | (本页 §Step 0-4) | check 20 |
 
-| 2. **数据隔离** (v1.5.7.6) | 周期起点 LP | **只用历史/预报, 不用当天实际** | `references/信息边界原则.md` | check 21 |
+| 2. **数据隔离** (v1.5.7.6) | 周期起点 LP | **只用历史/预报, 不用当天实际** | `references/data-usage/信息边界原则.md` | check 21 |
 
-| 3. **设计意图** (v1.5.7.7) | 跑题前 + 跑完 | **递进关系 + 期望方向 + 跑完对账** | `references/题目设计意图分析.md §1-5` | check 22 |
+| 3. **设计意图** (v1.5.7.7) | 跑题前 + 跑完 | **递进关系 + 期望方向 + 跑完对账** | `references/design-intent/题目设计意图分析.md §1-5` | check 22 |
 
 | 4. **指针强化** (v1.5.7.8) | AI 加载时 | **frontmatter description + Step 0 必读** | (本页 description + 下方"必读 3 文件") | (隐式) |
 
-| 5. **三口径+物理** (v1.5.7.9) | 写论文 §5 | **总费≠紧急购电费≠调整偏差** + **数据物理真实标注** | `references/题目设计意图分析.md §6-7` | check 23 |
+| 5. **三口径+物理** (v1.5.7.9) | 写论文 §5 | **总费≠紧急购电费≠调整偏差** + **数据物理真实标注** | `references/design-intent/题目设计意图分析.md §6-7` | check 23 |
 
 
 
 **类目适配** (v1.5.7.15 扩到 7 类题):
 
-- **滚动调度类** ⭐⭐⭐ → `references/信息边界原则.md` + `references/题目设计意图分析.md §6/§7` 直接用
+- **滚动调度类** ⭐⭐⭐ → `references/data-usage/信息边界原则.md` + `references/design-intent/题目设计意图分析.md §6/§7` 直接用
 
 - **物理机理类** ⭐ → `references/by-category/物理机理类典型反模式.md` (网格收敛/守恒律/边界条件/单位声明)
 
@@ -398,7 +402,7 @@ python -m pip download -d ./pkgs pandas numpy scipy matplotlib openpyxl PyMuPDF 
 
 - **交通运筹类** (v1.5.7.15 新增) → `references/by-category/交通运筹类典型反模式.md` (网络结构/容量时空/算法适用/Pareto)
 
-**详细反模式对照表 + 跑题前/后自检 checklist** → `references/5道防线自检清单.md` (v1.5.7.11 新增, 6.5 KB, 一处调取). dryrun **check 24** 验证该文件存在 + 4 章节齐全, **check 27** 验证 7 类目 references 全在.
+**详细反模式对照表 + 跑题前/后自检 checklist** → `references/design-intent/5道防线自检清单.md` (v1.5.7.11 新增, 6.5 KB, 一处调取). dryrun **check 24** 验证该文件存在 + 4 章节齐全, **check 27** 验证 7 类目 references 全在.
 
 
 
@@ -406,11 +410,11 @@ python -m pip download -d ./pkgs pandas numpy scipy matplotlib openpyxl PyMuPDF 
 
 
 
-1. **`references/信息边界原则.md`** (5.9 KB) — 三类信息边界 + 4 反模式. **不读 → 90% 会数据泄露** (用附件 2 当天实际做 周期起点计划, 评阅 §2.6 违规)
+1. **`references/data-usage/信息边界原则.md`** (5.9 KB) — 三类信息边界 + 4 反模式. **不读 → 90% 会数据泄露** (用附件 2 当天实际做 周期起点计划, 评阅 §2.6 违规)
 
-2. **`references/题目设计意图分析.md`** (8.5 KB, v1.5.7.9 加 §6 三口径 + §7 数据物理真实性) — 4 步法 + 反模式 + 实战复盘 + 三口径铁律 + 数据物理真实性标注. **不读 → 90% 按字面跑, 不知道 Q3 应**比 Q2 紧急购电低, **不知道总费 ≠ 紧急购电费 ≠ 调整偏差**
+2. **`references/design-intent/题目设计意图分析.md`** (8.5 KB, v1.5.7.9 加 §6 三口径 + §7 数据物理真实性) — 4 步法 + 反模式 + 实战复盘 + 三口径铁律 + 数据物理真实性标注. **不读 → 90% 按字面跑, 不知道 Q3 应**比 Q2 紧急购电低, **不知道总费 ≠ 紧急购电费 ≠ 调整偏差**
 
-3. **`references/读题清单.md`** (5 列模板) — 题面原话 + 解读 + 代码 + **题面禁项** + **题目设计意图**. 跑题前必填 15 项
+3. **`references/read-checklist/读题清单.md`** (5 列模板) — 题面原话 + 解读 + 代码 + **题面禁项** + **题目设计意图**. 跑题前必填 15 项
 
 
 
@@ -470,7 +474,7 @@ python -m pip download -d ./pkgs pandas numpy scipy matplotlib openpyxl PyMuPDF 
 
 
 
-跑题前**必须**写完 `求解/读题清单.md` (15 项全覆盖, `references/读题清单.md` 提供模板), 缺一项 dryrun check 19 直接 RED:
+跑题前**必须**写完 `求解/读题清单.md` (15 项全覆盖, `references/read-checklist/读题清单.md` 提供模板), 缺一项 dryrun check 19 直接 RED:
 
 
 
@@ -546,7 +550,7 @@ python -m pip download -d ./pkgs pandas numpy scipy matplotlib openpyxl PyMuPDF 
 
 
 
-详细原则 + 实战案例 → `references/信息边界原则.md`. dryrun check 21 自动扫描 .py 检测 "day_idx 当天实际" 误用 → RED.
+详细原则 + 实战案例 → `references/data-usage/信息边界原则.md`. dryrun check 21 自动扫描 .py 检测 "day_idx 当天实际" 误用 → RED.
 
 
 
@@ -586,7 +590,7 @@ CUMCM 题目是**研究性问题**, 不是"按字面跑 LP". 题目设计有**�
 
 
 
-详细方法论 (4 步法 + 实战复盘) → `references/题目设计意图分析.md`. dryrun check 22 扫描 .py 检测是否有"递进 / 设计意图 / 期望方向" 注释, 缺则 yellow 警告.
+详细方法论 (4 步法 + 实战复盘) → `references/design-intent/题目设计意图分析.md`. dryrun check 22 扫描 .py 检测是否有"递进 / 设计意图 / 期望方向" 注释, 缺则 yellow 警告.
 
 
 
@@ -596,7 +600,7 @@ CUMCM 题目是**研究性问题**, 不是"按字面跑 LP". 题目设计有**�
 
 **落地工具**:
 
-- 模板: `references/读题清单.md` (15 项空表, 跑题用户填)
+- 模板: `references/read-checklist/读题清单.md` (15 项空表, 跑题用户填)
 
 - LLM 工具: `references/llm-prompts/05-读题提取.md` (从题面 PDF 自动提取)
 
@@ -614,9 +618,9 @@ CUMCM 题目是**研究性问题**, 不是"按字面跑 LP". 题目设计有**�
 
 
 
-1. **学校画像定位**（赛前 2 周 / 1 天各 1 次）→ `references/学校国奖画像.md`（4 步自查 + 4 类学校画像 A/B/C/D, 借鉴 `bzd-cumcm-school-awards` 核心理念, **不复制 BZD 累积数据** — 走 bzdshumo.com 官网查）
+1. **学校画像定位**（赛前 2 周 / 1 天各 1 次）→ `references/preparation/学校国奖画像.md`（4 步自查 + 4 类学校画像 A/B/C/D, 借鉴 `bzd-cumcm-school-awards` 核心理念, **不复制 BZD 累积数据** — 走 bzdshumo.com 官网查）
 
-2. **题意翻译**（读完 PDF 第一时间, 比写求解计划更早）→ `references/题意翻译.md`（5 步流程: 逐句翻译 → 提取核心要素 → Mermaid 跨问题流程图 → 审计遗漏 → Markdown 报告, 借鉴 `bzd-problem-translator`）
+2. **题意翻译**（读完 PDF 第一时间, 比写求解计划更早）→ `references/read-checklist/题意翻译.md`（5 步流程: 逐句翻译 → 提取核心要素 → Mermaid 跨问题流程图 → 审计遗漏 → Markdown 报告, 借鉴 `bzd-problem-translator`）
 
 
 
@@ -636,7 +640,7 @@ CUMCM 题目是**研究性问题**, 不是"按字面跑 LP". 题目设计有**�
 
 | 4 | **图引用找不到文件** | \includegraphics 写了但跑题没生成该图, 编译报 missing | dryrun check 17 (Step 4 前) |
 
-> **完整经验 + 求解/编译失败 6 类 + 跨平台红线** → `references/红线与失败模式.md` §1. 4 大坑 (跑题前防) + §1 6 类 (跑题中修) 互补, **不在 SKILL.md 重复列**.
+> **完整经验 + 求解/编译失败 6 类 + 跨平台红线** → `references/read-checklist/红线与失败模式.md` §1. 4 大坑 (跑题前防) + §1 6 类 (跑题中修) 互补, **不在 SKILL.md 重复列**.
 
 
 
@@ -926,13 +930,13 @@ CUMCM 题目是**研究性问题**, 不是"按字面跑 LP". 题目设计有**�
 
 
 
-> 8 项整篇一致性自检的**完整清单 + 模板 + 踩坑案例**在 `references/paper-spec.md §2 8 项自检`（权威源, 本节不重复列）。
+> 8 项整篇一致性自检的**完整清单 + 模板 + 踩坑案例**在 `references/paper/paper-spec.md §2 8 项自检`（权威源, 本节不重复列）。
 
 > 每写完一个问题的代码，必须在 `求解/求解计划.md` 末尾的"自检"区逐项回填，**不全绿 = 该问题未完成**。
 
 
 
-**📦 跨问题常量强制规范**（C4，详 `references/导入规范.md §8`）：
+**📦 跨问题常量强制规范**（C4，详 `references/workflow/导入规范.md §8`）：
 
 
 
@@ -954,9 +958,9 @@ CUMCM 题目是**研究性问题**, 不是"按字面跑 LP". 题目设计有**�
 
 **全部勾完才能 next**。如果某项不勾，意味着这一问有未解决的硬问题，下一问会踩同样的坑。
 
-**🟢 Step 2 完成判据**: 5 问题 `求解/问题X/问题X_xxx.py` 全部 py_compile OK + `result.xlsx` 落盘 + 每问题都进 §Step 2.Gate 8 项 (`references/paper-spec.md §2 8 项自检`) 全勾.
+**🟢 Step 2 完成判据**: 5 问题 `求解/问题X/问题X_xxx.py` 全部 py_compile OK + `result.xlsx` 落盘 + 每问题都进 §Step 2.Gate 8 项 (`references/paper/paper-spec.md §2 8 项自检`) 全勾.
 
-**🟢 Step 2.Gate 完成判据**: 8 项 (`references/paper-spec.md §2 8 项自检`) 全 `green` + 上面的 3 条跨问题常量反问全勾 (constants.py / params.py / 命名一致). 任 1 项空 = `red` = 返工本问题.
+**🟢 Step 2.Gate 完成判据**: 8 项 (`references/paper/paper-spec.md §2 8 项自检`) 全 `green` + 上面的 3 条跨问题常量反问全勾 (constants.py / params.py / 命名一致). 任 1 项空 = `red` = 返工本问题.
 
 
 
@@ -988,7 +992,7 @@ CUMCM 题目是**研究性问题**, 不是"按字面跑 LP". 题目设计有**�
 
 
 
-> AI 工具使用声明 = **§9 1 句话 (3-5 项简要) + AI 详情 PDF (4 节详写)** + 6 项 AI 必查 (见下) → 见 `references/合规检查清单.md §1.3`（AI 工具类）。
+> AI 工具使用声明 = **§9 1 句话 (3-5 项简要) + AI 详情 PDF (4 节详写)** + 6 项 AI 必查 (见下) → 见 `references/data-usage/合规检查清单.md §1.3`（AI 工具类）。
 
 
 
@@ -1084,11 +1088,11 @@ CUMCM 题目是**研究性问题**, 不是"按字面跑 LP". 题目设计有**�
 
 - 严格：只标确实由 AI 生成的（乱标 = 评审反向扣"AI 标注不规范"分）
 
-- 完整 4 条规则 + 3 类禁用场景 → 见 `references/合规检查清单.md §1.3` + `§3 禁用场景`
+- 完整 4 条规则 + 3 类禁用场景 → 见 `references/data-usage/合规检查清单.md §1.3` + `§3 禁用场景`
 
 
 
-详细 10 章规范见 `references/paper-spec.md`（含全文统一符号表 + 8 项自检）。
+详细 10 章规范见 `references/paper/paper-spec.md`（含全文统一符号表 + 8 项自检）。
 
 
 
@@ -1096,13 +1100,13 @@ CUMCM 题目是**研究性问题**, 不是"按字面跑 LP". 题目设计有**�
 
 
 
-- **国奖级硬性指标**（6 类数字门槛 + 26 条自查表 6 维度）→ `references/国奖级硬性指标.md`
+- **国奖级硬性指标**（6 类数字门槛 + 26 条自查表 6 维度）→ `references/paper/国奖级硬性指标.md`
 
   - 公式 ≥ 15、表格 ≥ 18、图片 ≥ 10、参考文献 15-25、三类检验齐全、正文 25-30 页
 
   - 26 条逐条判定（AI 新规 / AI 幻觉 / 建模逻辑 / 求解合理 / 写作规范 / 排版页数）
 
-- **去 AIGC 指南**（降重 4 层法 + 9 类痕迹自查 + 6 类代码特征）→ `references/去AIGC指南.md`
+- **去 AIGC 指南**（降重 4 层法 + 9 类痕迹自查 + 6 类代码特征）→ `references/aigc/去AIGC指南.md`
 
   - **L4 证据/事实**层最有效（补数字、补理由、补边界、补失败方案）
 
@@ -1128,9 +1132,9 @@ CUMCM 题目是**研究性问题**, 不是"按字面跑 LP". 题目设计有**�
 
 
 
-- **18 条可视化陷阱**（均值柱/双Y轴/饼图/Y轴截断/rainbow色图/缺字方框 等）→ `references/绘图规范与避坑.md §2`（v1.5.7.19 合并自 `绘图规范.md` + `绘图避坑.md`, 详版含审稿人视角 + 代码示例）
+- **18 条可视化陷阱**（均值柱/双Y轴/饼图/Y轴截断/rainbow色图/缺字方框 等）→ `references/plot/绘图规范与避坑.md §2`（v1.5.7.19 合并自 `绘图规范.md` + `绘图避坑.md` 后, 两文件已删除, 详版含审稿人视角 + 代码示例）
 
-- **图型选择决策三轴**（变量数/论证意图/数据规模）→ `references/图型选择决策.md`（11.6 KB, 8 类数据形态分述）
+- **图型选择决策三轴**（变量数/论证意图/数据规模）→ `references/plot/图型选择决策.md`（11.6 KB, 8 类数据形态分述）
 
 - **速查表** → `references/绘图规范.md §0`（中文化压缩版，每条 1 行）
 
@@ -1142,11 +1146,11 @@ CUMCM 题目是**研究性问题**, 不是"按字面跑 LP". 题目设计有**�
 
 - **每道题 4 段式分析**（问题概述 / 总体思路 / 模型比选 / 创新方向）→ 写 `求解/求解计划.md` 时按这 4 段，**直接对应论文 §5.X 章节**
 
-- **5 跨问题架构**（机理→计算→精度 / 描述→估计→预测→决策 / 单例→多主体 / 确定性→不确定→稳健 / 单因素→多因素 / 分类→优化）→ `references/整题建模模式.md`（3.7 KB, 16 道 2020-2025 高教社杯国赛凝练）
+- **5 跨问题架构**（机理→计算→精度 / 描述→估计→预测→决策 / 单例→多主体 / 确定性→不确定→稳健 / 单因素→多因素 / 分类→优化）→ `references/workflow/整题建模模式.md`（3.7 KB, 16 道 2020-2025 高教社杯国赛凝练）
 
 - **7 题型路线**（动态优化/物理反演/统计生物/实验数据/规划生产/几何覆盖/分布式信息）+ **6 断链 failures** + **8 验证 routes**（同源）
 
-- **4 段式硬约束 + 创新标准** → `references/策略输出规范.md`（2.8 KB, 反例"使用遗传算法/模型融合/加可视化/堆因素 不算创新"）
+- **4 段式硬约束 + 创新标准** → `references/preparation/策略输出规范.md`（2.8 KB, 反例"使用遗传算法/模型融合/加可视化/堆因素 不算创新"）
 
 
 
@@ -1162,9 +1166,9 @@ CUMCM 题目是**研究性问题**, 不是"按字面跑 LP". 题目设计有**�
 
   - `save_csv()`：utf-8-sig 写，Excel 直接打开
 
-- **38+ 项验收清单**（Stage 5）→ `references/验收清单.md`（12.9 KB, 6 类：A 编译 / B 数值 / C 硬规则 / D 写作 / E 支撑材料 / F 2026 规范）
+- **38+ 项验收清单**（Stage 5）→ `references/audit/验收清单.md`（12.9 KB, 6 类：A 编译 / B 数值 / C 硬规则 / D 写作 / E 支撑材料 / F 2026 规范）
 
-- **4 角色 prompt 模板**（建模手/代码手/论文手/验收手）→ `references/角色Prompt.md`（13.5 KB, 团队 4 人分工时直接 copy-paste 角色身份到对话）
+- **4 角色 prompt 模板**（建模手/代码手/论文手/验收手）→ `references/preparation/角色Prompt.md`（13.5 KB, 团队 4 人分工时直接 copy-paste 角色身份到对话）
 
 
 
@@ -1200,7 +1204,7 @@ CUMCM 题目是**研究性问题**, 不是"按字面跑 LP". 题目设计有**�
 
 
 
-→ 完整版 `references/题意红线.md`（4.7 KB）
+→ 完整版 `references/read-checklist/题意红线.md`（4.7 KB）
 
 
 
@@ -1222,7 +1226,7 @@ python references/scripts/verify_pdf_metrics.py 论文/论文.pdf 0.4503 412.47
 
 
 
-写完后**先**做**符号一致性自检**（8 项，详见 `references/paper-spec.md §2 8 项自检`），全绿再编译（漏自检 = 编译时符号错乱返工）。
+写完后**先**做**符号一致性自检**（8 项，详见 `references/paper/paper-spec.md §2 8 项自检`），全绿再编译（漏自检 = 编译时符号错乱返工）。
 
 
 
@@ -1351,7 +1355,7 @@ foreach ($r in $refs) {
 
 
 
-→ 详见 `references/合规检查清单.md §2 一键验证命令`
+→ 详见 `references/data-usage/合规检查清单.md §2 一键验证命令`
 
 
 
@@ -1463,7 +1467,7 @@ if ($sizeMB -gt 20) { Write-Error "超过 20MB 限制！" }
 
 
 
-3 个文件硬要求（详 `references/合规检查清单.md §5`）：
+3 个文件硬要求（详 `references/data-usage/合规检查清单.md §5`）：
 
 - `论文/论文.pdf` — 纸质版（含承诺书 + 编号页）
 
@@ -1489,7 +1493,7 @@ if ($sizeMB -gt 20) { Write-Error "超过 20MB 限制！" }
 
 
 
-**完整 3 类红线 (求解/编译失败 + 跨平台代码 + 跑题纪律) + 修复命令 + 协同指针**在 `references/红线与失败模式.md` (权威源, 本节不重复列). 跑题遇错先查这里, 跑题前过一遍 §2 跨平台红线.
+**完整 3 类红线 (求解/编译失败 + 跨平台代码 + 跑题纪律) + 修复命令 + 协同指针**在 `references/read-checklist/红线与失败模式.md` (权威源, 本节不重复列). 跑题遇错先查这里, 跑题前过一遍 §2 跨平台红线.
 
 
 
@@ -1501,7 +1505,7 @@ if ($sizeMB -gt 20) { Write-Error "超过 20MB 限制！" }
 
 
 
-**完整硬规则 + AI 合规 + 纪律红线 + 4 类检查表 + 一键验证命令**在 `references/合规检查清单.md`（权威源, 本节不重复列）。**写完论文后**逐项打勾 + 跑 §2 验证命令。
+**完整硬规则 + AI 合规 + 纪律红线 + 4 类检查表 + 一键验证命令**在 `references/data-usage/合规检查清单.md`（权威源, 本节不重复列）。**写完论文后**逐项打勾 + 跑 §2 验证命令。
 
 
 
@@ -1543,7 +1547,7 @@ if ($sizeMB -gt 20) { Write-Error "超过 20MB 限制！" }
 
 
 
-**4 必做 + 1 可选 + 5 步状态机关系 + 4 个 PowerShell 验证脚本**在 `references/post-solution-audit.md` (权威源, 本节不重复). sign-off 绿后跑 20-30 分钟, 比交卷后评委扣分划算. 简述:
+**4 必做 + 1 可选 + 5 步状态机关系 + 4 个 PowerShell 验证脚本**在 `references/audit/post-solution-audit.md` (权威源, 本节不重复). sign-off 绿后跑 20-30 分钟, 比交卷后评委扣分划算. 简述:
 
 
 
@@ -1571,7 +1575,7 @@ if ($sizeMB -gt 20) { Write-Error "超过 20MB 限制！" }
 
 
 
-开赛前**一周**看 `references/赛前学习清单.md`（不在跑题 always-loaded 里, 节省 16 KB context）。
+开赛前**一周**看 `references/preparation/赛前学习清单.md`（不在跑题 always-loaded 里, 节省 16 KB context）。
 
 覆盖 6 大题型 + 30+ 算法 + 60/30/7 天速成 + 跑题红线 + 自检清单。跑题期间不读。
 
