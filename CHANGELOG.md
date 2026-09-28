@@ -1,10 +1,27 @@
-# CHANGELOG (v1.5.7.24 — 拆 CHANGELOG, 最新 4 entries 留主文件)
+# CHANGELOG (v1.5.7.25 — references/ 拆 by-category/ sub-directory, 6 类目 references 归类)
 
 > **v1.5.7.20 之前 15 个 hotfix** (v1.5.7.5 ~ v1.5.7.19) → [`CHANGELOG-archive.md`](CHANGELOG-archive.md).
 >
 > **拆分原因**: 392 行累积, human 翻历史困难. 主文件只留最新 4 个 (writing-for-agents 审计 hotfix).
 >
 > **查找旧版本**: 用 grep 搜 `CHANGELOG-archive.md` (e.g. `grep -n v1.5.7.10 CHANGELOG-archive.md`).
+
+## v1.5.7.25 — references/by-category/ sub-directory (v1.5.7.24 hotfix)
+
+**核心**: 6 个类目 references (物理/数据/优化/经济/生物/交通) 从 `references/` 平铺 → `references/by-category/` sub-directory:
+- 物理机理类典型反模式.md
+- 数据分析类典型反模式.md
+- 优化类典型反模式.md
+- 经济金融类典型反模式.md
+- 生物医疗类典型反模式.md
+- 交通运筹类典型反模式.md
+
+**影响**:
+- SKILL.md §Step 0 类目适配段 6 行引用改 `references/by-category/xxx.md` (line 389-399)
+- SKILL.md §Step 0 索引表 7 类题专属行加 "(v1.5.7.25 移到 sub-directory)"
+- dryrun.py check 26 + 27 路径改 `REFS_DIR / "by-category" / "xxx类典型反模式.md"` (4 处 tuple)
+
+**dryrun 不变**: 24/31 green + 7 yellow + 0 red.
 
 ---
 

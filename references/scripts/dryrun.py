@@ -1015,14 +1015,15 @@ def check_v15713_category_adaptation():
 
 def check_v15714_category_references():
     """checkable 26: v1.5.7.14 4 类目专属 references (物理/数据/优化/调度) 全在
-    1. references/物理机理类典型反模式.md 存在 + 含 §1 反模式 + §3 期望对照
-    2. references/数据分析类典型反模式.md 存在 + 含 §1 反模式 + §4 时序严格
-    3. references/优化类典型反模式.md 存在 + 含 §1 反模式 + §3 期望对照
+    (v1.5.7.25 移到 references/by-category/ sub-directory)
+    1. references/by-category/物理机理类典型反模式.md 存在 + 含 §1 反模式 + §3 期望对照
+    2. references/by-category/数据分析类典型反模式.md 存在 + 含 §1 反模式 + §4 时序严格
+    3. references/by-category/优化类典型反模式.md 存在 + 含 §1 反模式 + §3 期望对照
     """
     cat_files = [
-        (REFS_DIR / "物理机理类典型反模式.md", ["## 1.", "网格收敛"], "物理机理类典型反模式.md 缺 §1 反模式或网格收敛段"),
-        (REFS_DIR / "数据分析类典型反模式.md", ["## 1.", "训练-测试", "时序"], "数据分析类典型反模式.md 缺 §1 反模式或训练-测试/时序段"),
-        (REFS_DIR / "优化类典型反模式.md", ["## 1.", "gap", "灵敏度"], "优化类典型反模式.md 缺 §1 反模式或 gap/灵敏度段"),
+        (REFS_DIR / "by-category" / "物理机理类典型反模式.md", ["## 1.", "网格收敛"], "物理机理类典型反模式.md 缺 §1 反模式或网格收敛段"),
+        (REFS_DIR / "by-category" / "数据分析类典型反模式.md", ["## 1.", "训练-测试", "时序"], "数据分析类典型反模式.md 缺 §1 反模式或训练-测试/时序段"),
+        (REFS_DIR / "by-category" / "优化类典型反模式.md", ["## 1.", "gap", "灵敏度"], "优化类典型反模式.md 缺 §1 反模式或 gap/灵敏度段"),
     ]
     missing = []
     for path, required_kws, fix in cat_files:
@@ -1036,19 +1037,20 @@ def check_v15714_category_references():
     if missing:
         return ("red", f"v1.5.7.14 类目 references 缺: {'; '.join(missing)}",
                 "补齐 3 份类目 references (§1 反模式 + 类目专属术语: 物理=网格收敛/数据=训练-测试/优化=gap)")
-    return ("green", "物理机理/数据分析/优化 3 类目 references 全在 + 类目专属术语齐", None)
+    return ("green", "by-category/ 3 类目 references 全在 + 类目专属术语齐 (v1.5.7.25 移到 sub-directory)", None)
 
 
 def check_v15715_more_category_references():
     """checkable 27: v1.5.7.15 7 类目 references 全在 (扩 3 类: 经济/生物/交通)
-    1. references/经济金融类典型反模式.md 存在 + 含 §1 反模式 + 类目专属术语 (基点/风险度量/压力测试)
-    2. references/生物医疗类典型反模式.md 存在 + 含 §1 反模式 + 类目专属术语 (机理引用/多重校正/伦理)
+    (v1.5.7.25 移到 references/by-category/ sub-directory)
+    1. references/by-category/经济金融类典型反模式.md 存在 + 含 §1 反模式 + 类目专属术语 (基点/风险度量/压力测试)
+    2. references/by-category/生物医疗类典型反模式.md 存在 + 含 §1 反模式 + 类目专属术语 (机理引用/多重校正/伦理)
     3. references/交通运筹类典型反模式.md 存在 + 含 §1 反模式 + 类目专属术语 (网络结构/Pareto/时空约束)
     """
     cat_files = [
-        (REFS_DIR / "经济金融类典型反模式.md", ["## 1.", "基点", "压力测试"], "经济金融类典型反模式.md 缺 §1 反模式或基点/压力测试段"),
-        (REFS_DIR / "生物医疗类典型反模式.md", ["## 1.", "机理引用", "多重校正"], "生物医疗类典型反模式.md 缺 §1 反模式或机理引用/多重校正段"),
-        (REFS_DIR / "交通运筹类典型反模式.md", ["## 1.", "网络结构", "Pareto"], "交通运筹类典型反模式.md 缺 §1 反模式或网络结构/Pareto段"),
+        (REFS_DIR / "by-category" / "经济金融类典型反模式.md", ["## 1.", "基点", "压力测试"], "经济金融类典型反模式.md 缺 §1 反模式或基点/压力测试段"),
+        (REFS_DIR / "by-category" / "生物医疗类典型反模式.md", ["## 1.", "机理引用", "多重校正"], "生物医疗类典型反模式.md 缺 §1 反模式或机理引用/多重校正段"),
+        (REFS_DIR / "by-category" / "交通运筹类典型反模式.md", ["## 1.", "网络结构", "Pareto"], "交通运筹类典型反模式.md 缺 §1 反模式或网络结构/Pareto段"),
     ]
     missing = []
     for path, required_kws, fix in cat_files:
@@ -1062,7 +1064,7 @@ def check_v15715_more_category_references():
     if missing:
         return ("red", f"v1.5.7.15 新增 3 类目 references 缺: {'; '.join(missing)}",
                 "补齐 3 份新类目 references (§1 反模式 + 类目专属术语: 经济=基点/生物=多重校正/交通=Pareto)")
-    return ("green", "经济金融/生物医疗/交通运筹 3 类目 references 全在 + 类目专属术语齐", None)
+    return ("green", "by-category/ 经济金融/生物医疗/交通运筹 3 类目 references 全在 + 类目专属术语齐 (v1.5.7.25 移到 sub-directory)", None)
 
 
 def check_v15716_period_start_concept():
@@ -1220,8 +1222,8 @@ CHECKS = [
     ("23. v1.5.7.9 三口径铁律 + 数据物理真实性", check_v1579_three_modes_and_data),
     ("24. v1.5.7.11 5 道防线自检清单 (中心索引 + 反模式 + checklist)", check_v15711_five_lines_index),
     ("25. v1.5.7.13 类目适配说明 (防通用性陷阱, 3 references 顶部标 [调度类]/[通用])", check_v15713_category_adaptation),
-    ("26. v1.5.7.14 4 类目 references (物理/数据/优化 + 调度, 类目专属术语)", check_v15714_category_references),
-    ("27. v1.5.7.15 7 类目 references (扩 3 类: 经济/生物/交通, 类目专属术语)", check_v15715_more_category_references),
+    ("26. v1.5.7.14 4 类目 references (物理/数据/优化 + 调度, 类目专属术语, v1.5.7.25 移到 by-category/)", check_v15714_category_references),
+    ("27. v1.5.7.15 7 类目 references (扩 3 类: 经济/生物/交通, 类目专属术语, v1.5.7.25 移到 by-category/)", check_v15715_more_category_references),
     ("28. v1.5.7.16 周期起点决策概念升级 (防 0:00 锚定陷阱)", check_v15716_period_start_concept),
     ("29. v1.5.7.17 信息边界 + 题目设计意图 重复段合并 (防内容重复)", check_v15717_consolidation),
     ("30. v1.5.7.18 AIGC 文档合并 (受保护片段 + 检测平台弱点 → AIGC降重策略.md)", check_v15718_aigc_merge),

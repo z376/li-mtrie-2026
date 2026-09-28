@@ -11,7 +11,7 @@ description: |
 
 metadata:
 
-  version: "1.5.7.24"
+  version: "1.5.7.25"
 
   category: competition-workflow
 
@@ -386,17 +386,17 @@ python -m pip download -d ./pkgs pandas numpy scipy matplotlib openpyxl PyMuPDF 
 
 - **滚动调度类** ⭐⭐⭐ → `references/信息边界原则.md` + `references/题目设计意图分析.md §6/§7` 直接用
 
-- **物理机理类** ⭐ → `references/物理机理类典型反模式.md` (网格收敛/守恒律/边界条件/单位声明)
+- **物理机理类** ⭐ → `references/by-category/物理机理类典型反模式.md` (网格收敛/守恒律/边界条件/单位声明)
 
-- **数据分析类** ⭐ → `references/数据分析类典型反模式.md` (训练-测试 gap/类别不平衡/时序严格)
+- **数据分析类** ⭐ → `references/by-category/数据分析类典型反模式.md` (训练-测试 gap/类别不平衡/时序严格)
 
-- **优化类** ⭐⭐ → `references/优化类典型反模式.md` (算法适用性/gap/灵敏度)
+- **优化类** ⭐⭐ → `references/by-category/优化类典型反模式.md` (算法适用性/gap/灵敏度)
 
-- **经济金融类** (v1.5.7.15 新增) → `references/经济金融类典型反模式.md` (基点单位/时序严格/风险度量/压力测试)
+- **经济金融类** (v1.5.7.15 新增) → `references/by-category/经济金融类典型反模式.md` (基点单位/时序严格/风险度量/压力测试)
 
-- **生物医疗类** (v1.5.7.15 新增) → `references/生物医疗类典型反模式.md` (机理引用/个体差异/伦理脱敏/多重校正)
+- **生物医疗类** (v1.5.7.15 新增) → `references/by-category/生物医疗类典型反模式.md` (机理引用/个体差异/伦理脱敏/多重校正)
 
-- **交通运筹类** (v1.5.7.15 新增) → `references/交通运筹类典型反模式.md` (网络结构/容量时空/算法适用/Pareto)
+- **交通运筹类** (v1.5.7.15 新增) → `references/by-category/交通运筹类典型反模式.md` (网络结构/容量时空/算法适用/Pareto)
 
 **详细反模式对照表 + 跑题前/后自检 checklist** → `references/5道防线自检清单.md` (v1.5.7.11 新增, 6.5 KB, 一处调取). dryrun **check 24** 验证该文件存在 + 4 章节齐全, **check 27** 验证 7 类目 references 全在.
 
@@ -674,7 +674,7 @@ CUMCM 题目是**研究性问题**, 不是"按字面跑 LP". 题目设计有**�
 |-------|-------------|
 | **数据使用纪律** | `references/信息边界原则.md` (周期起点决策信息边界 + 反模式) · `references/合规检查清单.md` (§1.4 数据使用纪律) |
 | **设计意图 + 期望** | `references/题目设计意图分析.md` (§1-5 4 步法 + §6 三口径 + §7 数据物理) · `references/5道防线自检清单.md` (§0 类目适配 + §1 总览) |
-| **7 类题专属** | `references/{物理机理/数据分析/优化/经济金融/生物医疗/交通运筹}类典型反模式.md` (按本题类型选 1 份) |
+| **7 类题专属** | `references/by-category/{物理机理/数据分析/优化/经济金融/生物医疗/交通运筹}类典型反模式.md` (按本题类型选 1 份, v1.5.7.25 移到 sub-directory) |
 | **跑题前自检** | `references/读题清单.md` (15 项模板) · `references/红线与失败模式.md` (§1 失败 handling 6 类 + §2 跨平台红线) |
 | **跑题中参考** | `references/workflow.md` (工作流) · `references/模型字典使用指南.md` · `references/模型决策树.md` · `references/整题建模模式.md` |
 | **写论文** | `references/paper-spec.md` (权威源) · `references/国奖级硬性指标.md` · `references/格式自查清单.md` |
