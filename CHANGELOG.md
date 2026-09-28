@@ -1,6 +1,18 @@
-# CHANGELOG (v1.5.7.21 — writing-for-agents 审计 P1 收尾: description 砍 5 道防线行 + references/ 索引表)
+# CHANGELOG (v1.5.7.22 — writing-for-agents 审计 P2 收尾: leading words 锚定)
 
 > v1.5.7.11 实战索引化: 5 道防线 (v1.5.7.5 ~ v1.5.7.10) 分散在 SKILL.md 和多个 references/. 新建 `references/5道防线自检清单.md` (6.5 KB) 做**集中索引 + 反模式对照表 (12 行) + 跑题前 checklist (10 项) + 跑完后对照表 (5 项)**, AI 一处拿到全貌, 避免"知道有但漏了".
+
+## v1.5.7.22 — writing-for-agents 审计 P2 收尾 (v1.5.7.21 hotfix)
+
+**核心**: writing-for-agents 审计最后一项 P2 — leading word 锚定 + 中文化:
+- **`tracer bullet` → `探路弹`** (5 处替换): §Step 1.5 标题 + 解释 + "30 分钟探路流程" + "没跑探路弹" 踩坑教训 + 完成判据. 中文 prior 强 (学生都打过枪/知道"先打一发试路径").
+- **加 SKILL.md leading words 锚定段** (line 46 之后): 6 个核心 leading word 统一表 (green/red/sign-off/checkable/探路弹/check N/5 道防线), 后续写作按此表.
+
+**影响文件**: SKILL.md (5 处替换 + 1 段新增).
+
+**dryrun 不变**: 24/31 green + 7 yellow + 0 red.
+
+---
 
 ## v1.5.7.21 — writing-for-agents 审计 P1 收尾 (v1.5.7.20 hotfix)
 
