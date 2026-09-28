@@ -1114,24 +1114,34 @@ def check_v15728_leading_words_table():
 
 
 def check_v15728_nine_subdirs():
-    """checkable 34: v1.5.7.28 (v1.5.7.26 + v1.5.7.25) — references/ 10 sub-directory 全在
-    9 新建 (data-usage/design-intent/read-checklist/workflow/paper/plot/aigc/audit/preparation)
-    + 1 已存在 (by-category)
+    """checkable 34: v1.5.7.31 — references/ 18 sub-directory 全在 (扩 v1.5.7.28 的 10 → 18)
+
+    18 sub-directory 分 3 类:
+    - 10 由 v1.5.7.25-26 拆分新建 (by-category + 9 新建)
+    - 8 原有 (2026官方答疑/examples/llm-prompts/scripts/templates/数模资料/板块自查/获奖论文/技能总结)
+
+    ⚠️ v1.5.7.28 之前只验 10 个新建 sub-directory, 已存在的 8 个被忽略 (如果被删, check 不报)
     """
     expected = [
+        # v1.5.7.25-26 拆分新建 (10 个)
         "by-category", "data-usage", "design-intent", "read-checklist",
         "workflow", "paper", "plot", "aigc", "audit", "preparation",
+        # 原有 (8 个)
+        "2026官方答疑", "examples", "llm-prompts", "scripts",
+        "templates", "数模资料", "板块自查", "获奖论文",
+        # v1.5.7.30 新建 (1 个)
+        "技能总结",
     ]
     missing = [s for s in expected if not (REFS_DIR / s).is_dir()]
     if missing:
         return ("red", f"references/ 缺 {len(missing)} 个 sub-directory ({', '.join(missing)})",
-                f"创建这些 sub-directory 并按 v1.5.7.25-26 拆分方案移动文件")
+                f"恢复这些 sub-directory (按 git log 看是何时删的)")
     # 验证每个 sub-directory 至少 1 个文件
     empty = [s for s in expected if not any((REFS_DIR / s).iterdir())]
     if empty:
         return ("yellow", f"{len(empty)} 个 sub-directory 空 ({', '.join(empty)})",
                 f"空目录没人用, 删除或补文件")
-    return ("green", f"references/ 10 sub-directory 全在 (v1.5.7.25-26 拆分), 都非空", None)
+    return ("green", f"references/ 18 sub-directory 全在 (v1.5.7.25-26 拆分 10 + 原有 8), 都非空", None)
 
 
 def check_v15716_period_start_concept():
@@ -1297,7 +1307,7 @@ CHECKS = [
     ("31. v1.5.7.19 绘图文档合并 (绘图规范 + 绘图避坑 → 绘图规范与避坑.md)", check_v15719_plot_merge),
     ("32. v1.5.7.28 SKILL.md description ≤ 6 行 (writing-for-agents 约束)", check_v15728_description_six_lines),
     ("33. v1.5.7.28 SKILL.md leading words 锚定 10 词全在 (green/red/sign-off/checkable/探路弹/check N/5 道防线/反模式/陷阱/踩坑/避坑)", check_v15728_leading_words_table),
-    ("34. v1.5.7.28 references/ 10 sub-directory 全在 (by-category/data-usage/design-intent/read-checklist/workflow/paper/plot/aigc/audit/preparation)", check_v15728_nine_subdirs),
+    ("34. v1.5.7.31 references/ 18 sub-directory 全在 (10 拆分 + 8 原有: 2026官方答疑/examples/llm-prompts/scripts/templates/数模资料/板块自查/获奖论文 + 1 新建 技能总结)", check_v15728_nine_subdirs),
 ]
 
 

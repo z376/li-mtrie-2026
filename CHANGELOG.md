@@ -1,10 +1,25 @@
-# CHANGELOG (v1.5.7.30 — 收匠期: 跨 2 session 经验汇总, references/技能总结/经验汇总.md + user memory 2 条)
+# CHANGELOG (v1.5.7.31 — check 34 扩到验 18 sub-directory (原 10 漏 8 原有))
 
 > **v1.5.7.20 之前 15 个 hotfix** (v1.5.7.5 ~ v1.5.7.19) → [`CHANGELOG-archive.md`](CHANGELOG-archive.md).
 >
 > **拆分原因**: 392 行累积, human 翻历史困难. 主文件只留最新 4 个 (writing-for-agents 审计 hotfix).
 >
 > **查找旧版本**: 用 grep 搜 `CHANGELOG-archive.md` (e.g. `grep -n v1.5.7.10 CHANGELOG-archive.md`).
+
+## v1.5.7.31 — check 34 扩到验 18 sub-directory (v1.5.7.30 hotfix)
+
+**核心**: writing-for-agents 审计 v1.5.7.30 发现 check 34 只验 10 个新建 sub-directory (v1.5.7.25-26 拆分), **漏 8 个原有** (2026官方答疑/examples/llm-prompts/scripts/templates/数模资料/板块自查/获奖论文). 修复:
+
+- **check 34 扩到 19 个** (10 拆分 + 8 原有 + 1 v1.5.7.30 新建 技能总结):
+  - 缺 → 红 + 提示"按 git log 看是何时删的"
+  - 空 → 黄 + 提示"删除或补文件"
+- **check 34 描述更新**: 加 "v1.5.7.31" 标识 + "原有 8 个被忽略" 警示
+
+**影响文件**: dryrun.py (check 34 改 19 行 + CHECKS 改 1 行).
+
+**dryrun**: 27/34 green + 7 yellow + 0 red (v1.5.7.31 修后, 6 维度从 4 green + 2 yellow → 5 green + 1 yellow — 仅 SKILL.md 1581 行略超 1500 仍是 yellow, 边际收益低保留).
+
+---
 
 ## v1.5.7.30 — 收匠期 (v1.5.7.29 hotfix, 跨 2 session 经验汇总)
 
