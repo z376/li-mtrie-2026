@@ -38,17 +38,17 @@ bzd-math-modeling-skills/skills/论文自查类/
 ├── bzd-model-solution-checker    → 07-模型求解自查.md   (v1.5.3)
 ├── bzd-reference-appendix-checker→ 08-参考文献附录自查.md (v1.5.3)
 ├── bzd-paper-aigc-auditor        → 09-AIGC审计.md       (v1.5.3)
-├── bzd-model-dictionary          → references/模型字典使用指南.md (v1.5.1)
-├── bzd-paper-format-checker      → references/格式自查清单.md    (v1.5.1)
-└── bzd-review-paper              → references/百分制评审方法.md  (v1.5.1)
+├── bzd-model-dictionary          → references/workflow/模型字典使用指南.md (v1.5.1)
+├── bzd-paper-format-checker      → references/paper/格式自查清单.md    (v1.5.1)
+└── bzd-review-paper              → references/paper/百分制评审方法.md  (v1.5.1)
 ```
 
 ## 与现有 4 文件关系
 
 | v1.5.1+2 借鉴 | v1.5.3 板块 | 关系 |
 |---|---|---|
-| `references/去AIGC指南.md` (14.6KB) | 09-AIGC审计.md | 高层指南, 板块 09 是其精简方法论摘要 |
-| `references/AIGC降重策略.md` (9.4KB, v1.5.7.18 合并) | 09-AIGC审计.md § 4 轮降重 + 关联 | 禁改片段 + 检测平台 + 实战策略 — 合并自 受保护片段+检测平台弱点 |
+| `references/aigc/去AIGC指南.md` (14.6KB) | 09-AIGC审计.md | 高层指南, 板块 09 是其精简方法论摘要 |
+| `references/aigc/AIGC降重策略.md` (9.4KB, v1.5.7.18 合并) | 09-AIGC审计.md § 4 轮降重 + 关联 | 禁改片段 + 检测平台 + 实战策略 — 合并自 受保护片段+检测平台弱点 |
 | `references/数模资料/各板块写作指南/*.pdf` (8 PDF) | 01-09 全部 | BZD 详细版 (2.1MB), 板块自查是精简方法论 |
 
 **用法推荐**: 9 个板块自查 (1-3 分钟/个, 共 15-30 分钟) 快速走查, 详版 PDF 按需深读.

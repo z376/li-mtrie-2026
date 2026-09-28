@@ -1,10 +1,37 @@
-# CHANGELOG (v1.5.7.25 — references/ 拆 by-category/ sub-directory, 6 类目 references 归类)
+# CHANGELOG (v1.5.7.26 — references/ 拆 9 个 sub-directory, 27 平铺 .md 归类)
 
 > **v1.5.7.20 之前 15 个 hotfix** (v1.5.7.5 ~ v1.5.7.19) → [`CHANGELOG-archive.md`](CHANGELOG-archive.md).
 >
 > **拆分原因**: 392 行累积, human 翻历史困难. 主文件只留最新 4 个 (writing-for-agents 审计 hotfix).
 >
 > **查找旧版本**: 用 grep 搜 `CHANGELOG-archive.md` (e.g. `grep -n v1.5.7.10 CHANGELOG-archive.md`).
+
+## v1.5.7.26 — references/ 拆 9 个 sub-directory (v1.5.7.25 hotfix)
+
+**核心**: 27 个平铺 .md 按用途归类到 9 个新 sub-directory + 1 个已存在 (by-category/):
+
+| sub-directory | 文件数 | 文件 |
+|---|---|---|
+| `data-usage/` | 2 | 信息边界原则, 合规检查清单 |
+| `design-intent/` | 2 | 题目设计意图分析, 5道防线自检清单 |
+| `read-checklist/` | 4 | 读题清单, 红线与失败模式, 题意红线, 题意翻译 |
+| `workflow/` | 5 | workflow, 模型字典使用指南, 模型决策树, 整题建模模式, 导入规范 |
+| `paper/` | 4 | paper-spec, 国奖级硬性指标, 格式自查清单, 百分制评审方法 |
+| `plot/` | 2 | 绘图规范与避坑, 图型选择决策 |
+| `aigc/` | 2 | AIGC降重策略, 去AIGC指南 |
+| `audit/` | 2 | 验收清单, post-solution-audit |
+| `preparation/` | 4 | 赛前学习清单, 角色Prompt, 策略输出规范, 学校国奖画像 |
+
+**影响**:
+- SKILL.md §Step 0 索引表 10 类用途引用全改 sub-directory 路径
+- SKILL.md §Step 0 类目适配段引用 (line 389-399)
+- SKILL.md line 1121 AIGC 引用
+- dryrun.py 21 处 `REFS_DIR / "xxx"` 路径改 `REFS_DIR / "subdir" / "xxx"`
+- 42 references 文件 156 处交叉引用改 sub-directory 前缀 (含 llm-prompts/ 板块自查/ scripts/ templates/ 数模资料/ examples/)
+
+**dryrun 不变**: 24/31 green + 7 yellow + 0 red (v1.5.7.25 的 by-category/ 路径继承,不需要新 check).
+
+---
 
 ## v1.5.7.25 — references/by-category/ sub-directory (v1.5.7.24 hotfix)
 

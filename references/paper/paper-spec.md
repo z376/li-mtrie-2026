@@ -6,7 +6,7 @@
 
 **分工 (checkable, 与 workflow.md 严格不重叠)**:
 - **`SKILL.md` = 5 步状态机入口** (读题 → 求解计划 → 求解 → 写论文 → 编译, 含 checkable `green`/`red` 判据)
-- **`references/workflow.md` = 8 个 sub-step 细节** (整题建模主线 / 模型比选 / 8 项自检回填 / 论文各章约束 / 图路径 / 代码规范 / 常见错误 / 最终提交物)
+- **`references/workflow/workflow.md` = 8 个 sub-step 细节** (整题建模主线 / 模型比选 / 8 项自检回填 / 论文各章约束 / 图路径 / 代码规范 / 常见错误 / 最终提交物)
 - **本文件 = 10 章论文模板规范** (摘要/引言/总体分析/模型假设/符号说明/建模与求解/模型检验/模型评价/改进推广/参考文献/附录, 每章怎么写)
 - **冲突时一律以 SKILL.md 5 步状态机为准**, 本文件 + workflow.md 是补全不重复
 - **本文件不重复**: (1) 5 步状态机本身 → 看 SKILL.md; (2) sub-step 细节 → 看 workflow.md; (3) checkable `green`/`red` 判据 → 看 SKILL.md Step 0-4

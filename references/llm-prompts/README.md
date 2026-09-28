@@ -34,10 +34,10 @@
 
 ## 与现有 references 的协同
 
-- **工具 01 选题推荐** ↔ `references/模型决策树.md` + `references/整题建模模式.md` + `workflow.md §1.5 4 段式分析`
-- **工具 02 代码修复** ↔ `references/scripts/data_utils.py` (utf-8-sig) + `references/去AIGC指南.md §5` (AI 当审稿人)
-- **工具 03 自动审稿** ↔ `references/国奖级硬性指标.md §3 26 条自查表` + `references/验收清单.md 38+ 项` + `references/题意红线.md`
-- **工具 04 百分制评审** ⚡v1.5.1 ↔ `references/模型字典使用指南.md` (M1) + `references/格式自查清单.md` (M2) + `references/百分制评审方法.md` (M3) — 3 个方法论 + 1 个 LLM 工具闭环
+- **工具 01 选题推荐** ↔ `references/workflow/模型决策树.md` + `references/workflow/整题建模模式.md` + `workflow.md §1.5 4 段式分析`
+- **工具 02 代码修复** ↔ `references/scripts/data_utils.py` (utf-8-sig) + `references/aigc/去AIGC指南.md §5` (AI 当审稿人)
+- **工具 03 自动审稿** ↔ `references/paper/国奖级硬性指标.md §3 26 条自查表` + `references/audit/验收清单.md 38+ 项` + `references/read-checklist/题意红线.md`
+- **工具 04 百分制评审** ⚡v1.5.1 ↔ `references/workflow/模型字典使用指南.md` (M1) + `references/paper/格式自查清单.md` (M2) + `references/paper/百分制评审方法.md` (M3) — 3 个方法论 + 1 个 LLM 工具闭环
 
 ---
 
@@ -85,4 +85,4 @@ T+96h   提交
 
 - 选题在题组判定上（A/B/C/D/E 错选 = 0 分）—— 自己看 `SKILL.md §Step 0`
 - 算最终提交前最后 1 小时（时间不够自审 LLM 输出）
-- 替代 `references/去AIGC指南.md §5` 改写（要先用 LLM 指出问题，再人工改，最后用 LLM 验证）
+- 替代 `references/aigc/去AIGC指南.md §5` 改写（要先用 LLM 指出问题，再人工改，最后用 LLM 验证）

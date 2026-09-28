@@ -242,7 +242,7 @@ scipy/statsmodels,偶尔用 pytorch/transformers。
 ### Stage 4 Prompt 模板(逐章写)
 
 ```
-请以论文手身份,完成 Stage 4:论文写作(v3 11 章规范,见 references/paper-spec.md)。
+请以论文手身份,完成 Stage 4:论文写作(v3 11 章规范,见 references/paper/paper-spec.md)。
 
 前置:求解已全部完成,每题 py/图/结果 csv 都齐了。
 

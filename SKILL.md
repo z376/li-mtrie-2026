@@ -11,7 +11,7 @@ description: |
 
 metadata:
 
-  version: "1.5.7.25"
+  version: "1.5.7.26"
 
   category: competition-workflow
 
@@ -672,15 +672,16 @@ CUMCM 题目是**研究性问题**, 不是"按字面跑 LP". 题目设计有**�
 
 | 用途类 | 文件 (按需读) |
 |-------|-------------|
-| **数据使用纪律** | `references/信息边界原则.md` (周期起点决策信息边界 + 反模式) · `references/合规检查清单.md` (§1.4 数据使用纪律) |
-| **设计意图 + 期望** | `references/题目设计意图分析.md` (§1-5 4 步法 + §6 三口径 + §7 数据物理) · `references/5道防线自检清单.md` (§0 类目适配 + §1 总览) |
-| **7 类题专属** | `references/by-category/{物理机理/数据分析/优化/经济金融/生物医疗/交通运筹}类典型反模式.md` (按本题类型选 1 份, v1.5.7.25 移到 sub-directory) |
-| **跑题前自检** | `references/读题清单.md` (15 项模板) · `references/红线与失败模式.md` (§1 失败 handling 6 类 + §2 跨平台红线) |
-| **跑题中参考** | `references/workflow.md` (工作流) · `references/模型字典使用指南.md` · `references/模型决策树.md` · `references/整题建模模式.md` |
-| **写论文** | `references/paper-spec.md` (权威源) · `references/国奖级硬性指标.md` · `references/格式自查清单.md` |
-| **绘图规范** | `references/绘图规范与避坑.md` (§1 决策三轴 + §2 18 条陷阱 + §3 matplotlib 设置) |
-| **AIGC 降重** | `references/AIGC降重策略.md` (§1-2 禁改 + §3-7 实战) · `references/去AIGC指南.md` |
-| **赛后验收** | `references/验收清单.md` · `references/post-solution-audit.md` (Step 2.Gate 8 项权威源) |
+| **数据使用纪律** | `references/data-usage/信息边界原则.md` (周期起点决策信息边界 + 反模式) · `references/data-usage/合规检查清单.md` (§1.4 数据使用纪律) |
+| **设计意图 + 期望** | `references/design-intent/题目设计意图分析.md` (§1-5 4 步法 + §6 三口径 + §7 数据物理) · `references/design-intent/5道防线自检清单.md` (§0 类目适配 + §1 总览) |
+| **7 类题专属** | `references/by-category/{物理机理/数据分析/优化/经济金融/生物医疗/交通运筹}类典型反模式.md` (按本题类型选 1 份) |
+| **跑题前自检** | `references/read-checklist/读题清单.md` (15 项模板) · `references/read-checklist/红线与失败模式.md` (§1 失败 handling 6 类 + §2 跨平台红线) · `references/read-checklist/题意红线.md` · `references/read-checklist/题意翻译.md` |
+| **跑题中参考** | `references/workflow/workflow.md` (工作流) · `references/workflow/模型字典使用指南.md` · `references/workflow/模型决策树.md` · `references/workflow/整题建模模式.md` · `references/workflow/导入规范.md` |
+| **写论文** | `references/paper/paper-spec.md` (权威源) · `references/paper/国奖级硬性指标.md` · `references/paper/格式自查清单.md` · `references/paper/百分制评审方法.md` |
+| **绘图规范** | `references/plot/绘图规范与避坑.md` (§1 决策三轴 + §2 18 条陷阱 + §3 matplotlib 设置) · `references/plot/图型选择决策.md` |
+| **AIGC 降重** | `references/aigc/AIGC降重策略.md` (§1-2 禁改 + §3-7 实战) · `references/aigc/去AIGC指南.md` |
+| **赛后验收** | `references/audit/验收清单.md` · `references/audit/post-solution-audit.md` (Step 2.Gate 8 项权威源) |
+| **赛前 + 角色** | `references/preparation/赛前学习清单.md` · `references/preparation/角色Prompt.md` · `references/preparation/学校国奖画像.md` · `references/preparation/策略输出规范.md` |
 | **模板 + 脚本** | `references/templates/example-paper/` (18 .tex + format.cls) · `references/scripts/` (8 个 .py + check_tex_compile.md) · `references/llm-prompts/` (5 prompt) |
 
 > **9 板块快速自查** (跑题中"还差什么"快速扫) → `references/板块自查/` (9 板块 markdown) + `README.md` 索引.
@@ -1117,7 +1118,7 @@ CUMCM 题目是**研究性问题**, 不是"按字面跑 LP". 题目设计有**�
 
 - **3 轮协议**（结构化降重流程）：第 1 轮 减法（划禁改 → 扫描 → 词级 → 句级 → 段落）→ 第 2 轮 加法（节奏工程 + 审慎推断 + 具体化）→ 第 3 轮 Anti-AI 审计
 
-- **5 类禁改片段 + 4 平台检测弱点 + 3 档修改率 + 实战策略** → `references/AIGC降重策略.md` (v1.5.7.18 合并自 `受保护片段.md` + `检测平台弱点.md`)
+- **5 类禁改片段 + 4 平台检测弱点 + 3 档修改率 + 实战策略** → `references/aigc/AIGC降重策略.md` (v1.5.7.18 合并自 `受保护片段.md` + `检测平台弱点.md`)
 
 - **9 维度自动扫描** → `references/scripts/aigc_scan.py`（借鉴 aigc-reduce，含 GBK 兼容 patch）
 

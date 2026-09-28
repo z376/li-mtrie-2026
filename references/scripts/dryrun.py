@@ -270,9 +270,9 @@ def check_llm_tools():
 def check_bzd_v151():
     """checkable 9: v1.5.1 BZD 借鉴 3 references 方法论 + 数模资料 README."""
     files = [
-        "references/模型字典使用指南.md",
-        "references/格式自查清单.md",
-        "references/百分制评审方法.md",
+        "references/workflow/模型字典使用指南.md",
+        "references/paper/格式自查清单.md",
+        "references/paper/百分制评审方法.md",
         "references/数模资料/README.md",
     ]
     missing = [f for f in files if not (SKILL_ROOT / f).exists()]
@@ -295,8 +295,8 @@ def check_bzd_v153():
         "references/板块自查/07-模型求解自查.md",
         "references/板块自查/08-参考文献附录自查.md",
         "references/板块自查/09-AIGC审计.md",
-        "references/题意翻译.md",
-        "references/学校国奖画像.md",
+        "references/read-checklist/题意翻译.md",
+        "references/preparation/学校国奖画像.md",
     ]
     missing = [f for f in files if not (SKILL_ROOT / f).exists()]
     if missing:
@@ -774,7 +774,7 @@ def check_v1575_polish():
         return ("red", f"SKILL.md description {len(desc_lines)} 行 (v1.5.7.5 修剪应 ≤ 6 行)",
                 "合并触发词 (开始求解/跑题/做数模 → 跑题)")
     # 2. references/红线与失败模式.md 存在
-    redline = REFS_DIR / "红线与失败模式.md"
+    redline = REFS_DIR / "read-checklist" / "红线与失败模式.md"
     if not redline.exists():
         return ("red", "references/红线与失败模式.md 缺失 (v1.5.7.5 推出)",
                 "把 SKILL.md §Failure handling + §跨平台代码红线 + §跑题期间红线 3 段推到 references/红线与失败模式.md")
@@ -808,12 +808,12 @@ def check_v1576_data_isolation():
         return ("red", "SKILL.md 缺 '周期起点信息边界' 章节 (v1.5.7.6 必加 + v1.5.7.16 升级概念, 防数据泄露)",
                 "在 §Step 0 15 项表格后加 '📌 周期起点信息边界 (v1.5.7.6 新增, v1.5.7.16 概念升级)' 章节, 列三类信息边界 (历史/预报/当期实际)")
     # 2. references/信息边界原则.md 存在
-    boundary_doc = REFS_DIR / "信息边界原则.md"
+    boundary_doc = REFS_DIR / "data-usage" / "信息边界原则.md"
     if not boundary_doc.exists():
         return ("red", "references/信息边界原则.md 缺失 (v1.5.7.6 核心规则文档)",
                 "写 references/信息边界原则.md (三类信息边界 + 反模式 + 实战案例)")
     # 3. references/读题清单.md 含 "题面禁项" 第 4 列
-    checklist_md = REFS_DIR / "读题清单.md"
+    checklist_md = REFS_DIR / "read-checklist" / "读题清单.md"
     if checklist_md.exists():
         ck_content = checklist_md.read_text(encoding="utf-8", errors="replace")
         if "题面禁项" not in ck_content:
@@ -865,12 +865,12 @@ def check_v1577_design_intent():
         return ("red", "SKILL.md 缺 '题目设计意图分析' 章节 (v1.5.7.7 必加, 防按字面跑不解题)",
                 "在 §Step 0 信息边界章节后加 '📌 题目设计意图分析 (v1.5.7.7 新增)' 章节, 列递进关系 + 期望方向")
     # 2. references/题目设计意图分析.md 存在
-    intent_doc = REFS_DIR / "题目设计意图分析.md"
+    intent_doc = REFS_DIR / "design-intent" / "题目设计意图分析.md"
     if not intent_doc.exists():
         return ("red", "references/题目设计意图分析.md 缺失 (v1.5.7.7 核心方法论)",
                 "写 references/题目设计意图分析.md (4 步法 + 反模式 + 2026 C 题实战复盘)")
     # 3. references/读题清单.md 含 "题目设计意图" 第 5 列
-    checklist_md = REFS_DIR / "读题清单.md"
+    checklist_md = REFS_DIR / "read-checklist" / "读题清单.md"
     if checklist_md.exists():
         ck_content = checklist_md.read_text(encoding="utf-8", errors="replace")
         if "题目设计意图" not in ck_content:
@@ -910,7 +910,7 @@ def check_v1579_three_modes_and_data():
     3. SKILL.md description 提到 v1.5.7.9 (隐含)
     4. 跑题目录 .py 文件不含物理造假关键词 (yellow 警告)
     """
-    intent_doc = REFS_DIR / "题目设计意图分析.md"
+    intent_doc = REFS_DIR / "design-intent" / "题目设计意图分析.md"
     if not intent_doc.exists():
         return ("red", "references/题目设计意图分析.md 缺失", "不可用")
     intent_content = intent_doc.read_text(encoding="utf-8", errors="replace")
@@ -957,7 +957,7 @@ def check_v15711_five_lines_index():
     2. 含 §1 总览 + §2 反模式速查 + §3 跑题前自检 + §4 跑完后对照
     3. SKILL.md §Step 0 顶部含"5 道防线速查表"
     """
-    index_doc = REFS_DIR / "5道防线自检清单.md"
+    index_doc = REFS_DIR / "design-intent" / "5道防线自检清单.md"
     if not index_doc.exists():
         return ("red", "references/5道防线自检清单.md 缺失 (v1.5.7.11 必加)",
                 "新建 references/5道防线自检清单.md, 含 §1 5 道防线总览 + §2 反模式对照表 (12 行) + §3 跑题前自检 + §4 跑完后对照 checklist + §5/§6 引用与版本")
@@ -990,9 +990,9 @@ def check_v15713_category_adaptation():
     4. references/题目设计意图分析.md §7 数据物理真实性 顶部含 '通用' 段
     """
     required = [
-        (REFS_DIR / "5道防线自检清单.md", "类目适配", "5道防线自检清单.md 缺类目适配段"),
-        (REFS_DIR / "信息边界原则.md", "适用题类", "信息边界原则.md 缺适用题类说明"),
-        (REFS_DIR / "题目设计意图分析.md", "适用题类", "题目设计意图分析.md §6 缺适用题类说明"),
+        (REFS_DIR / "design-intent" / "5道防线自检清单.md", "类目适配", "5道防线自检清单.md 缺类目适配段"),
+        (REFS_DIR / "data-usage" / "信息边界原则.md", "适用题类", "信息边界原则.md 缺适用题类说明"),
+        (REFS_DIR / "design-intent" / "题目设计意图分析.md", "适用题类", "题目设计意图分析.md §6 缺适用题类说明"),
     ]
     missing = []
     for path, kw, fix in required:
@@ -1003,7 +1003,7 @@ def check_v15713_category_adaptation():
         if kw not in content:
             missing.append(fix)
     # §7 必须含 '通用' 字样
-    intent_doc = REFS_DIR / "题目设计意图分析.md"
+    intent_doc = REFS_DIR / "design-intent" / "题目设计意图分析.md"
     intent_content = intent_doc.read_text(encoding="utf-8", errors="replace")
     if "通用" not in intent_content[intent_content.find("§7"):] if "§7" in intent_content else "":
         missing.append("题目设计意图分析.md §7 缺 '通用' 标注")
@@ -1074,7 +1074,7 @@ def check_v15716_period_start_concept():
     3. 5道防线自检清单.md 自检 checklist 用 '周期起点' (而非 0:00)
     """
     # 1. 信息边界原则.md 核心规则用 周期起点
-    boundary_doc = REFS_DIR / "信息边界原则.md"
+    boundary_doc = REFS_DIR / "data-usage" / "信息边界原则.md"
     if not boundary_doc.exists():
         return ("red", "references/信息边界原则.md 缺失", "不可用")
     boundary_content = boundary_doc.read_text(encoding="utf-8", errors="replace")
@@ -1088,7 +1088,7 @@ def check_v15716_period_start_concept():
         return ("red", "SKILL.md 缺 '周期起点' 概念 (v1.5.7.16 升级)",
                 "把 '0:00 LP' / '0:00 决策' 改为 '周期起点 LP' / '周期起点决策'")
     # 3. 5道防线自检清单.md 含 周期起点
-    five_lines_doc = REFS_DIR / "5道防线自检清单.md"
+    five_lines_doc = REFS_DIR / "design-intent" / "5道防线自检清单.md"
     if five_lines_doc.exists():
         five_content = five_lines_doc.read_text(encoding="utf-8", errors="replace")
         if "周期起点" not in five_content:
@@ -1104,7 +1104,7 @@ def check_v15717_consolidation():
     2. 信息边界原则.md §2 反模式 2 引用 '题目设计意图分析.md §7'
     3. 题目设计意图分析.md §7 仍存在 + 含 §7 数据物理真实性
     """
-    boundary_doc = REFS_DIR / "信息边界原则.md"
+    boundary_doc = REFS_DIR / "data-usage" / "信息边界原则.md"
     if not boundary_doc.exists():
         return ("red", "references/信息边界原则.md 缺失", "不可用")
     boundary_content = boundary_doc.read_text(encoding="utf-8", errors="replace")
@@ -1119,7 +1119,7 @@ def check_v15717_consolidation():
         return ("red", "信息边界原则.md 缺 §7 引用 (v1.5.7.17 合并后必须引用)",
                 "在 §2 反模式 2 加 '→ 见 references/题目设计意图分析.md §7 数据物理真实性标注' 引用")
     # 3. 题目设计意图 §7 仍存在
-    intent_doc = REFS_DIR / "题目设计意图分析.md"
+    intent_doc = REFS_DIR / "design-intent" / "题目设计意图分析.md"
     intent_content = intent_doc.read_text(encoding="utf-8", errors="replace")
     if "数据物理真实性" not in intent_content:
         return ("red", "题目设计意图分析.md 缺 §7 数据物理真实性 (v1.5.7.17 合并后必须保留)",
@@ -1134,7 +1134,7 @@ def check_v15718_aigc_merge():
     3. references/检测平台弱点.md 已删除 (不应存在)
     """
     # 1. AIGC降重策略.md 存在 + 4 关键章节
-    aigc_doc = REFS_DIR / "AIGC降重策略.md"
+    aigc_doc = REFS_DIR / "aigc" / "AIGC降重策略.md"
     if not aigc_doc.exists():
         return ("red", "references/AIGC降重策略.md 缺失 (v1.5.7.18 合并必须新建)",
                 "新建 references/AIGC降重策略.md, 合并 受保护片段 + 检测平台弱点")
@@ -1149,7 +1149,7 @@ def check_v15718_aigc_merge():
     if missing:
         return ("red", f"references/AIGC降重策略.md 缺章节 ({', '.join(missing)})",
                 "合并 受保护片段 + 检测平台弱点, 至少保留 4 章节: 核心铁律/5 类禁改/4 平台/实战策略")
-    # 2 & 3. 受保护片段.md + 检测平台弱点.md 不应存在
+    # 2 & 3. 受保护片段.md + 检测平台弱点.md 不应存在 (v1.5.7.18 已合并删除)
     legacy_files = [
         REFS_DIR / "受保护片段.md",
         REFS_DIR / "检测平台弱点.md",
@@ -1158,8 +1158,8 @@ def check_v15718_aigc_merge():
     if still_exists:
         return ("yellow",
                 f"v1.5.7.18 合并后旧文件仍存在 ({', '.join(still_exists)})",
-                f"删除 {'/'.join(still_exists)} — 内容已合并到 references/AIGC降重策略.md")
-    return ("green", "AIGC 文档合并: 受保护片段 + 检测平台弱点 → AIGC降重策略.md (4 章节齐, 旧文件已删)", None)
+                f"删除 {'/'.join(still_exists)} — 内容已合并到 references/aigc/AIGC降重策略.md")
+    return ("green", "AIGC 文档合并: 受保护片段 + 检测平台弱点 → aigc/AIGC降重策略.md (4 章节齐, 旧文件已删)", None)
 
 
 def check_v15719_plot_merge():
@@ -1169,7 +1169,7 @@ def check_v15719_plot_merge():
     3. references/绘图避坑.md 已删除 (不应存在)
     """
     # 1. 新文件存在 + 3 关键章节
-    plot_doc = REFS_DIR / "绘图规范与避坑.md"
+    plot_doc = REFS_DIR / "plot" / "绘图规范与避坑.md"
     if not plot_doc.exists():
         return ("red", "references/绘图规范与避坑.md 缺失 (v1.5.7.19 合并必须新建)",
                 "新建 references/绘图规范与避坑.md, 合并 绘图规范 + 绘图避坑")
@@ -1183,7 +1183,7 @@ def check_v15719_plot_merge():
     if missing:
         return ("red", f"references/绘图规范与避坑.md 缺章节 ({', '.join(missing)})",
                 "合并 绘图规范 + 绘图避坑, 至少保留 3 章节: 决策三轴/18 条陷阱/matplotlib 设置")
-    # 2 & 3. 旧文件不应存在
+    # 2 & 3. 旧文件不应存在 (v1.5.7.19 已合并删除)
     legacy_files = [
         REFS_DIR / "绘图规范.md",
         REFS_DIR / "绘图避坑.md",
@@ -1192,7 +1192,7 @@ def check_v15719_plot_merge():
     if still_exists:
         return ("yellow",
                 f"v1.5.7.19 合并后旧文件仍存在 ({', '.join(still_exists)})",
-                f"删除 {'/'.join(still_exists)} — 内容已合并到 references/绘图规范与避坑.md")
+                f"删除 {'/'.join(still_exists)} — 内容已合并到 references/plot/绘图规范与避坑.md")
     return ("green", "绘图文档合并: 绘图规范 + 绘图避坑 → 绘图规范与避坑.md (3 章节齐, 旧文件已删)", None)
 
 

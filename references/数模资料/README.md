@@ -2,7 +2,7 @@
 
 > **借鉴源**: BZD 数模社 `bzdshumo.com` 维护的论文自查 + 训练材料.
 > 本目录收录 BZD 数模社免费公开的 **.docx / .xlsx / .pdf / .zip 资源**, 供 li-mtrie 学生**自取**用.
-> 不复制 BZD 受版权保护的字典/规则内容(那部分已提炼到 `references/模型字典使用指南.md` 等 3 个方法论 md).
+> 不复制 BZD 受版权保护的字典/规则内容(那部分已提炼到 `references/workflow/模型字典使用指南.md` 等 3 个方法论 md).
 
 ## 资源清单
 
@@ -11,7 +11,7 @@
 | **`5年16题训练-官方评阅细则评分要点.zip`** | 424KB | 5 年国赛真题 + 官方评阅细则 + 评分要点 + 完整训练材料 | **赛前 2 周** 模拟, 赛后 复盘学习 |
 | **`2026年数学建模竞赛模板-BZD数模社(证书签名).pdf`** | 2.4MB | BZD 数模社 2026 完整 LaTeX 模板 (带证书签名样式), 备用模板 | 想换风格时 (默认仍用 `论文/format.cls`) |
 | **`2026年数学建模竞赛模板-简洁版.docx`** | 88KB | BZD 数模社 2026 简洁版 Word 模板 | 想用 Word 写时 (默认仍用 LaTeX) |
-| **`数学建模论文自查表.xlsx`** | 30KB | 单 Sheet 自查表, 团队打印协作填写 | 终审前, 走完 `references/格式自查清单.md` 12 章节程序化部分后, 人工逐项勾 |
+| **`数学建模论文自查表.xlsx`** | 30KB | 单 Sheet 自查表, 团队打印协作填写 | 终审前, 走完 `references/paper/格式自查清单.md` 12 章节程序化部分后, 人工逐项勾 |
 | **`BZD数模论文AI痕迹自查指南.docx`** | 53KB | AIGC 痕迹的人工自查清单 + 改写指南 | 终稿后, 配合 `references/scripts/aigc_scan.py` 自动扫描, 互补 |
 | **`各板块写作指南/`** (8 PDF) | 2.1MB | 8 大板块 (摘要/问题重述/问题分析/模型假设/符号/模型求解/模型总结/参考文献+附录) 详细写作说明 | **写每章前**快速翻 1 遍, 知道该板块必写什么、常见错误 |
 
@@ -38,10 +38,10 @@
 
 | 数模资料 | 对应 li-mtrie 文档 |
 |---|---|
-| `数学建模论文自查表.xlsx` | `references/格式自查清单.md` (12 章节程序化) — xlsx 给**人**勾, md 给**程序**查 |
-| `BZD数模论文AI痕迹自查指南.docx` | `references/scripts/aigc_scan.py` (9 维度自动) + `references/去AIGC指南.md` (4 铁律) |
-| `各板块写作指南/*.pdf` | `references/paper-spec.md` (10 章模板规范) — pdf 是**板块级指引**, md 是**模板级规则** |
-| `5年16题训练-官方评阅细则评分要点.zip` | `references/赛前学习清单.md` (6 大题型 + 30+ 算法 + 60/30/7 天路径) + `references/获奖论文/板凳龙-南科大-2024国一.md` |
+| `数学建模论文自查表.xlsx` | `references/paper/格式自查清单.md` (12 章节程序化) — xlsx 给**人**勾, md 给**程序**查 |
+| `BZD数模论文AI痕迹自查指南.docx` | `references/scripts/aigc_scan.py` (9 维度自动) + `references/aigc/去AIGC指南.md` (4 铁律) |
+| `各板块写作指南/*.pdf` | `references/paper/paper-spec.md` (10 章模板规范) — pdf 是**板块级指引**, md 是**模板级规则** |
+| `5年16题训练-官方评阅细则评分要点.zip` | `references/preparation/赛前学习清单.md` (6 大题型 + 30+ 算法 + 60/30/7 天路径) + `references/获奖论文/板凳龙-南科大-2024国一.md` |
 
 ## 何时用这张地图
 

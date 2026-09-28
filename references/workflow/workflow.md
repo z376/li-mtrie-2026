@@ -1,8 +1,8 @@
-# references/workflow.md — SKILL.md 没说的细节专项
+# references/workflow/workflow.md — SKILL.md 没说的细节专项
 
 > **分工 (checkable, 与 paper-spec.md 严格不重叠)**:
 > - **SKILL.md = 单一真相源, 5 步状态机入口** (含 Procedure ASCII 流程图 + 每步 checkable `green`/`red` 判据)
-> - **`references/paper-spec.md` = 10 章论文模板规范** (摘要/引言/.../附录 各自怎么写)
+> - **`references/paper/paper-spec.md` = 10 章论文模板规范** (摘要/引言/.../附录 各自怎么写)
 > - **本文件 = sub-step 细节展开, 8 个 sub-step 深入** (整题建模主线 / 模型比选 / 8 项自检回填 / 论文各章约束 / 图路径 / 代码规范 / 常见错误 / 最终提交物)
 > - **冲突时一律以 SKILL.md 为准**, 本文件 + paper-spec.md 是补全不重复
 > - **本文件不重复**: (1) 5 步状态机本身 → 看 SKILL.md; (2) 10 章论文每章怎么写 → 看 paper-spec.md; (3) checkable `green`/`red` 判据 → 看 SKILL.md Step 0-4.
@@ -54,7 +54,7 @@ flowchart LR
 
 > 整合思路借鉴自 [bzd-modeling-ideas](https://github.com/) 整题级建模框架
 > （已中文化、简化为数模国赛评审能看懂的版本，不照搬文字）
-> **详版**（从 16 道 2020-2025 高教社杯国赛题凝练）→ `references/整题建模模式.md`（3.7 KB, 5 跨问题架构 + 7 题型路线 + 6 断链 + 8 验证）
+> **详版**（从 16 道 2020-2025 高教社杯国赛题凝练）→ `references/workflow/整题建模模式.md`（3.7 KB, 5 跨问题架构 + 7 题型路线 + 6 断链 + 8 验证）
 
 ### 1.5 每个问题 4 段式分析（借鉴 bzd-modeling-ideas 4.x.1-4.x.4）
 
@@ -77,7 +77,7 @@ flowchart LR
 
 **反例**（bzd 警告）："使用遗传算法""模型融合""增加可视化""考虑更多因素" 单独使用**不算创新**——必须有具体改动 + 验证 + 对照。
 
-**详版** → `references/策略输出规范.md`（2.8 KB, 4 段式硬约束 + 可行路线标准 + 创新标准 + 全文一致性检查 + 表格规则）
+**详版** → `references/preparation/策略输出规范.md`（2.8 KB, 4 段式硬约束 + 可行路线标准 + 创新标准 + 全文一致性检查 + 表格规则）
 
 ---
 
@@ -154,14 +154,14 @@ flowchart LR
 
 ## 4. 论文各章关键约束（Step 3 子步骤）
 
-> 章节结构 + 通用写作规则 + 编号体系 v7 **全部权威源**在 `references/paper-spec.md`
+> 章节结构 + 通用写作规则 + 编号体系 v7 **全部权威源**在 `references/paper/paper-spec.md`
 > （§二 各章节详细规范 + §三 通用写作规则 + §三.6 编号体系 v7）。
 > 本节**不重复** paper-spec.md 的内容，只补 paper-spec.md 没说但学生常踩的细节。
 
 **学生常踩的 3 个章节坑**（paper-spec.md 没明说）：
 
 - **第 5 章 5.X.1 分析与准备**：流程图必须与数据/算法流程**逐框对应**（"数据预处理"框对应 pd.read_xxx；"建模"框对应 def model_xxx；"求解"框对应 def solve_xxx）
-- **第 6 章 模型检验**：误差分析 + 灵敏度 + 稳健性 **3 段齐全**，每段有量化数据+图；只写 1-2 段最高省一档（详 `references/国奖级硬性指标.md` §3 自查表 21-23 条）
+- **第 6 章 模型检验**：误差分析 + 灵敏度 + 稳健性 **3 段齐全**，每段有量化数据+图；只写 1-2 段最高省一档（详 `references/paper/国奖级硬性指标.md` §3 自查表 21-23 条）
 - **第 9 章 参考文献**：每条 **必须** 在正文有 `\cite{}`，否则评阅标"数据不实"；GB/T 7714 格式严格
 
 **5 类硬规则速查**（paper-spec.md §三 通用写作规则的"学生速记版"）：
@@ -287,4 +287,4 @@ def save_csv(df, name):
 - AI 工具使用情况已记录（用了 AI 时）
 - 引用公开资料按 GB/T 7714 标注
 
-完整 8 条禁止/允许行为表 + 严重违规后果 → 见 `references/合规检查清单.md §4`
+完整 8 条禁止/允许行为表 + 严重违规后果 → 见 `references/data-usage/合规检查清单.md §4`
