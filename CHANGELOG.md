@@ -1,10 +1,42 @@
-# CHANGELOG (v1.5.7.31 — check 34 扩到验 18 sub-directory (原 10 漏 8 原有))
+# CHANGELOG (v1.5.7.32 — SKILL.md 1581 → 1464 行 (-117), §Step 3 + §Step 4.1 inline reference 拆到 references/paper/写作与附录检查.md)
 
 > **v1.5.7.20 之前 15 个 hotfix** (v1.5.7.5 ~ v1.5.7.19) → [`CHANGELOG-archive.md`](CHANGELOG-archive.md).
 >
 > **拆分原因**: 392 行累积, human 翻历史困难. 主文件只留最新 4 个 (writing-for-agents 审计 hotfix).
 >
 > **查找旧版本**: 用 grep 搜 `CHANGELOG-archive.md` (e.g. `grep -n v1.5.7.10 CHANGELOG-archive.md`).
+
+## v1.5.7.32 — SKILL.md 1581 → 1464 行 (-117, 拆 inline reference 到 references/paper/) (v1.5.7.31 hotfix)
+
+**核心**: writing-for-agents 2 yellow → 1 yellow (Two loads 修复, Pruning 已在 v1.5.7.31 修复). 把 §Step 3 末尾 + §Step 4.1 共 ~117 行 inline reference 拆到新文件:
+
+- **新建 `references/paper/写作与附录检查.md`** (4.2 KB):
+  - §1 LLM 工具集成 (3 prompt + 核心原则 + 协同)
+  - §2 题意红线 4 条 (用真实几何 / 解析验证 / 验证链 / 5 步自查)
+  - §3 PDF 成品结构体检 (verify_pdf_metrics.py)
+  - §4 占位符 grep 自检 (PowerShell 命令 + dryrun check 15)
+  - §5 附录文件存在性自检 (PowerShell 命令 + 2025C 反例 + dryrun check 16)
+- **SKILL.md §Step 3 末尾** 5 段 inline 改 1 行指针
+- **SKILL.md §Step 4.1** 附录检查 inline 改 1 行指针
+
+**影响文件**: 新建 `references/paper/写作与附录检查.md` (4.2 KB) + 改 SKILL.md (-117 行).
+
+**dryrun**: 27/34 green + 7 yellow + 0 red.
+
+**writing-for-agents 6 维度最终状态**:
+
+| 维度 | v1.5.7.31 | v1.5.7.32 |
+|---|---|---|
+| 1. Context pointer | ✅ green | ✅ green |
+| 2. Two loads | ⚠️ yellow (1581) | ✅ green (1464 ≤ 1500) |
+| 3. Information hierarchy | ✅ green | ✅ green |
+| 4. Steps + completion | ✅ green | ✅ green |
+| 5. Leading words | ✅ green | ✅ green |
+| 6. Pruning | ✅ green (v1.5.7.31) | ✅ green |
+
+**6 green + 0 yellow** — 全维度 green.
+
+---
 
 ## v1.5.7.31 — check 34 扩到验 18 sub-directory (v1.5.7.30 hotfix)
 
