@@ -1291,11 +1291,16 @@ def check_v15719_plot_merge():
 # ===== v1.5.7.34 新增 4 项: 参考文献 4 层审计 (L2/L3/L1-加强/L5-留位) =====
 
 # AI 工具关键词 (L3 禁列清单, 命中即红)
+# v1.5.7.34: 26 项基础
+# v1.5.7.35: + 14 项扩展 (v17 P0-C claude2025 防御, AI 修复时把自己写进参考文献)
 AI_TOOL_FORBIDDEN_KEYWORDS = [
     "ChatGPT", "DeepSeek", "Claude", "Copilot", "文心一言", "通义千问",
     "GPT-4", "GPT-3.5", "GPT-4o", "Kimi", "豆包", "元宝", "文心",
     "星火", "智谱", "Doubao", "Gemini", "Claude-3", "Bard", "Llama",
     "Qwen", "Yi-", "Baichuan", "ChatGLM", "Spark", "ERNIE",
+    "Claude Sonnet", "Anthropic", "OpenAI", "GPT-4 Turbo", "GPT-4V",
+    "o1-preview", "o3-mini", "Sora", "Mistral", "Mixtral",
+    "Claude Opus", "Claude Haiku", "Claude 3.5", "Claude 4",
 ]
 
 # GB/T 7714 模板字段占位符 (L1 强化, v5 P1 防御)
@@ -1556,6 +1561,307 @@ def check_39_numeric_consistency_reserved():
             "短期由 SKILL.md §Step 4 末尾 论文内部数字一致性自检清单 手动兜底 (跑题后必做). 等下次实现 auto check.")
 
 
+# ===== v1.5.7.35 新增 4 项: 赛后审计 L6/L7/L11/L12 =====
+
+def check_result_vs_paper_numeric():
+    """checkable 40: result 文件 vs 论文数字一致性 L6 (auto, 简化版).
+
+    背景: v15 P0-1 (§5.3 表9 365天冒名334天) + 论文综合 10 处 P0 数字偏差
+    (Q2/Q3/Q4-2 vs resultX.xlsx 偏差 11.5倍 / 37倍) + v17 P0-A 表9 编造拆分.
+    简化版: 跑 .tex 提取 "数字+元/万" + resultX.xlsx 求和, 数量级比对.
+    0.5-2.0x green, 否则 yellow. 完整版需解析 LaTeX 数学环境, 等下次.
+
+    Template 状态: yellow (模板占位符 .tex 数字与 result 不一致是设计意图).
+    """
+    paper_dir = get_paper_dir()
+    if not paper_dir.exists():
+        return ("yellow", f"论文目录不存在 ({paper_dir}), 跳过 L6", "用 --paper-dir 指定")
+    is_template = "templates" in str(paper_dir) or "example" in str(paper_dir)
+
+    result_files = {}
+    for r in [paper_dir.parent / "求解", paper_dir.parent / "数据" / "附件" / "附件5"]:
+        if r.exists():
+            for f in r.rglob("result*.xlsx"):
+                m = re.match(r"result(\d[\w-]*)\.xlsx", f.name)
+                if m:
+                    result_files.setdefault(m.group(1), []).append(f)
+    if not result_files:
+        return ("yellow", "result*.xlsx 未找到", "跑题后必须生成 result1/2/3/4-2/4-3.xlsx")
+
+    try:
+        import openpyxl
+    except ImportError:
+        return ("yellow", "openpyxl 未装, 跳过 L6", "pip install openpyxl")
+    result_totals = {}
+    for key, paths in result_files.items():
+        for path in paths[:1]:
+            try:
+                wb = openpyxl.load_workbook(path, data_only=True, read_only=True)
+            except Exception:
+                continue
+            for sheet_name in wb.sheetnames:
+                ws = wb[sheet_name]
+                col_total, col_count = 0, 0
+                for row in ws.iter_rows(min_row=2, max_row=min(ws.max_row, 1000), values_only=True):
+                    for v in row[:3]:
+                        if isinstance(v, (int, float)) and abs(v) > 100:
+                            col_total += v
+                            col_count += 1
+                            break
+                if col_count > 10:
+                    result_totals[key] = col_total
+                    break
+            wb.close()
+            if key in result_totals:
+                break
+    if not result_totals:
+        return ("yellow", f"result {len(result_files)} 个但无法提取总费用列", "检查 sheet 结构")
+
+    paper_totals = []
+    target_files = ["0.摘要.tex", "5.1.1.分析与准备.tex", "5.1.2.建模与求解.tex",
+                    "5.2.建模与求解.tex", "5.3.建模与求解.tex", "5.4.建模与求解.tex"]
+    for fname in target_files:
+        tex_file = paper_dir / fname
+        if not tex_file.exists():
+            continue
+        try:
+            tcontent = tex_file.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            continue
+        for m in re.finditer(r"(\d{1,3}(?:[,，]\d{3})+|\d{4,})\s*(?:元|万元|万\s*元)", tcontent):
+            num_str = m.group(1).replace(",", "").replace("，", "")
+            try:
+                val = int(num_str)
+                unit = m.group(0).replace(m.group(1), "").strip()
+                if "万" in unit:
+                    val *= 10000
+                if val > 10000:
+                    paper_totals.append((fname, m.group(0)[:30], val))
+            except ValueError:
+                pass
+    if not paper_totals:
+        return ("yellow", "论文 .tex 未找到 数字+元/万元 模式 (简化版)", "完整 L6 需解析 LaTeX 数学环境")
+
+    result_sum = sum(result_totals.values())
+    paper_mean = sum(v for _, _, v in paper_totals) / max(len(paper_totals), 1)
+    if result_sum == 0:
+        return ("yellow", "result 总费用求和=0", "深入检查 sheet")
+    ratio = paper_mean / max(result_sum, 1)
+    if 0.5 <= ratio <= 2.0:
+        return ("green",
+                f"L6 简化版: 论文 {len(paper_totals)} 处 / result {len(result_totals)} 个, 数量级匹配 ({ratio:.2f}x)",
+                None)
+    if is_template:
+        return ("yellow",
+                f"example 模板有意保留不一致 ({ratio:.2f}x)",
+                "跑题用户用真实 resultX.xlsx 重写摘要+§5.X")
+    return ("yellow",
+            f"result 总费用 vs 论文关键数字均值 比值 {ratio:.2f}x (期望 0.5-2.0)",
+            f"跑题后必做 L6 完整比对: resultX.xlsx 各 sheet 总费用 vs 论文 §5.X 表数字. 偏差 > 5% 即按 v15 P0-1 修复")
+
+
+def check_attachments_vs_paper_mtime():
+    """checkable 41: 附件 ↔ 正文 mtime 一致性 L7 (auto).
+
+    背景: v15 P0-4 附件5 旧版 (09-11 11:21, 比新鲜结果旧 2 天) + v17 P0-E 附件5 仅 2/5 刷新.
+    防御: 扫 数据/附件/附件N/ mtime vs 论文最新 mtime vs 求解/最新 mtime.
+    附件旧于求解 2h+ 红, 旧于论文 2h+ 黄.
+    """
+    paper_dir = get_paper_dir()
+    if not paper_dir.exists():
+        return ("yellow", f"论文目录不存在 ({paper_dir}), 跳过 L7", "用 --paper-dir 指定")
+    if "templates" in str(paper_dir) or "example" in str(paper_dir):
+        return ("yellow", "example 模板无附件, 跳过 L7", "跑题用户用真实附件 5 个 result 文件同步")
+
+    paper_mtime = 0
+    for tex_file in paper_dir.glob("*.tex"):
+        try:
+            mt = tex_file.stat().st_mtime
+            if mt > paper_mtime:
+                paper_mtime = mt
+        except Exception:
+            continue
+    if paper_mtime == 0:
+        return ("yellow", "论文 .tex 文件不存在, 跳过 L7", "复制 example-paper → 论文/")
+
+    attach_dir = paper_dir.parent / "数据" / "附件" / "附件5"
+    if not attach_dir.exists():
+        return ("yellow", "数据/附件/附件5/ 不存在, 跳过 L7", "无附件场景可忽略")
+    attach_files = list(attach_dir.glob("*.xlsx"))
+    if not attach_files:
+        return ("yellow", "附件目录无 .xlsx", "跳过 L7")
+
+    solve_dir = paper_dir.parent / "求解"
+    solve_mtime = 0
+    if solve_dir.exists():
+        for f in solve_dir.rglob("result*.xlsx"):
+            try:
+                mt = f.stat().st_mtime
+                if mt > solve_mtime:
+                    solve_mtime = mt
+            except Exception:
+                continue
+
+    THRESHOLD = 2 * 3600
+    stale_attach = []
+    very_stale = []
+    for f in attach_files:
+        try:
+            mt = f.stat().st_mtime
+        except Exception:
+            continue
+        age_paper = paper_mtime - mt
+        if age_paper > THRESHOLD:
+            stale_attach.append(f"{f.name} 旧于论文 {age_paper/3600:.1f}h")
+        if solve_mtime > 0 and mt < solve_mtime - THRESHOLD:
+            very_stale.append(f"{f.name} 旧于求解 result {age_paper/3600:.1f}h")
+    if very_stale:
+        return ("red",
+                f"附件 {len(very_stale)}/{len(attach_files)} 旧于求解 result (v15 P0-4 / v17 P0-E)",
+                f"从 求解/问题X/结果/ 复制新 resultX.xlsx 到 数据/附件/附件5/. 命中: {very_stale[:3]}")
+    if stale_attach:
+        return ("yellow",
+                f"附件 {len(stale_attach)}/{len(attach_files)} 旧于论文 2h+",
+                f"提交前最好同步. 命中: {stale_attach[:3]}")
+    return ("green",
+            f"附件 {len(attach_files)} 个 .xlsx mtime 一致 (无过期)",
+            None)
+
+
+def check_figure_mtime_vs_solve():
+    """checkable 45: 旧图未刷新 L11 (auto, includegraphics 图 mtime vs 求解).
+
+    背景: v15 P0-3 §5.4 图7/图8 (Q4-2/Q4-3_全年汇总.png) 是 g_adj 修复前的旧图 +
+    v17 P0-E 图7/图8/q1_不确定性分配 均为旧图. 防御: includegraphics 引用的 .png vs
+    求解/最新 mtime. 图旧于求解 12h+ 红, 2h+ 黄.
+    """
+    paper_dir = get_paper_dir()
+    if not paper_dir.exists():
+        return ("yellow", f"论文目录不存在 ({paper_dir}), 跳过 L11", "用 --paper-dir 指定")
+
+    figures_dir = paper_dir / "figures"
+    if not figures_dir.exists():
+        return ("yellow", "论文/figures/ 不存在, 跳过 L11", "跑题用户应复制 figures/")
+
+    cited_figs = set()
+    for tex_file in paper_dir.glob("*.tex"):
+        try:
+            tcontent = tex_file.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            continue
+        for m in re.finditer(r"\\includegraphics(?:\[[^\]]*\])?\{([^}]+)\}", tcontent):
+            cited_figs.add(m.group(1))
+    if not cited_figs:
+        return ("yellow", "论文 .tex 未 includegraphics 任何 .png", "跑题后必加图")
+
+    fig_mtimes = {}
+    for fig_rel in cited_figs:
+        for cand in [paper_dir / fig_rel, figures_dir / Path(fig_rel).name]:
+            if cand.exists():
+                try:
+                    fig_mtimes[fig_rel] = cand.stat().st_mtime
+                    break
+                except Exception:
+                    continue
+    if not fig_mtimes:
+        return ("yellow", f"引用 {len(cited_figs)} 张图但 figures/ 中无对应文件", "检查路径一致")
+
+    solve_dir = paper_dir.parent / "求解"
+    solve_mtime = 0
+    if solve_dir.exists():
+        for f in solve_dir.rglob("*"):
+            try:
+                mt = f.stat().st_mtime
+                if mt > solve_mtime:
+                    solve_mtime = mt
+            except Exception:
+                continue
+
+    THRESHOLD_YELLOW = 2 * 3600
+    THRESHOLD_RED = 12 * 3600
+    stale_yellow = []
+    stale_red = []
+    for fig_rel, mt in fig_mtimes.items():
+        if solve_mtime > 0 and mt < solve_mtime - THRESHOLD_RED:
+            age = (solve_mtime - mt) / 3600
+            stale_red.append(f"{Path(fig_rel).name} 旧于求解 {age:.1f}h")
+        elif solve_mtime > 0 and mt < solve_mtime - THRESHOLD_YELLOW:
+            age = (solve_mtime - mt) / 3600
+            stale_yellow.append(f"{Path(fig_rel).name} 旧于求解 {age:.1f}h")
+    if stale_red:
+        return ("red",
+                f"图 {len(stale_red)}/{len(fig_mtimes)} 旧于求解 12h+ (v17 P0-E)",
+                f"用最新 result 重生成. 命中: {stale_red[:3]}")
+    if stale_yellow:
+        return ("yellow",
+                f"图 {len(stale_yellow)}/{len(fig_mtimes)} 旧于求解 2h+",
+                f"提交前最好重生成. 命中: {stale_yellow[:3]}")
+    return ("green",
+            f"图 {len(fig_mtimes)}/{len(cited_figs)} mtime 一致",
+            None)
+
+
+def check_calendar_window_consistency():
+    """checkable 46: 口径混用 L12 (auto, 334 天 vs 365 天).
+
+    背景: v15 P0-1 §5.3 表9 365 天值冒名 334 天 + 论文综合 §2.4 Q4 论文数与任一口径
+    都不符 (Q2/Q3 365 天 vs Q4 334 天). 防御: 扫摘要 + §5.X 含 334 天/365 天/2.1-12.31/
+    1.1-12.31 关键词. 出现 ≥ 2 种口径 红.
+    """
+    paper_dir = get_paper_dir()
+    if not paper_dir.exists():
+        return ("yellow", f"论文目录不存在 ({paper_dir}), 跳过 L12", "用 --paper-dir 指定")
+    is_template = "templates" in str(paper_dir) or "example" in str(paper_dir)
+
+    target_files = ["0.摘要.tex", "5.1.1.分析与准备.tex", "5.1.2.建模与求解.tex",
+                    "5.2.建模与求解.tex", "5.3.建模与求解.tex", "5.4.建模与求解.tex"]
+    patterns_to_check = [
+        ("334 天", "334 天"),
+        ("365 天", "365 天"),
+        ("2.1-12.31", "2.1-12.31 (334 天区间)"),
+        ("1.1-12.31", "1.1-12.31 (365 天区间)"),
+        ("2025.2.1", "2025.2.1 (334 天起点)"),
+        ("2025.1.1", "2025.1.1 (365 天起点)"),
+    ]
+    found = set()
+    for fname in target_files:
+        tex_file = paper_dir / fname
+        if not tex_file.exists():
+            continue
+        try:
+            tcontent = tex_file.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            continue
+        non_comment = "\n".join(
+            line for line in tcontent.splitlines()
+            if not line.lstrip().startswith("%")
+        )
+        for kw, label in patterns_to_check:
+            if non_comment.count(kw) > 0:
+                found.add(label)
+
+    distinct_calendars = set()
+    if any("334 天" in k or "2.1-12.31" in k or "2025.2.1" in k for k in found):
+        distinct_calendars.add("334 天")
+    if any("365 天" in k or "1.1-12.31" in k or "2025.1.1" in k for k in found):
+        distinct_calendars.add("365 天")
+
+    n = len(distinct_calendars)
+    if n == 0:
+        return ("yellow", "论文 .tex 未出现 334/365 口径关键词", "建议摘要 + §5.X 明确统计期")
+    if n >= 2:
+        if is_template:
+            return ("yellow",
+                    f"example 模板有意保留 {n} 种口径引导",
+                    f"跑题用户统一为 334 天 (附件5 模板口径) 或 365 天 (全年). 命中: {list(distinct_calendars)}")
+        return ("red",
+                f"论文混用 {n} 种统计期口径 {distinct_calendars} (v15 P0-1 / 论文综合 §2.4)",
+                f"全文统一为 334 天 (附件5 对齐) 或 365 天. 命中: {list(found)}")
+    return ("green",
+            f"口径统一: {distinct_calendars} (L12 扫 {len(found)} 关键词命中)",
+            None)
+
+
 CHECKS = [
     ("1. 装包 (核心包)", check_pkg),
     ("2. 10 Python 脚本", check_python_scripts),
@@ -1596,6 +1902,10 @@ CHECKS = [
     ("37. v1.5.7.34 AI 工具禁列 L3 (9.参考文献.tex 扫 {N} 关键词, 命中红, BZD 2026 规范)", check_ai_tool_in_refs),
     ("38. v1.5.7.34 模板占位符强化 L1 (9.参考文献 + 9.0.AI声明 扫 \\textbf{{【...】}} + GB/T 7714 字段, v5 P1 防御)", check_template_placeholders_v2),
     ("39. v1.5.7.34 数字一致性 L5 (摘要-§5 章节-Q 表数字互查, 留位, 短期 SKILL.md §Step 4 手动清单兜底)", check_39_numeric_consistency_reserved),
+    ("40. v1.5.7.35 result 文件 vs 论文数字 L6 (数量级比对, 简化版, v15 P0-1 / 论文综合 10 处 P0 防御)", check_result_vs_paper_numeric),
+    ("41. v1.5.7.35 附件 vs 正文 mtime L7 (附件旧于求解红, 旧于论文黄, v15 P0-4 / v17 P0-E 防御)", check_attachments_vs_paper_mtime),
+    ("45. v1.5.7.35 旧图未刷新 L11 (includegraphics 图 mtime vs 求解, 旧于 12h 红, v15 P0-3 / v17 P0-E 防御)", check_figure_mtime_vs_solve),
+    ("46. v1.5.7.35 口径混用 L12 (334 天 vs 365 天, ≥2 种混用红, v15 P0-1 / 论文综合 §2.4 防御)", check_calendar_window_consistency),
 ]
 
 

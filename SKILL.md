@@ -11,7 +11,7 @@ description: |
 
 metadata:
 
-  version: "1.5.7.34"
+  version: "1.5.7.35"
 
   category: competition-workflow
 
@@ -1445,23 +1445,32 @@ if ($sizeMB -gt 20) { Write-Error "超过 20MB 限制！" }
 
 
 
-## 参考文献审计清单 (跑题后必做, v1.5.7.34 新增, 4 层 L1-L5)
+## 参考文献与赛后审计清单 (跑题后必做, v1.5.7.34 新增 4 层 L1-L5, v1.5.7.35 扩到 16 层 L1-L16)
 
-> **v5 P1 教训**: 9.0.AI工具使用声明.tex L4 仍带【简要用途】模板占位符 (check 15 漏报, v5 报告 P1). **v5 P0 教训**: 摘要 Q3 节约 5.7% vs §5.3 反贵 5.4% 方向反转 / Q4-2 三处数字对不上 / §5.1.2 鲁棒差额自相矛盾.
+> **v5 P1 教训**: 9.0.AI工具使用声明.tex L4 仍带【简要用途】模板占位符 (check 15 漏报). **v17 复审教训**: claude2025 AI 修复时把自己写进参考文献 [14] + li2018/zhang2022 幻觉文献 (作者/期刊/年份/卷期全错) + 表9 编造拆分 + 表q1_robust 全表编造. **v15 终审教训**: g_adj 无上界 → 14,797 格物理不可行值 + 附件5 旧版.
 
-**4 层审计** (L1-L5) 在 `references/audit/参考文献审计清单.md` (权威源, 本节不重复):
+**16 层审计清单** (L1-L16) 在 `references/audit/参考文献审计清单.md` (权威源, 4 auto check + 5 manual 兜底 + 7 混合). 本节只列 16 层简表 + 跑题后必做顺序:
 
-- **L1 占位符** (auto): check 15 + check 38 (强化, v5 P1 防御, 扫 \\textbf{【...】} + GB/T 7714 字段 28 项)
+| 层 | 检查内容 | 类型 | dryrun check | 跑题后必做 |
+|---|---|---|---|---|
+| L1 | 占位符未替换 | auto | check 15 + check 38 (强化) | dryrun |
+| L2 | 编号对应 | auto | check 36 | dryrun |
+| L3 | AI 工具禁列 | auto | check 37 (v1.5.7.35 强化) | dryrun |
+| L4 | 真实性 spot-check | manual 12 步 | — | 30 min |
+| L5 | 数字一致性 | manual 4 步 + check 39 留位 | check 39 (留位) | 10 min |
+| L6 | result 文件 ↔ 论文数字 | auto | check 40 (新) | dryrun |
+| L7 | 附件 ↔ 正文 mtime | auto | check 41 (新) | dryrun |
+| L8 | 灵敏度表 ↔ 代码 | manual | — | 10 min |
+| L9 | SOC 末值合理性 | manual | — | 10 min |
+| L10 | 假设 ↔ 代码 | manual | — | 15 min |
+| L11 | 旧图 ↔ result mtime | auto | check 45 (新) | dryrun |
+| L12 | 口径混用 (334/365) | auto | check 46 (新) | dryrun |
+| L13 | AI 工具条目强化 | auto | check 37 关键词扩 (新) | dryrun |
+| L14 | 幻觉文献 | manual (L4 步骤 2-7 覆盖) | — | (L4 内) |
+| L15 | 双向题 vs 4h 窗口 | manual | — | 5 min |
+| L16 | Q1 表1/表2 格式 | manual | — | 10 min |
 
-- **L2 编号对应** (auto): check 36 (\\cite 与 \\item 互查, A-B 红 cite 不存在, B-A 黄孤儿)
-
-- **L3 AI 工具禁列** (auto): check 37 (扫 26 关键词, 命中红, BZD 2026 规范)
-
-- **L4 真实性 spot-check** (manual, 12 步骤): 作者/期刊/年份/页码/网址/DOI 必须真实可核验 (v4 P1 han/wang 作者错教训)
-
-- **L5 数字一致性** (manual + 留位 auto): check 39 永久 yellow 留位, 短期由本节 "论文内部数字一致性自检清单" 兜底 (4 步: 摘要 vs §5.X / §5.X 内 vs §5.X / §5.X vs resultX.xlsx / 334 vs 365 口径)
-
-**跑题后必做顺序**: dryrun sign-off 绿 → L1 (auto) → L2 (auto) → L3 (auto) → L4 (manual 12 步, 30 min) → L5 (manual 4 步, 10 min), 4 层全过才交卷, 比评委扣分划算.
+**跑题后必做顺序**: dryrun sign-off 绿 (L1/L2/L3/L6/L7/L11/L12/L13 auto) → L4 (12 步, 30 min) → L5 (4 步, 10 min) → L8 (10 min) → L9 (10 min) → L10 (15 min) → L15 (5 min) → L16 (10 min), 16 层全过才交卷. **总耗时约 90 分钟**, 比评委扣分划算.
 
 
 
