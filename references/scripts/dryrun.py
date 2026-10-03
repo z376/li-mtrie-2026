@@ -1862,6 +1862,123 @@ def check_calendar_window_consistency():
             None)
 
 
+# ===== v1.5.7.36 新增 2 项: 绘图自检 L14 (冗余图) + L15 (图注 vs axes) =====
+
+def check_unused_figures():
+    """checkable 47: figures/ 中未被 \includegraphics 引用的图 (auto).
+
+    背景: 论文综合 (Sep 12) §六.2 反例 — 8 张冗余未引用图残留
+    (q2_季节PV箱线图.png / q2_月度发电量对比.png / q2_全年汇总.png /
+    q2_累计费用.png / q2_梅雨敏感性.png / q2_预测误差敏感性.png /
+    q2_不完美预测.xlsx / q2_用附件3不滚动.xlsx). 这些图是上一轮分析残留或
+    自己加的中间产物, 不被任何 \includegraphics 引用, 却跟着 figures/ 一起
+    提交. 防御: 调 references/scripts/check_figure.py:find_unused_figures
+    扫 figures/ vs 所有 .tex \includegraphics 引用集, 报告差集.
+
+    Template 状态: yellow (template 示例 figures/ 含占位图, 设计意图).
+    """
+    paper_dir = get_paper_dir()
+    if not paper_dir.exists():
+        return ("yellow", f"论文目录不存在 ({paper_dir}), 跳过 L14 冗余图检查",
+                "用 --paper-dir 指定")
+    is_template = "templates" in str(paper_dir) or "example" in str(paper_dir)
+
+    # 1. 找 figures/ 目录
+    figures_dir = paper_dir / "figures"
+    if not figures_dir.exists():
+        return ("yellow", "论文/figures/ 不存在, 跳过 L14 (无图场景)",
+                "跑题用户应复制 example-paper/figures/ → 论文/figures/")
+
+    # 2. 扫 figures/ 中所有目标图, 与所有 .tex \includegraphics 集比对
+    try:
+        sys.path.insert(0, str(SCRIPTS_DIR))
+        from check_figure import find_unused_figures
+    except ImportError as e:
+        return ("yellow", f"check_figure.py 导入失败: {e}", "检查 references/scripts/check_figure.py 完整性")
+
+    tex_files = [str(p) for p in paper_dir.glob("*.tex")]
+    try:
+        unused, cited = find_unused_figures(figures_dir, tex_files=tex_files)
+    except Exception as e:
+        return ("yellow", f"find_unused_figures 调用失败: {e}", "检查 check_figure.py 实现")
+
+    if not unused and not cited:
+        return ("yellow", f"figures/ {figures_dir} 无 .png/.pdf/.svg 图", "跑题后必须生成图")
+
+    if not unused:
+        return ("green",
+                f"figures/ {len(cited)} 张图全部被 \includegraphics 引用 (无冗余)",
+                None)
+
+    # 有冗余
+    if is_template:
+        return ("yellow",
+                f"example 模板有意保留 {len(unused)} 张冗余图 (设计意图, 跑题时清理才 GREEN)",
+                f"冗余示例: {unused[:3]}. 跑题用户复制 example-paper 后删冗余图")
+    return ("yellow",
+            f"figures/ 有 {len(unused)} 张图未被任何正文 \includegraphics 引用 (论文综合 §六.2 反例)",
+            f"删除冗余图: {unused[:5]}. 引用图: {len(cited)} 张")
+
+
+def check_caption_axes_consistency():
+    """checkable 48: 论文 PDF caption 含多面板语义但 figure 实际只有 1 张图 (auto).
+
+    背景: 论文综合 (Sep 12) §六.1 反例 — 图1 图注称"上: 购电量与电价, 下: 储能 SOC",
+    实际只有单面板 (无 SOC 子图). 图注与实际 axes 数不符是图片堆积型问题,
+    评委一眼能看出"图说一套, 画一套". 防御: 调 references/scripts/visual_qa.py:
+    check_caption_axes_consistency 扫 PDF 中 caption 关键词 vs figure axes 数.
+
+    Template 状态: yellow (template 无 PDF, 跳过).
+    """
+    paper_dir = get_paper_dir()
+    if not paper_dir.exists():
+        return ("yellow", f"论文目录不存在 ({paper_dir}), 跳过 L15 图注检查",
+                "用 --paper-dir 指定")
+
+    # 1. 找 PDF (论文.pdf 或 电子版.pdf)
+    pdf_candidates = ["论文.pdf", "电子版.pdf", "main.pdf", "paper.pdf"]
+    pdf_path = None
+    for fn in pdf_candidates:
+        cand = paper_dir / fn
+        if cand.exists():
+            pdf_path = str(cand)
+            break
+    if pdf_path is None:
+        return ("yellow", f"论文 PDF 不存在 ({pdf_candidates}), 跳过 L15",
+                "跑题后必先生成 PDF (xelatex × 2)")
+
+    # 2. 调 visual_qa.py check_caption_axes_consistency
+    try:
+        sys.path.insert(0, str(SCRIPTS_DIR))
+        from visual_qa import check_caption_axes_consistency
+    except ImportError as e:
+        return ("yellow", f"visual_qa.py 导入失败: {e}", "检查 references/scripts/visual_qa.py 完整性")
+
+    try:
+        issues = check_caption_axes_consistency(pdf_path)
+    except Exception as e:
+        return ("yellow", f"check_caption_axes_consistency 调用失败: {e}", "检查 visual_qa.py 实现")
+
+    if not issues:
+        return ("green",
+                f"L15 图注 vs axes 一致性: PDF {pdf_path} 无多面板 caption-axes 不符",
+                None)
+
+    # 有问题
+    has_red = any(sev == "FAIL" for sev, _ in issues)
+    if has_red:
+        msgs = [m for s, m in issues if s == "FAIL"]
+        return ("red",
+                f"图注含多面板语义但 figure 实际 axes 不够 (论文综合 §六.1 反例)",
+                f"修改 figure: 加子图或删 caption 多面板描述. 命中: {msgs[:3]}")
+
+    has_warn = any(sev == "WARN" for sev, _ in issues)
+    msgs_w = [m for s, m in issues if s == "WARN"]
+    return ("yellow",
+            f"L15 图注扫描: 找到 {len(issues)} 处 caption 含多面板语义, 需人工核对 (论文综合 §六.1 反例)",
+            f"命中: {msgs_w[:3]}")
+
+
 CHECKS = [
     ("1. 装包 (核心包)", check_pkg),
     ("2. 10 Python 脚本", check_python_scripts),
@@ -1906,6 +2023,8 @@ CHECKS = [
     ("41. v1.5.7.35 附件 vs 正文 mtime L7 (附件旧于求解红, 旧于论文黄, v15 P0-4 / v17 P0-E 防御)", check_attachments_vs_paper_mtime),
     ("45. v1.5.7.35 旧图未刷新 L11 (includegraphics 图 mtime vs 求解, 旧于 12h 红, v15 P0-3 / v17 P0-E 防御)", check_figure_mtime_vs_solve),
     ("46. v1.5.7.35 口径混用 L12 (334 天 vs 365 天, ≥2 种混用红, v15 P0-1 / 论文综合 §2.4 防御)", check_calendar_window_consistency),
+    ("47. v1.5.7.36 冗余图 L14 (figures/ 中未 \\includegraphics 引用的 .png/.pdf/.svg, 论文综合 §六.2 反例)", check_unused_figures),
+    ("48. v1.5.7.36 图注 vs axes L15 (PDF caption 含多面板语义但 figure 实际 axes 不够, 论文综合 §六.1 反例)", check_caption_axes_consistency),
 ]
 
 

@@ -11,7 +11,7 @@ description: |
 
 metadata:
 
-  version: "1.5.7.35"
+  version: "1.5.7.36"
 
   category: competition-workflow
 
@@ -1471,6 +1471,10 @@ if ($sizeMB -gt 20) { Write-Error "超过 20MB 限制！" }
 | L16 | Q1 表1/表2 格式 | manual | — | 10 min |
 
 **跑题后必做顺序**: dryrun sign-off 绿 (L1/L2/L3/L6/L7/L11/L12/L13 auto) → L4 (12 步, 30 min) → L5 (4 步, 10 min) → L8 (10 min) → L9 (10 min) → L10 (15 min) → L15 (5 min) → L16 (10 min), 16 层全过才交卷. **总耗时约 90 分钟**, 比评委扣分划算.
+
+## 绘图自检 (v1.5.7.36 新增, check 45/47/48 auto)
+
+**3 类 v15/v17/论文综合 实战图问题**: 图注 vs axes 一致 (auto check 48, 论文综合 §六.1) / 冗余图 (auto check 47, 论文综合 §六.2) / 旧图 (auto check 45, v15 P0-3 + v17 P0-E). 完整 §八 自检清单 + §十 实战反例 见 `references/plot/绘图规范与避坑.md` (权威源). 跑题后必跑 dryrun (L11/L14/L15 全覆盖).
 
 
 

@@ -22,7 +22,9 @@ from __future__ import annotations
 import argparse
 import glob
 import os
+import re
 import sys
+from pathlib import Path
 from typing import Any
 
 JPEG_FORMATS = {"jpg", "jpeg"}
@@ -204,6 +206,62 @@ def check_figure(path: str, min_dpi: int = 300,
         issues.append(("WARN", f"未识别的扩展名: .{ext}"))
 
     return issues, info
+
+
+def find_unused_figures(figures_dir: str | os.PathLike,
+                         tex_files: list[str] | None = None,
+                         exts: tuple[str, ...] = (".png", ".pdf", ".jpg", ".jpeg", ".svg", ".tif", ".tiff")) -> tuple[list[str], list[str]]:
+    """
+    扫描 figures_dir 中未被任何 .tex \\includegraphics 引用的图 (v1.5.7.36 新增).
+
+    背景: 论文综合 (Sep 12) §六.2 反例 — 8 张冗余未引用图残留 (q2_季节PV箱线图.png,
+    q2_月度发电量对比.png, q2_全年汇总.png, q2_累计费用.png, q2_梅雨敏感性.png,
+    q2_预测误差敏感性.png, q2_不完美预测.xlsx, q2_用附件3不滚动.xlsx). 这些图
+    是上一轮分析残留或自己加的中间产物, 不被任何 \\includegraphics 引用, 却
+    跟着 figures/ 一起提交. 既浪费 PDF 渲染时间, 又给评委"图堆积"印象.
+
+    防御: 返回 (unused, cited) 两个 list. unused = figures_dir 中未被引用的图;
+    cited = 引用到的图 (含其他子目录路径).
+
+    用法:
+        unused, cited = find_unused_figures("论文/figures", tex_files=["论文/5.2.tex", ...])
+    """
+    figures_dir = Path(figures_dir)
+    if not figures_dir.is_dir():
+        return [], []
+
+    # 1. 收集 figures_dir 中所有目标扩展名图
+    all_figs: list[str] = set()
+    for ext in exts:
+        for f in figures_dir.rglob(f"*{ext}"):
+            all_figs.add(f.name)
+
+    if not all_figs:
+        return [], []
+
+    # 2. 收集 tex 中 \\includegraphics 引用的所有图名
+    if tex_files is None:
+        # 默认: figures_dir 父目录下的所有 .tex
+        tex_files = [str(p) for p in figures_dir.parent.glob("*.tex")]
+
+    cited: set[str] = set()
+    cite_pat = re.compile(r"\\includegraphics(?:\[[^\]]*\])?\{([^}]+)\}")
+    for tf in tex_files:
+        try:
+            content = Path(tf).read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            continue
+        # 跳过 % 注释行
+        non_comment = "\n".join(
+            line for line in content.splitlines()
+            if not line.lstrip().startswith("%")
+        )
+        for m in cite_pat.finditer(non_comment):
+            cited.add(Path(m.group(1)).name)
+
+    # 3. 差集 = 未引用
+    unused = sorted(all_figs - cited)
+    return unused, sorted(cited)
 
 
 def print_report(path: str, issues: list, info: dict) -> str:
