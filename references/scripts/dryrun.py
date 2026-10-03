@@ -1862,6 +1862,170 @@ def check_calendar_window_consistency():
             None)
 
 
+# ===== v1.5.7.37 新增 2 项: AIGC 扫描增强 L16 (段首重复率) + L17 (连接词密度) =====
+
+# AIGC 连接词关键词 (Sep 13 实战: "同时" ×8 偏多, "然而/因此/此外" 等)
+AIGC_CONNECTOR_KEYWORDS = (
+    "同时", "然而", "因此", "此外", "更进一步", "与此同时",
+    "综上所述", "可以看出", "值得注意的是", "由此可见",
+)
+
+
+def check_segment_opener_repetition():
+    """checkable 49: AIGC 段首重复率 L16 (auto, AIGC 痕迹实战提炼).
+
+    背景: 2025C Sep 13 AIGC 报告 (Sep 13 04:06 09-13 复审) 段首重复率 39.6% 偏高
+    (主要因"问题一/二/三/四"结构 + "本文/当/针对" 等高频词). Sep 13 报告 §2.2 判定
+    39.6% 可接受 (<50% 阈值), 但建议人工分散到"本问/该问题/此问题". 加自动扫:
+
+    1. 收集论文所有 .tex 段首 2 字符 (跳过 % 注释 + 空段 + 章节标题)
+    2. 计算重复率 = (总段数 - 唯一段首数) / 总段数
+    3. 0-30% green (低), 30-50% yellow (可接受), > 50% red (偏高, AIGC 风险)
+
+    Template 状态: yellow (template 默认多章节重复段首, 设计意图).
+    """
+    paper_dir = get_paper_dir()
+    if not paper_dir.exists():
+        return ("yellow", f"论文目录不存在 ({paper_dir}), 跳过 L16 段首重复率",
+                "用 --paper-dir 指定")
+    is_template = "templates" in str(paper_dir) or "example" in str(paper_dir)
+
+    target_files = ["0.摘要.tex", "1.引言.tex", "2.总体分析.tex", "3.模型假设.tex",
+                    "4.符号说明.tex", "5.1.1.分析与准备.tex", "5.1.2.建模与求解.tex",
+                    "5.2.建模与求解.tex", "5.3.建模与求解.tex", "5.4.建模与求解.tex",
+                    "6.模型检验.tex", "7.模型评价.tex", "8.模型改进推广.tex"]
+    openers = []
+    for fname in target_files:
+        tex_file = paper_dir / fname
+        if not tex_file.exists():
+            continue
+        try:
+            tcontent = tex_file.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            continue
+        # 提取段落 (用空行分隔), 段首 2 字符
+        for para in tcontent.split("\n\n"):
+            lines = [l for l in para.split("\n") if l.strip() and not l.strip().startswith("%")]
+            if not lines:
+                continue
+            first_line = lines[0].strip()
+            # 跳过章节标题 + 列表项 + 数学环境
+            if first_line.startswith(("\\section", "\\subsection", "\\subsubsection",
+                                        "\\item", "$", "\\begin", "\\end",
+                                        "\\textbf", "\\caption", "\\label")):
+                continue
+            # 段首 2 字符
+            opener = first_line[:2]
+            if opener:
+                openers.append(opener)
+
+    if not openers:
+        return ("yellow", "论文 .tex 未提取到段首 (可能全章节标题/无段落)",
+                "跑题用户应写真实段落")
+
+    total = len(openers)
+    unique = len(set(openers))
+    repetition_rate = 1.0 - unique / total if total > 0 else 0
+
+    # Sep 13 AIGC 阈值: <50% 可接受 (green/yellow 分界), >50% 偏高
+    if repetition_rate < 0.30:
+        return ("green",
+                f"AIGC 段首重复率 {repetition_rate:.1%} 低 ({total} 段, {unique} 唯一) — Sep 13 AIGC 报告 39.6% 阈值的 0.6 倍",
+                None)
+    if repetition_rate < 0.50:
+        if is_template:
+            return ("yellow",
+                    f"example 模板有意保留段首重复 ({repetition_rate:.1%}, 设计意图, 跑题时分散才 GREEN)",
+                    f"替换段首为'本问/该问题/此问题/当'等变体")
+        return ("yellow",
+                f"AIGC 段首重复率 {repetition_rate:.1%} 中等 ({total} 段, {unique} 唯一) — Sep 13 AIGC 报告 39.6% 同等",
+                f"分散段首: '问题' → '本问/该问题/此问题'; '本文' → '本研究/笔者'; '当' → '此时/当...时'")
+    if is_template:
+        return ("yellow",
+                f"example 模板有意保留段首重复偏高 ({repetition_rate:.1%}, 设计意图)",
+                f"分散段首变体")
+    return ("red",
+            f"AIGC 段首重复率 {repetition_rate:.1%} 偏高 ({total} 段, {unique} 唯一) — AIGC 风险",
+            f"替换段首为变体 (Sep 13 报告 §4.4 优化建议: '同时' 替换 3 处, '问题' 替换为'本问/该问题/此问题')")
+
+
+def check_connector_density():
+    """checkable 50: AIGC 连接词密度 L17 (auto, "同时" 等关键词扫).
+
+    背景: 2025C Sep 13 AIGC 报告 §2.1 连接词密度 7.5% (低, <50% 阈值);
+    "同时" ×8 偏多, 建议替换 2-3 处为"且/并/另一方面". 加自动扫:
+
+    1. 收集论文所有 .tex 连接词命中数 (AIGC_CONNECTOR_KEYWORDS 10 项)
+    2. 计算总连接词数 / 总句数 = 连接词密度
+    3. 0-10% green (低), 10-15% yellow (中等), > 15% red (偏高)
+
+    Template 状态: yellow (template 默认示例, 设计意图).
+    """
+    paper_dir = get_paper_dir()
+    if not paper_dir.exists():
+        return ("yellow", f"论文目录不存在 ({paper_dir}), 跳过 L17 连接词密度",
+                "用 --paper-dir 指定")
+    is_template = "templates" in str(paper_dir) or "example" in str(paper_dir)
+
+    target_files = ["0.摘要.tex", "1.引言.tex", "2.总体分析.tex", "5.1.1.分析与准备.tex",
+                    "5.1.2.建模与求解.tex", "5.2.建模与求解.tex", "5.3.建模与求解.tex",
+                    "5.4.建模与求解.tex", "7.模型评价.tex", "8.模型改进推广.tex"]
+    connector_count = 0
+    sentence_count = 0
+    per_keyword = {kw: 0 for kw in AIGC_CONNECTOR_KEYWORDS}
+    for fname in target_files:
+        tex_file = paper_dir / fname
+        if not tex_file.exists():
+            continue
+        try:
+            tcontent = tex_file.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            continue
+        # 跳过 % 注释行
+        non_comment = "\\n".join(
+            line for line in tcontent.splitlines()
+            if not line.lstrip().startswith("%")
+        )
+        # 数连接词命中 (中文字符, 无 word boundary)
+        for kw in AIGC_CONNECTOR_KEYWORDS:
+            cnt = non_comment.count(kw)
+            per_keyword[kw] += cnt
+            connector_count += cnt
+        # 数句子 (中文句号/问号/感叹号, 跳过数学环境的 $)
+        non_math = re.sub(r"\$.*?\$", "", non_comment, flags=re.DOTALL)
+        sentence_count += len(re.findall(r"[。！？]", non_math))
+
+    if sentence_count == 0:
+        return ("yellow", "论文 .tex 未提取到句子 (可能全文数学/公式)",
+                "跑题用户应写完整摘要 + §5.X 正文")
+
+    density = connector_count / sentence_count if sentence_count > 0 else 0
+
+    # 找最高频连接词 (报告 "同时" 偏多)
+    top_kw = sorted(per_keyword.items(), key=lambda x: -x[1])[:3]
+    top_msg = ", ".join(f"{kw}×{cnt}" for kw, cnt in top_kw if cnt > 0)
+
+    if density < 0.10:
+        return ("green",
+                f"AIGC 连接词密度 {density:.1%} 低 ({connector_count}/{sentence_count}, {top_msg}) — Sep 13 AIGC 报告 7.5% 同级",
+                None)
+    if density < 0.15:
+        if is_template:
+            return ("yellow",
+                    f"example 模板有意保留连接词 ({density:.1%}, 设计意图, 跑题时分散才 GREEN)",
+                    f"分散: {top_msg}")
+        return ("yellow",
+                f"AIGC 连接词密度 {density:.1%} 中等 ({connector_count}/{sentence_count}, {top_msg})",
+                f"分散'同时/然而/因此'为'且/并/另一方面/从而' (Sep 13 报告 §2.1)")
+    if is_template:
+        return ("yellow",
+                f"example 模板有意保留连接词偏高 ({density:.1%})",
+                f"分散连接词")
+    return ("red",
+            f"AIGC 连接词密度 {density:.1%} 偏高 ({connector_count}/{sentence_count}, {top_msg}) — AIGC 风险",
+            f"替换'同时/然而/因此'为变体: '且/并/另一方面/从而/除此之外'")
+
+
 # ===== v1.5.7.36 新增 2 项: 绘图自检 L14 (冗余图) + L15 (图注 vs axes) =====
 
 def check_unused_figures():
@@ -2025,6 +2189,8 @@ CHECKS = [
     ("46. v1.5.7.35 口径混用 L12 (334 天 vs 365 天, ≥2 种混用红, v15 P0-1 / 论文综合 §2.4 防御)", check_calendar_window_consistency),
     ("47. v1.5.7.36 冗余图 L14 (figures/ 中未 \\includegraphics 引用的 .png/.pdf/.svg, 论文综合 §六.2 反例)", check_unused_figures),
     ("48. v1.5.7.36 图注 vs axes L15 (PDF caption 含多面板语义但 figure 实际 axes 不够, 论文综合 §六.1 反例)", check_caption_axes_consistency),
+    ("49. v1.5.7.37 AIGC 段首重复率 L16 (<30% 低 green / 30-50% 中等 yellow / >50% 偏高 red, Sep 13 AIGC 报告 39.6% 阈值)", check_segment_opener_repetition),
+    ("50. v1.5.7.37 AIGC 连接词密度 L17 (扫 同时/然而/因此/此外 等 10 项, <10% 低 green / 10-15% 中等 yellow / >15% 偏高 red, Sep 13 AIGC 报告 7.5% 阈值)", check_connector_density),
 ]
 
 

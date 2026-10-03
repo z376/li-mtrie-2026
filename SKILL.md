@@ -11,7 +11,7 @@ description: |
 
 metadata:
 
-  version: "1.5.7.36"
+  version: "1.5.7.37"
 
   category: competition-workflow
 
@@ -1475,6 +1475,10 @@ if ($sizeMB -gt 20) { Write-Error "超过 20MB 限制！" }
 ## 绘图自检 (v1.5.7.36 新增, check 45/47/48 auto)
 
 **3 类 v15/v17/论文综合 实战图问题**: 图注 vs axes 一致 (auto check 48, 论文综合 §六.1) / 冗余图 (auto check 47, 论文综合 §六.2) / 旧图 (auto check 45, v15 P0-3 + v17 P0-E). 完整 §八 自检清单 + §十 实战反例 见 `references/plot/绘图规范与避坑.md` (权威源). 跑题后必跑 dryrun (L11/L14/L15 全覆盖).
+
+## AIGC 扫描增强 (v1.5.7.37 新增, check 49/50 auto)
+
+**Sep 13 AIGC 报告实战提炼**: 段首重复率 L16 (auto check 49, Sep 13 阈值 39.6%, 分散"问题"为"本问/该问题/此问题") / 连接词密度 L17 (auto check 50, Sep 13 阈值 7.5%, 扫 同时/然而/因此/此外 等 10 项). 详细 Sep 13 报告 → `Desktop\数建\第九周\2025c(clude)\li-mtrie（2026）\审计历史\AIGC痕迹审计报告-2026-09-13.md`.
 
 
 
