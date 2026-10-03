@@ -11,7 +11,7 @@ description: |
 
 metadata:
 
-  version: "1.5.7.33"
+  version: "1.5.7.34"
 
   category: competition-workflow
 
@@ -1442,6 +1442,26 @@ if ($sizeMB -gt 20) { Write-Error "超过 20MB 限制！" }
 - 必做 4: 5.X.2 引用的图/表都存在 (编号连续)
 
 - 可选 5: LLM 工具 03 自动审稿 (5 维, 30 min)
+
+
+
+## 参考文献审计清单 (跑题后必做, v1.5.7.34 新增, 4 层 L1-L5)
+
+> **v5 P1 教训**: 9.0.AI工具使用声明.tex L4 仍带【简要用途】模板占位符 (check 15 漏报, v5 报告 P1). **v5 P0 教训**: 摘要 Q3 节约 5.7% vs §5.3 反贵 5.4% 方向反转 / Q4-2 三处数字对不上 / §5.1.2 鲁棒差额自相矛盾.
+
+**4 层审计** (L1-L5) 在 `references/audit/参考文献审计清单.md` (权威源, 本节不重复):
+
+- **L1 占位符** (auto): check 15 + check 38 (强化, v5 P1 防御, 扫 \\textbf{【...】} + GB/T 7714 字段 28 项)
+
+- **L2 编号对应** (auto): check 36 (\\cite 与 \\item 互查, A-B 红 cite 不存在, B-A 黄孤儿)
+
+- **L3 AI 工具禁列** (auto): check 37 (扫 26 关键词, 命中红, BZD 2026 规范)
+
+- **L4 真实性 spot-check** (manual, 12 步骤): 作者/期刊/年份/页码/网址/DOI 必须真实可核验 (v4 P1 han/wang 作者错教训)
+
+- **L5 数字一致性** (manual + 留位 auto): check 39 永久 yellow 留位, 短期由本节 "论文内部数字一致性自检清单" 兜底 (4 步: 摘要 vs §5.X / §5.X 内 vs §5.X / §5.X vs resultX.xlsx / 334 vs 365 口径)
+
+**跑题后必做顺序**: dryrun sign-off 绿 → L1 (auto) → L2 (auto) → L3 (auto) → L4 (manual 12 步, 30 min) → L5 (manual 4 步, 10 min), 4 层全过才交卷, 比评委扣分划算.
 
 
 

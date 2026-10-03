@@ -1,10 +1,53 @@
-# CHANGELOG (v1.5.7.33 — check 35 加 SKILL.md ≤ 1500 行护栏, 防 6 维度 sprawl)
+# CHANGELOG (v1.5.7.34 — 参考文献 4 层审计 L1-L5, 2025C v5 报告实战提炼)
 
 > **v1.5.7.20 之前 15 个 hotfix** (v1.5.7.5 ~ v1.5.7.19) → [`CHANGELOG-archive.md`](CHANGELOG-archive.md).
 >
 > **拆分原因**: 392 行累积, human 翻历史困难. 主文件只留最新 4 个 (writing-for-agents 审计 hotfix).
 >
 > **查找旧版本**: 用 grep 搜 `CHANGELOG-archive.md` (e.g. `grep -n v1.5.7.10 CHANGELOG-archive.md`).
+
+## v1.5.7.34 — 参考文献 4 层审计 L1-L5 (v1.5.7.33 hotfix, 2025C v5 报告实战提炼)
+
+**核心**: 2025C 跑题 v5 报告 P0 (摘要-§5 数字自相矛盾, 红) + P1 (9.0.AI工具使用声明.tex L4 模板占位符漏报, 红) + 教训: 参考文献审计缺自动防线. 加 4 项 check + 1 个 references 文档:
+
+- **check 36 (L2 编号对应, auto)**: `\\cite` 与 `\\item` 互查, A-B 红 cite 不存在, B-A 黄孤儿
+- **check 37 (L3 AI 工具禁列, auto)**: 扫 26 关键词 (ChatGPT/DeepSeek/Claude/Copilot/文心一言/通义千问/GPT-4/Kimi/豆包/元宝/Gemini/Llama/Qwen/Baichuan/ChatGLM/Spark/ERNIE/...), 命中红 (BZD 2026 规范)
+- **check 38 (L1 占位符强化, auto, v5 P1 防御)**: 扫 9.参考文献.tex + 9.0.AI工具使用声明.tex 的 `\\textbf{【...】}` (item 内 GB/T 7714 字段占位符) + GB/T 7714 字段占位符 28 项 (【作者】/【论文题名】/【期刊名】/【出版地】/【简要用途】 等)
+- **check 39 (L5 数字一致性, 留位 yellow)**: 摘要-§5 章节-Q 表互查, auto 实现复杂度高 (需解析 LaTeX 数学环境 + 跨文件 grep), 永久 yellow 留位, 短期 SKILL.md §参考文献审计清单 手动兜底
+
+**新建 `references/audit/参考文献审计清单.md`** (11.6 KB, 4 层 L1-L5):
+
+- **L1 占位符** (auto, dryrun check 15 + check 38)
+- **L2 编号对应** (auto, check 36)
+- **L3 AI 工具禁列** (auto, check 37)
+- **L4 真实性 spot-check** (**manual, 12 步骤**: 文献数量 5-15 / 作者真实 / 题名真实 / 期刊真实 / 年份真实 / 卷期页码 / 类型标识 / DOI 网址 / 引用覆盖 / AI 工具未误列 / 与 result 一致 / 格式统一)
+- **L5 数字一致性** (manual + 兜底清单 + check 39 留位)
+
+**SKILL.md 加 §参考文献审计清单** (19 行): 紧跟 Post-Solution Audit, 4 层概览 + 跑题后必做顺序
+
+**影响文件**:
+
+- 改 `references/scripts/dryrun.py` (+163 行: AI_TOOL_FORBIDDEN_KEYWORDS 26 项 + GB_T_7714_TEMPLATE_FIELDS 28 项 + check_ref_number_consistency + check_ai_tool_in_refs + check_template_placeholders_v2 + check_39_numeric_consistency_reserved + CHECKS 4 行)
+- 新建 `references/audit/参考文献审计清单.md` (11.6 KB)
+- 改 SKILL.md (+19 行, 总 1483 ≤ 1500 ✓)
+- 改 CHANGELOG.md (主文件移 v1.5.7.30 → archive)
+
+**dryrun**: 29/39 green + 10 yellow + 0 red (check 35 green SKILL.md ≤ 1500 ✓ + check 33 green leading words 11 个全在 ✓).
+
+**v5 报告 P0/P1 防御映射**:
+
+| v5 报告问题 | 防御 check |
+|---|---|
+| v5 P1 9.0.AI工具使用声明.tex L4【简要用途】 | check 38 (扫【简要用途】/【简要填】/【这里填】) |
+| v5 P0 摘要 Q3 节约 5.7% vs §5.3 反贵 5.4% | check 39 留位 + SKILL.md 手动清单 |
+| v5 P0 摘要 Q4-2 = 1504万 vs §5.4 = 2183万 vs 文件 = 1843万 | check 39 留位 + SKILL.md 手动清单 |
+| v5 P0 §5.1.2 鲁棒差额 +2552 vs +9648 | check 39 留位 + SKILL.md 手动清单 |
+| v5 P0 §5.2 紧急购电 11.6 vs 110.9 vs 589 万 | check 39 留位 + SKILL.md 手动清单 |
+| v4 P1 9.参考文献.tex han/wang 作者错 | L4 步骤 2 真实作者 spot-check |
+| v4 P1 6 条未引用 | check 36 (cite 与 item 互查) |
+| v5 验证 AI 工具未误列 ✓ | check 37 (L3 强化, 防止以后误列) |
+
+---
 
 ## v1.5.7.33 — check 35 加 SKILL.md ≤ 1500 行护栏 (v1.5.7.32 hotfix)
 
@@ -69,28 +112,6 @@
 **影响文件**: dryrun.py (check 34 改 19 行 + CHECKS 改 1 行).
 
 **dryrun**: 27/34 green + 7 yellow + 0 red (v1.5.7.31 修后, 6 维度从 4 green + 2 yellow → 5 green + 1 yellow — 仅 SKILL.md 1581 行略超 1500 仍是 yellow, 边际收益低保留).
-
----
-
-## v1.5.7.30 — 收匠期 (v1.5.7.29 hotfix, 跨 2 session 经验汇总)
-
-**核心**: v1.5.7.10 → v1.5.7.29 共 20 hotfix 跨 Sep 18 + Sep 28 两 session 收尾. 用户说"收集一下经验", 3 处全存:
-
-1. **`references/技能总结/经验汇总.md`** (8.6 KB, 新文件):
-   - **A. skill 维护方法论** (writing-for-agents 6 维度 / 抽象化 3 步 / 拆分决策 / dryrun 3 check)
-   - **B. 数模答题方法论** (设计意图 4 步 / 数据隔离 3 类 / Q3 物理边界发现 / 跑题工作流)
-   - **C. 项目特定决策** (v1.5.7.10-29 版本表 / 最终结构 / dryrun 终极状态)
-   - **D. 引用** (CHANGELOG + 题目设计意图 §4.4 + 本目录)
-
-2. **`user.md` 加 2 条** (跨项目方法论):
-   - **Skill 维护方法论** (writing-for-agents 6 维度 / 抽象化 / 拆分 / dryrun 3 check)
-   - **数模滚动决策题物理边界** (滚动调整无效 / 前一天实际最优 / 期望方向修正)
-
-3. **本 CHANGELOG entry** (v1.5.7.30 收匠期记录).
-
-**影响文件**: 新建 `references/技能总结/经验汇总.md` (8.6 KB) + 改 user.md.
-
-**dryrun 不变**: 27/34 green + 7 yellow + 0 red.
 
 ---
 

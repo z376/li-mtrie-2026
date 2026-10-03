@@ -1,8 +1,30 @@
-# CHANGELOG-archive (v1.5.7.24 — 拆 CHANGELOG, v1.5.7.19 及之前)
+# CHANGELOG-archive (v1.5.7.34 — v1.5.7.30 收匠期入档, v1.5.7.19 及之前)
 
-> **历史归档** — v1.5.7.20 之前的 hotfix. 最新 hotfix 见 [`CHANGELOG.md`](CHANGELOG.md).
+> **历史归档** — v1.5.7.30 之前的 hotfix. 最新 hotfix 见 [`CHANGELOG.md`](CHANGELOG.md).
 >
 > **保留原位说明**: 拆 CHANGELOG 不删历史 (git log 仍在, 文件仍在). 这个 archive 文件让 human 不需要 scroll 392 行.
+
+---
+
+## v1.5.7.30 — 收匠期 (v1.5.7.29 hotfix, 跨 2 session 经验汇总)
+
+**核心**: v1.5.7.10 → v1.5.7.29 共 20 hotfix 跨 Sep 18 + Sep 28 两 session 收尾. 用户说"收集一下经验", 3 处全存:
+
+1. **`references/技能总结/经验汇总.md`** (8.6 KB, 新文件):
+   - **A. skill 维护方法论** (writing-for-agents 6 维度 / 抽象化 3 步 / 拆分决策 / dryrun 3 check)
+   - **B. 数模答题方法论** (设计意图 4 步 / 数据隔离 3 类 / Q3 物理边界发现 / 跑题工作流)
+   - **C. 项目特定决策** (v1.5.7.10-29 版本表 / 最终结构 / dryrun 终极状态)
+   - **D. 引用** (CHANGELOG + 题目设计意图 §4.4 + 本目录)
+
+2. **`user.md` 加 2 条** (跨项目方法论):
+   - **Skill 维护方法论** (writing-for-agents 6 维度 / 抽象化 / 拆分 / dryrun 3 check)
+   - **数模滚动决策题物理边界** (滚动调整无效 / 前一天实际最优 / 期望方向修正)
+
+3. **本 CHANGELOG entry** (v1.5.7.30 收匠期记录).
+
+**影响文件**: 新建 `references/技能总结/经验汇总.md` (8.6 KB) + 改 user.md.
+
+**dryrun 不变**: 27/34 green + 7 yellow + 0 red.
 
 ---
 

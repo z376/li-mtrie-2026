@@ -1288,6 +1288,274 @@ def check_v15719_plot_merge():
     return ("green", "绘图文档合并: 绘图规范 + 绘图避坑 → 绘图规范与避坑.md (3 章节齐, 旧文件已删)", None)
 
 
+# ===== v1.5.7.34 新增 4 项: 参考文献 4 层审计 (L2/L3/L1-加强/L5-留位) =====
+
+# AI 工具关键词 (L3 禁列清单, 命中即红)
+AI_TOOL_FORBIDDEN_KEYWORDS = [
+    "ChatGPT", "DeepSeek", "Claude", "Copilot", "文心一言", "通义千问",
+    "GPT-4", "GPT-3.5", "GPT-4o", "Kimi", "豆包", "元宝", "文心",
+    "星火", "智谱", "Doubao", "Gemini", "Claude-3", "Bard", "Llama",
+    "Qwen", "Yi-", "Baichuan", "ChatGLM", "Spark", "ERNIE",
+]
+
+# GB/T 7714 模板字段占位符 (L1 强化, v5 P1 防御)
+GB_T_7714_TEMPLATE_FIELDS = [
+    "【简要用途",     # 9.0.AI工具使用声明.tex v5 P1 未替换源
+    "【简要填",       # 模板示例引导
+    "【这里填",       # 模板示例引导
+    "【作者",         # 9.参考文献.tex item
+    "【论文题名",
+    "【期刊名",
+    "【年份",
+    "【卷",
+    "【起止页码",
+    "【书名",
+    "【出版地",
+    "【出版社",
+    "【出版年",
+    "【授予单位",
+    "【发布机构",
+    "【报告名称",
+    "【数据集名称",
+    "【网址",
+    "【更新时间",
+    "【访问日期",
+    "【网页资源名称",
+    "【标准号",
+    "【标准名称",
+    "【出版者",
+    "【文件名称",
+    "【颁布机构",
+    "【发布机构",
+    "【发布日期",
+]
+
+
+def check_ref_number_consistency():
+    """checkable 36: 参考文献编号对应 (L2 一致性, auto).
+
+    背景: 2025C 跑题 v4 → v5 反复改 9.参考文献.tex, 改了条目没同步正文 \\cite (或反过来),
+    导致 cite 编号悬空 (cite 不存在, 红) 或条目孤儿 (定义未引用, 黑/黄).
+    防御: 提取所有 \\cite{[n]} (正文) + 9.参考文献.tex \\item [n] (文末),
+    做 A-B (cite 不存在) 红 + B-A (孤儿条目) 黄 自检.
+
+    支持 enumerate 自动编号 (按 \\item 出现顺序) 与 \\item [n] (手动) 两种模板.
+    Template 状态: yellow (模板占位符 \\item 与真实正文不一致是设计意图).
+    """
+    paper_dir = get_paper_dir()
+    if not paper_dir.exists():
+        return ("yellow", f"论文目录不存在 ({paper_dir}), 跳过 L2 编号对应自检",
+                "用 --paper-dir <path> 指定, 或在跑题目录下跑")
+    is_template = "templates" in str(paper_dir) or "example" in str(paper_dir)
+
+    ref_file = paper_dir / "9.参考文献.tex"
+    if not ref_file.exists():
+        return ("yellow", "9.参考文献.tex 不存在, 跳过编号对应自检",
+                "若使用纯 BZD 模板无 ref, 可忽略; 若有 \\cite 则补建 9.参考文献.tex")
+
+    # 1. 提取 9.参考文献.tex 的 \\item 编号集 B
+    ref_content = ref_file.read_text(encoding="utf-8", errors="replace")
+    # 模式 A: \\item [n] (手动)
+    manual_items = re.findall(r"\\item\s*\[(\d+)\]", ref_content)
+    # 模式 B: enumerate 自动编号, 按 \\item 出现顺序
+    auto_items = []
+    in_enumerate = False
+    for line in ref_content.splitlines():
+        if r"\begin{enumerate}" in line:
+            in_enumerate = True
+            continue
+        if r"\end{enumerate}" in line:
+            in_enumerate = False
+            continue
+        if in_enumerate and re.search(r"\\item\b", line):
+            auto_items.append(len(auto_items) + 1)
+
+    if manual_items:
+        ref_nums = set(int(x) for x in manual_items)
+        mode = "manual \\item [n]"
+    else:
+        ref_nums = set(auto_items)
+        mode = "enumerate 自动"
+    if not ref_nums:
+        return ("yellow", "9.参考文献.tex 未识别到 \\item 条目, 跳过编号对应",
+                "检查 9.参考文献.tex 是否用 \\begin{enumerate} 或 \\item [n] 结构")
+
+    # 2. 提取所有正文 \\cite{[n]} 集 A
+    cited_nums = set()
+    cite_loc = {}  # n → [(file, line), ...]
+    for tex_file in sorted(paper_dir.glob("*.tex")):
+        if tex_file.name == "9.参考文献.tex":
+            continue
+        try:
+            content = tex_file.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            continue
+        # 跳过 % 注释行 (整行 + 行内)
+        non_comment_lines = [
+            line for line in content.splitlines()
+            if not line.lstrip().startswith("%")
+        ]
+        non_comment = "\n".join(non_comment_lines)
+        for m in re.finditer(r"\\cite\{([^}]*)\}", non_comment):
+            inner = m.group(1)
+            for n in re.split(r"[,，\s]+", inner):
+                n = n.strip()
+                if n.isdigit():
+                    num = int(n)
+                    cited_nums.add(num)
+                    line_no = non_comment[:m.start()].count("\n") + 1
+                    cite_loc.setdefault(num, []).append((tex_file.name, line_no))
+
+    # 3. 比对 A (cited) vs B (ref_items)
+    a_minus_b = sorted(cited_nums - ref_nums)  # cite 不存在 → 红
+    b_minus_a = sorted(ref_nums - cited_nums)  # 孤儿 → 黄
+
+    if a_minus_b:
+        details = []
+        for n in a_minus_b:
+            for fn, ln in cite_loc.get(n, [])[:2]:
+                details.append(f"{fn}:L{ln} \\cite{{{n}}}")
+        return ("red",
+                f"\\cite 编号 {a_minus_b} 在 9.参考文献.tex 中无对应条目 ({len(a_minus_b)} 处)",
+                f"在 9.参考文献.tex 加 \\item [{a_minus_b[0]}] ... 条目. cite 位置: {'; '.join(details[:3])}")
+
+    if b_minus_a:
+        return ("yellow",
+                f"9.参考文献.tex 编号 {b_minus_a} 未被任何正文 \\cite 引用 (孤儿条目, {len(b_minus_a)} 条)",
+                f"删 / 合并 / 补 \\cite{{{b_minus_a[0]}}} 到正文. 数量 {len(b_minus_a)} 条")
+
+    return ("green",
+            f"参考文献编号 {len(ref_nums)} 条 ({mode}) 与正文 \\cite 全部对应 (无 cite 不存在, 无孤儿)",
+            None)
+
+
+def check_ai_tool_in_refs():
+    """checkable 37: 9.参考文献.tex 不得列 AI 工具 (L3 真实性, auto).
+
+    背景: BZD 2026 规范明确: AI 工具 (ChatGPT / DeepSeek / Claude / Copilot / 文心一言 / ...)
+    禁止列入参考文献, 只能在 9.0.AI工具使用声明.tex 声明. 2025C 跑题 v5 验证 AI 工具未误列 ✓,
+    加这道防线: 自动扫 {len(AI_TOOL_FORBIDDEN_KEYWORDS)} 关键词, 命中即红.
+
+    Template 状态: yellow (模板示例引导文字含 AI 关键词, 是设计意图).
+    """
+    paper_dir = get_paper_dir()
+    if not paper_dir.exists():
+        return ("yellow", f"论文目录不存在 ({paper_dir}), 跳过 L3 AI 工具禁列自检",
+                "用 --paper-dir <path> 指定, 或在跑题目录下跑")
+    is_template = "templates" in str(paper_dir) or "example" in str(paper_dir)
+
+    ref_file = paper_dir / "9.参考文献.tex"
+    if not ref_file.exists():
+        return ("yellow", "9.参考文献.tex 不存在, 跳过 AI 工具禁列自检",
+                "若使用纯 BZD 模板无 ref, 可忽略")
+
+    content = ref_file.read_text(encoding="utf-8", errors="replace")
+    # 跳过 % 整行注释
+    non_comment_lines = [
+        line for line in content.splitlines()
+        if not line.lstrip().startswith("%")
+    ]
+    non_comment = "\n".join(non_comment_lines)
+
+    violations = []
+    for kw in AI_TOOL_FORBIDDEN_KEYWORDS:
+        for m in re.finditer(re.escape(kw), non_comment):
+            line_no = non_comment[:m.start()].count("\n") + 1
+            line_start = non_comment.rfind("\n", 0, m.start()) + 1
+            line_end = non_comment.find("\n", m.end())
+            if line_end == -1:
+                line_end = len(non_comment)
+            line_text = non_comment[line_start:line_end]
+            violations.append(f"L{line_no} 命中 {kw!r}: {line_text[:80]}")
+
+    if violations:
+        if is_template:
+            return ("yellow",
+                    f"example 模板有意保留 {len(violations)} 处 AI 工具关键词 (BZD 规范引导文字, 跑题时必须删)",
+                    f"参考性关键词: {violations[:2]}. 跑题用户需删除 9.参考文献.tex 中所有 AI 工具条目")
+        return ("red",
+                f"9.参考文献.tex 出现 {len(violations)} 处 AI 工具关键词 (扫 {len(AI_TOOL_FORBIDDEN_KEYWORDS)} 项)",
+                f"AI 工具 (ChatGPT/DeepSeek/Claude/...) 禁止列入, 仅在 9.0.AI工具使用声明.tex 声明. 命中: {violations[:3]}")
+
+    return ("green",
+            f"9.参考文献.tex 未列 AI 工具 (扫 {len(AI_TOOL_FORBIDDEN_KEYWORDS)} 关键词, 0 命中)",
+            None)
+
+
+def check_template_placeholders_v2():
+    """checkable 38: 模板占位符强化检查 (L1 扩展, v5 P1 防御, auto).
+
+    背景: 2025C 跑题 v5 P1: 9.0.AI工具使用声明.tex L4 仍带【简要用途...】占位符,
+    check 15 漏报原因可能是 paper_dir 路径不对 / 未跑. 加专项检查:
+
+    1. 9.0.AI工具使用声明.tex: 扫【简要用途】/【简要填】/【这里填】模板引导
+    2. 9.参考文献.tex: 扫 \\textbf{【...】} (item 内 GB/T 7714 字段占位符, 模板专用格式)
+    3. 通用: 扫【作者】/【论文题名】/【期刊名】/【出版地】等 GB/T 7714 字段
+
+    Template 状态: yellow (模板有意保留), 跑题状态: red.
+    """
+    paper_dir = get_paper_dir()
+    if not paper_dir.exists():
+        return ("yellow", f"论文目录不存在 ({paper_dir}), 跳过 L1 占位符强化自检",
+                "用 --paper-dir <path> 指定, 或在跑题目录下跑")
+    is_template = "templates" in str(paper_dir) or "example" in str(paper_dir)
+
+    target_files = ["9.参考文献.tex", "9.0.AI工具使用声明.tex"]
+    violations = []
+    for fname in target_files:
+        tex_file = paper_dir / fname
+        if not tex_file.exists():
+            continue
+        try:
+            content = tex_file.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            continue
+        # 跳过 % 整行注释
+        non_comment_lines = [
+            line for line in content.splitlines()
+            if not line.lstrip().startswith("%")
+        ]
+        non_comment = "\n".join(non_comment_lines)
+        # 模式 1: \\textbf{【...】} (item 内 GB/T 7714 字段占位符)
+        for m in re.finditer(r"\\textbf\{【[^】]*】\}", non_comment):
+            line_no = non_comment[:m.start()].count("\n") + 1
+            violations.append(f"{fname}:L{line_no} \\textbf{{【...】}} -> {m.group()[:60]}")
+        # 模式 2: GB/T 7714 模板字段占位符字符串 (行内自由出现)
+        for kw in GB_T_7714_TEMPLATE_FIELDS:
+            for m in re.finditer(re.escape(kw), non_comment):
+                line_no = non_comment[:m.start()].count("\n") + 1
+                violations.append(f"{fname}:L{line_no} 模板占位符 {kw!r}")
+
+    if violations:
+        if is_template:
+            return ("yellow",
+                    f"example 模板有意保留 {len(violations)} 处占位符 (设计意图, 跑题时填掉才 GREEN)",
+                    f"占位符示例: {violations[:3]}. 跑题用户复制 example-paper 后替换")
+        return ("red",
+                f"9.参考文献.tex / 9.0.AI工具使用声明.tex 仍带 {len(violations)} 处模板占位符 (v5 P1 防御)",
+                f"替换为实际内容. 重点: 9.0.AI工具使用声明.tex 【简要用途】占位符 (v5 P1 漏报源). 命中: {violations[:3]}")
+
+    return ("green",
+            f"9.参考文献.tex + 9.0.AI工具使用声明.tex 模板占位符全替换 (扫 {len(GB_T_7714_TEMPLATE_FIELDS)} 关键词 + \\textbf{{【...】}} 模式, 0 命中)",
+            None)
+
+
+def check_39_numeric_consistency_reserved():
+    """checkable 39: 数字一致性 L5 (留位, 摘要-§5 章节-Q 表数字互查).
+
+    背景: 2025C 跑题 v5 报告 P0: 摘要 Q3 节约 5.7% vs §5.3 调整反贵 5.4% (方向反转),
+    摘要 Q4-2 = 1504 万 vs §5.4 = 2183 万 vs 文件 = 1843 万 (三处对不上),
+    §5.1.2 鲁棒差额 +2552 元 vs +9648 元, §5.2 紧急购电 11.6 万 vs 110.9 万 vs 589 万.
+    自动实现复杂度高 (需解析 LaTeX 数学环境 + 跨文件 grep), v1.5.7.34 留位,
+    短期由 SKILL.md §Step 4 末尾 "论文内部数字一致性自检清单" (跑题后必做, 手动) 兜底.
+
+    状态: 永久 yellow (留位, 不判 PASS/FAIL), 等下次实现.
+    """
+    return ("yellow",
+            "v1.5.7.34 留位 — 数字一致性 L5 (摘要-§5 章节-Q 表数字互查, 自动实现复杂度高)",
+            "短期由 SKILL.md §Step 4 末尾 论文内部数字一致性自检清单 手动兜底 (跑题后必做). 等下次实现 auto check.")
+
+
 CHECKS = [
     ("1. 装包 (核心包)", check_pkg),
     ("2. 10 Python 脚本", check_python_scripts),
@@ -1324,6 +1592,10 @@ CHECKS = [
     ("33. v1.5.7.28 SKILL.md leading words 锚定 10 词全在 (green/red/sign-off/checkable/探路弹/check N/5 道防线/反模式/陷阱/踩坑/避坑)", check_v15728_leading_words_table),
     ("34. v1.5.7.31 references/ 18 sub-directory 全在 (10 拆分 + 8 原有: 2026官方答疑/examples/llm-prompts/scripts/templates/数模资料/板块自查/获奖论文 + 1 新建 技能总结)", check_v15728_nine_subdirs),
     ("35. v1.5.7.32 SKILL.md ≤ 1500 行 (writing-for-agents 硬约束, 防止 6 维度 sprawl)", check_v15732_skill_md_lines),
+    ("36. v1.5.7.34 参考文献编号对应 L2 (\\cite 与 \\item 互查, A-B 红 cite 不存在, B-A 黄孤儿)", check_ref_number_consistency),
+    ("37. v1.5.7.34 AI 工具禁列 L3 (9.参考文献.tex 扫 {N} 关键词, 命中红, BZD 2026 规范)", check_ai_tool_in_refs),
+    ("38. v1.5.7.34 模板占位符强化 L1 (9.参考文献 + 9.0.AI声明 扫 \\textbf{{【...】}} + GB/T 7714 字段, v5 P1 防御)", check_template_placeholders_v2),
+    ("39. v1.5.7.34 数字一致性 L5 (摘要-§5 章节-Q 表数字互查, 留位, 短期 SKILL.md §Step 4 手动清单兜底)", check_39_numeric_consistency_reserved),
 ]
 
 
