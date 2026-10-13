@@ -11,7 +11,7 @@ description: |
 
 metadata:
 
-  version: "1.5.7.38"
+  version: "1.5.7.39"
 
   category: competition-workflow
 
@@ -1476,9 +1476,9 @@ if ($sizeMB -gt 20) { Write-Error "超过 20MB 限制！" }
 
 **绘图自检** (v1.5.7.36): 图注 vs axes 一致 (check 48, 论文综合 §六.1) / 冗余图 (check 47, §六.2) / 旧图 (check 45, v15 P0-3 + v17 P0-E). **AIGC 扫描** (v1.5.7.37): 段首重复率 (check 49, Sep 13 阈值 39.6%) / 连接词密度 (check 50, Sep 13 阈值 7.5%). 完整 §十 实战反例见 `references/plot/绘图规范与避坑.md`. 跑题后必跑 dryrun (L11/L14/L15/L16/L17).
 
-## 跑题后 mavis 代理审计 (v1.5.7.38, **用户要求审计时调**)
+## 跑题后 mavis 代理审计 (v1.5.7.38 新增, **v1.5.7.39 改为默认**)
 
-self-audit 47 项 hardcode 抓不到内容级问题 (v15 P0-1 表9 365冒334 / v17 P0-A 编造 / v17 P0-C claude2025 误列 等). 跑 `python references\scripts\dryrun.py --agent-audit --paper-dir <论文目录>`, 复制输出 brief 到 mavis 主对话, mavis spawn mavis worker sub-session (独立 fresh context, 不缓存) 实际审计. 详细 brief 模板见 `references/scripts/agent_audit.py` (含 14 类 P0 反例 + 报告输出格式).
+self-audit 47 项 hardcode 抓不到内容级问题 (v15 P0-1 表9 365冒334 / v17 P0-A 编造 / v17 P0-C claude2025 误列 等). v1.5.7.39 改默认走代理审计: 跑 `python references\scripts\dryrun.py [--mode agent] --paper-dir <论文目录>`, 复制输出 brief 到 mavis 主对话, mavis spawn mavis worker sub-session (独立 fresh context, 不缓存) 实际审计. 三种模式: `--mode agent` (默认, 调代理) / `--mode self` (跑 47 项 hardcode) / `--mode both` (两种都跑). 详细 brief 模板见 `references/scripts/agent_audit.py` (含 14 类 P0 反例 + 报告输出格式).
 
 
 

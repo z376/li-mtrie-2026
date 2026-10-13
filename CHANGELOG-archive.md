@@ -1,8 +1,51 @@
-# CHANGELOG-archive (v1.5.7.38 — v1.5.7.35 战赛审计 16 层入档, v1.5.7.19 及之前)
+# CHANGELOG-archive (v1.5.7.39 — v1.5.7.36 绘图自检入档, v1.5.7.19 及之前)
 
 > **历史归档** — v1.5.7.30 之前的 hotfix. 最新 hotfix 见 [`CHANGELOG.md`](CHANGELOG.md).
 >
 > **保留原位说明**: 拆 CHANGELOG 不删历史 (git log 仍在, 文件仍在). 这个 archive 文件让 human 不需要 scroll 392 行.
+
+---
+
+## v1.5.7.36 — 绘图自检 3 类实战图问题 (v1.5.7.35 hotfix, v15/v17/论文综合 §六提炼)
+
+**核心**: v15 终审 (Sep 13) + v17 复审 (Sep 13) + 论文综合 (Sep 12) + 结果图文献 (Sep 11) 4 份实战报告 P0/P1 暴露 3 类图问题, dryrun 已加 check 47/48 自动防御, §八 自检清单扩 3 条 + §十 实战反例加新章节.
+
+- **check 47 (冗余图 L14, auto)**: 调 `references/scripts/check_figure.py:find_unused_figures` 扫 figures/ 中未被任何 .tex `\\includegraphics` 引用的 .png/.pdf/.svg. 防论文综合 §六.2 反例 (8 张冗余未引用图残留: q2_季节PV箱线图.png / q2_累计费用.png / q2_梅雨敏感性.png 等).
+- **check 48 (图注 vs axes L15, auto)**: 调 `references/scripts/visual_qa.py:check_caption_axes_consistency` 扫 PDF 中 caption 含多面板语义 ("上/下/(a)/(b)/左/右") 与 figure 实际 axes 数是否一致. 防论文综合 §六.1 反例 (图注称"上:购电量与电价, 下:储能SOC", 实际只有单面板).
+
+**改 documents**:
+
+- 扩 `references/plot/绘图规范与避坑.md`:
+  - §八 自检清单加 3 条 (图注 vs axes / 冗余图 / 旧图)
+  - 新增 §十 实战反例 (R1 旧图 + R2 冗余图 + R3 图注不符 + R4 中文方块 + R5 文字越界), 每类配反例 + 防御 + 修复命令
+  - §六 版本历史加 v1.5.7.36 entry
+- 改 `references/scripts/check_figure.py` (+50 行): 新加 `find_unused_figures()` 函数, 供 check 47 调用
+- 改 `references/scripts/visual_qa.py` (+80 行): 新加 `check_caption_axes_consistency()` 函数 + 模块 docstring 更新, 供 check 48 调用
+
+**改 SKILL.md** (1492 → 1497 行, ≤ 1500 ✓):
+
+- §绘图自检 (5 行): 简表 + 3 类实战图问题 + 跑题后必跑 dryrun 指针
+
+**影响文件**:
+
+- 改 `references/scripts/dryrun.py` (+115 行: check_unused_figures + check_caption_axes_consistency + CHECKS 2 行)
+- 改 `references/scripts/check_figure.py` (+50 行)
+- 改 `references/scripts/visual_qa.py` (+80 行)
+- 改 `references/plot/绘图规范与避坑.md` (+~120 行 §八 + §十 + §六)
+- 改 SKILL.md (+5 行)
+- 改 CHANGELOG.md (主文件更新标题)
+
+**dryrun**: 29/45 green + 16 yellow + 0 red (check 35 green SKILL.md 1497 ≤ 1500 ✓ + check 33 green leading words 11 个全在 ✓).
+
+**v15/v17/论文综合 P0/P1 反例防御映射**:
+
+| 报告问题 | 防御 check / docs |
+|---|---|
+| v15 P0-3 §5.4 图7/图8 是 g_adj 修复前旧图 | check 45 (L11) + 绘图规范 §十 R1 |
+| v17 P0-E 图7/8/q1_不确定性分配 旧图 | check 45 (L11) + 绘图规范 §十 R1 |
+| 论文综合 §六.1 图1 SOC 子图缺失 (图注不符) | check 48 (L15) + 绘图规范 §十 R3 |
+| 论文综合 §六.2 8 张冗余未引用图残留 | check 47 (L14) + 绘图规范 §十 R2 |
+| 结果图文献 §四 图3 英文标签 (v4 P1 已修, 防回腐) | 绘图规范 §十 R4 + visual_qa.check_layout |
 
 ---
 

@@ -1,10 +1,62 @@
-# CHANGELOG (v1.5.7.38 — 改审计逻辑, 用户要求审计时调 mavis 代理)
+# CHANGELOG (v1.5.7.39 — 改 dryrun 默认走代理审计, self 模式 opt-in)
 
 > **v1.5.7.20 之前 15 个 hotfix** (v1.5.7.5 ~ v1.5.7.19) → [`CHANGELOG-archive.md`](CHANGELOG-archive.md).
 >
 > **拆分原因**: 392 行累积, human 翻历史困难. 主文件只留最新 4 个 (writing-for-agents 审计 hotfix).
 >
 > **查找旧版本**: 用 grep 搜 `CHANGELOG-archive.md` (e.g. `grep -n v1.5.7.10 CHANGELOG-archive.md`).
+
+## v1.5.7.39 — 改 dryrun 默认走代理审计, self 模式 opt-in (v1.5.7.38 hotfix)
+
+**核心**: v1.5.7.38 默认跑 47 项 self-audit + `--agent-audit` flag 触发 mavis 代理审计. v1.5.7.39 反转默认: 跑题后**模型自主审计也调代理**, 47 项 self-audit 改为 `--mode self` opt-in.
+
+**设计**:
+- `--mode agent` (默认): 调 agent_audit.py 生成 brief, 复制到 mavis 主对话触发 worker 审计. 不跑 47 项 self check.
+- `--mode self`: 跑 47 项 hardcode self-audit (mechanical 防线). 等价于旧默认行为.
+- `--mode both`: 先输出 brief, 再跑 47 项 self-audit (双重审计).
+- `--agent-audit` flag 向后兼容 (= agent 模式).
+
+**改 `references/scripts/dryrun.py`** (改 main() 入口解析, +30 行):
+- `--mode {agent, self, both}` 解析
+- 默认 mode = "agent" (v1.5.7.39 改)
+- 向后兼容 `--agent-audit` flag
+
+**改 SKILL.md** (1500 ≤ 1500 ✓, 临界):
+- §跑题后 mavis 代理审计 段加"v1.5.7.39 改为默认" + 三种模式说明
+
+**影响文件**:
+- 改 `references/scripts/dryrun.py` (+30 行)
+- 改 SKILL.md (改 1 段, 0 行变化)
+- 改 CHANGELOG.md (主文件更新标题)
+
+**dryrun**: 30/47 green + 17 yellow + 0 red (check 35 green SKILL.md 1500 ≤ 1500 ✓ + check 33 green leading words 11 个全在 ✓). `--mode self` 行为不变.
+
+**v1.5.7.34 → v1.5.7.39 审计架构最终状态**:
+
+| 版本 | 审计层 | 默认模式 |
+|---|---|---|
+| v1.5.7.34-37 | self-audit 47 项 hardcode check | 唯一模式 |
+| v1.5.7.38 | + agent-audit (mavis worker 代理) | self-audit (47 项) 默认, agent opt-in via `--agent-audit` |
+| **v1.5.7.39** | **同 v1.5.7.38, 改默认** | **agent 默认, self opt-in via `--mode self`** |
+
+**用法对比**:
+
+```bash
+# v1.5.7.39 默认 = v1.5.7.38 --agent-audit
+python references\scripts\dryrun.py --paper-dir <论文目录>
+# 复制 brief 到 mavis 主对话 → spawn mavis worker fresh 审计
+
+# 跑 47 项 self check (旧 v1.5.7.34-37 行为)
+python references\scripts\dryrun.py --mode self --paper-dir <论文目录>
+# 30/47 green + 17 yellow + 0 red
+
+# 双重审计 (agent brief + self check)
+python references\scripts\dryrun.py --mode both --paper-dir <论文目录>
+```
+
+**为何改默认**: 用户原话 "模型自主审计也调用代理" — self-audit 47 项 hardcode 是 mechanical 防线 (DPI/格式/语法), 抓不到内容级问题 (v15 P0-1 / v17 P0-A / v17 P0-C 都需要上下文推理 + LP 复现 + cross-file 比对). 默认走代理才能每次审计 fresh 抓到真问题.
+
+---
 
 ## v1.5.7.38 — 改审计逻辑: 用户要求审计时调 mavis 代理 (v1.5.7.37 hotfix)
 
@@ -80,49 +132,6 @@ self-audit 47 项保留 (mechanical 防线), 用户主动要求审计时走代�
 | "同时" 偏多 | ×8 | check 50 子项 top3 | 替换 2-3 处为"且/并" |
 | "问题" 段首 | ×12 (因"问题一/二/三/四") | check 49 段首重复率 | 改为"本问/该问题/此问题" |
 | "本文" 段首 | ×6 | check 49 段首重复率 | 改为"本研究/笔者" |
-
----
-
-## v1.5.7.36 — 绘图自检 3 类实战图问题 (v1.5.7.35 hotfix, v15/v17/论文综合 §六提炼)
-
-**核心**: v15 终审 (Sep 13) + v17 复审 (Sep 13) + 论文综合 (Sep 12) + 结果图文献 (Sep 11) 4 份实战报告 P0/P1 暴露 3 类图问题, dryrun 已加 check 47/48 自动防御, §八 自检清单扩 3 条 + §十 实战反例加新章节.
-
-- **check 47 (冗余图 L14, auto)**: 调 `references/scripts/check_figure.py:find_unused_figures` 扫 figures/ 中未被任何 .tex `\\includegraphics` 引用的 .png/.pdf/.svg. 防论文综合 §六.2 反例 (8 张冗余未引用图残留: q2_季节PV箱线图.png / q2_累计费用.png / q2_梅雨敏感性.png 等).
-- **check 48 (图注 vs axes L15, auto)**: 调 `references/scripts/visual_qa.py:check_caption_axes_consistency` 扫 PDF 中 caption 含多面板语义 ("上/下/(a)/(b)/左/右") 与 figure 实际 axes 数是否一致. 防论文综合 §六.1 反例 (图注称"上:购电量与电价, 下:储能SOC", 实际只有单面板).
-
-**改 documents**:
-
-- 扩 `references/plot/绘图规范与避坑.md`:
-  - §八 自检清单加 3 条 (图注 vs axes / 冗余图 / 旧图)
-  - 新增 §十 实战反例 (R1 旧图 + R2 冗余图 + R3 图注不符 + R4 中文方块 + R5 文字越界), 每类配反例 + 防御 + 修复命令
-  - §六 版本历史加 v1.5.7.36 entry
-- 改 `references/scripts/check_figure.py` (+50 行): 新加 `find_unused_figures()` 函数, 供 check 47 调用
-- 改 `references/scripts/visual_qa.py` (+80 行): 新加 `check_caption_axes_consistency()` 函数 + 模块 docstring 更新, 供 check 48 调用
-
-**改 SKILL.md** (1492 → 1497 行, ≤ 1500 ✓):
-
-- §绘图自检 (5 行): 简表 + 3 类实战图问题 + 跑题后必跑 dryrun 指针
-
-**影响文件**:
-
-- 改 `references/scripts/dryrun.py` (+115 行: check_unused_figures + check_caption_axes_consistency + CHECKS 2 行)
-- 改 `references/scripts/check_figure.py` (+50 行)
-- 改 `references/scripts/visual_qa.py` (+80 行)
-- 改 `references/plot/绘图规范与避坑.md` (+~120 行 §八 + §十 + §六)
-- 改 SKILL.md (+5 行)
-- 改 CHANGELOG.md (主文件更新标题)
-
-**dryrun**: 29/45 green + 16 yellow + 0 red (check 35 green SKILL.md 1497 ≤ 1500 ✓ + check 33 green leading words 11 个全在 ✓).
-
-**v15/v17/论文综合 P0/P1 反例防御映射**:
-
-| 报告问题 | 防御 check / docs |
-|---|---|
-| v15 P0-3 §5.4 图7/图8 是 g_adj 修复前旧图 | check 45 (L11) + 绘图规范 §十 R1 |
-| v17 P0-E 图7/8/q1_不确定性分配 旧图 | check 45 (L11) + 绘图规范 §十 R1 |
-| 论文综合 §六.1 图1 SOC 子图缺失 (图注不符) | check 48 (L15) + 绘图规范 §十 R3 |
-| 论文综合 §六.2 8 张冗余未引用图残留 | check 47 (L14) + 绘图规范 §十 R2 |
-| 结果图文献 §四 图3 英文标签 (v4 P1 已修, 防回腐) | 绘图规范 §十 R4 + visual_qa.check_layout |
 
 ---
 

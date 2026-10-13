@@ -12,10 +12,12 @@ LICENSE / pack exclude / fitz compat / 全文件存在性), 凑齐 14 项覆盖 
 连 fail 的根因).
 
 用法:
-    python references/scripts/dryrun.py            # 跑 14 项 checkable
-    python references/scripts/dryrun.py --json    # 输出 JSON 报告 (可管道)
-    python references/scripts/dryrun.py --ci      # CI 模式, 输出 GitHub Actions 友好格式
-    python references/scripts/dryrun.py --agent-audit  # v1.5.7.38: 调 mavis 代理审计 (生成 brief, 不跑 47 项 check)
+    python references/scripts/dryrun.py            # v1.5.7.39 默认: agent-audit (输出 brief, 调 mavis 代理)
+    python references/scripts/dryrun.py --mode self   # self-audit 47 项 hardcode check
+    python references/scripts/dryrun.py --mode both  # 两种都跑 (self check + agent brief)
+    python references/scripts/dryrun.py --json       # 输出 JSON 报告 (可管道)
+    python references/scripts/dryrun.py --ci         # CI 模式, 输出 GitHub Actions 友好格式
+    python references/scripts/dryrun.py --agent-audit # 等价 --mode agent (旧 flag 向后兼容)
 """
 import json
 import sys
@@ -2198,10 +2200,26 @@ CHECKS = [
 def main():
     json_mode = "--json" in sys.argv
     ci_mode = "--ci" in sys.argv
-    # v1.5.7.38: --agent-audit 模式: 调 mavis 代理审计, 不跑 47 项 check
-    agent_audit_mode = "--agent-audit" in sys.argv
-    if agent_audit_mode:
-        # 调 agent_audit.py 生成 brief (不跑 self-audit check)
+    # v1.5.7.39: --mode {agent, self, both} 三种模式, 默认 agent
+    # 旧 --agent-audit flag 向后兼容 (= agent 模式)
+    if "--mode" in sys.argv:
+        idx = sys.argv.index("--mode")
+        if idx + 1 < len(sys.argv):
+            mode = sys.argv[idx + 1]
+        else:
+            print("[ERROR] --mode 不带值, 应为 agent/self/both", file=sys.stderr)
+            sys.exit(1)
+    else:
+        mode = "agent"  # v1.5.7.39 默认: agent (调 mavis 代理审计)
+    if "--agent-audit" in sys.argv:
+        # 向后兼容
+        mode = "agent"
+    if mode not in ("agent", "self", "both"):
+        print(f"[ERROR] --mode 必须是 agent/self/both, 当前 {mode!r}", file=sys.stderr)
+        sys.exit(1)
+
+    if mode in ("agent", "both"):
+        # 调 agent_audit.py 生成 brief
         import subprocess
         paper_dir = get_paper_dir()
         cmd = [sys.executable, str(SCRIPTS_DIR / "agent_audit.py"),
@@ -2216,7 +2234,10 @@ def main():
         print("📋 上方是 mavis 代理审计 brief. 复制整段到 mavis 主对话, mavis 会")
         print("   spawn mavis worker sub-session 独立 fresh 审计 (每次 fresh, 不缓存).")
         print("=" * 70)
-        sys.exit(0)
+        if mode == "agent":
+            sys.exit(0)
+        # mode == "both": 继续跑 self check
+        print()
     results = {}
 
     for name, fn in CHECKS:
