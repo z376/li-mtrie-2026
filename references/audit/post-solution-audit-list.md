@@ -43,3 +43,4 @@ dryrun sign-off 绿 (L1/L2/L3/L6/L7/L11/L12/L13 auto) → L4 (12 步, 30 min) �
 - `references/audit/参考文献审计清单.md` (27 KB, L1-L16 详细描述)
 - `references/audit/auto-check-list.md` (v1.5.7.41, check 45/47/48/49/50 简表)
 - `references/audit/agent-audit-brief.md` (v1.5.7.41, 代理审计 brief 说明)
+- `references/audit/manual-checklist.md` (v1.5.7.42 新增, 5 类 manual 兜底 L8/L9/L10/L15/L16 详细步骤 + PowerShell 命令 + 实战反例)

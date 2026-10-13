@@ -1,8 +1,56 @@
-# CHANGELOG-archive (v1.5.7.41 — v1.5.7.40 收匠期 v2 入档, v1.5.7.19 及之前)
+# CHANGELOG-archive (v1.5.7.42 — v1.5.7.41 SKILL.md 拆段入档, v1.5.7.19 及之前)
 
 > **历史归档** — v1.5.7.30 之前的 hotfix. 最新 hotfix 见 [`CHANGELOG.md`](CHANGELOG.md).
 >
 > **保留原位说明**: 拆 CHANGELOG 不删历史 (git log 仍在, 文件仍在). 这个 archive 文件让 human 不需要 scroll 392 行.
+
+---
+
+## v1.5.7.41 — SKILL.md 拆段, 1500 行临界缓解 (v1.5.7.40 hotfix, user 指令 "继续" → A 拆段)
+
+**核心**: v1.5.7.40 SKILL.md 1500 行 (临界, check 35 护栏 ≤ 1500). v1.5.7.41 拆 3 段 (37 行) → `references/audit/` 子文件, 留 6 行指针, **净减 27 行 (1500 → 1473)**, 留 27 行 buffer 给后续 hotfix.
+
+**拆段设计** (3 段 → 3 子文件 + 1 指针段):
+
+| SKILL.md 拆出段 (行数) | 拆到文件 | 子文件大小 |
+|---|---|---|
+| §参考文献与赛后审计清单 (32 行, v1.5.7.35 加, 16 层表) | `references/audit/post-solution-audit-list.md` | 2.5 KB |
+| §跑题后自动检查 (3 行, v1.5.7.36-37 合并) | `references/audit/auto-check-list.md` | 2.2 KB |
+| §跑题后 mavis 代理审计 (3 行, v1.5.7.38-39 加) | `references/audit/agent-audit-brief.md` | 1.8 KB |
+| **合 1 段指针 (6 行)** | 留 SKILL.md | — |
+
+**新建 3 个 references/audit/ 子文件**:
+
+- `post-solution-audit-list.md` (2.5 KB): 16 层总表 + 跑题后必做顺序 + 90 min 总耗时 + v5/v15/v17 教训 + 引用
+- `auto-check-list.md` (2.2 KB): 绘图自检 3 check (45/47/48) + AIGC 扫描 2 check (49/50) + Sep 13 报告阈值映射 + 引用
+- `agent-audit-brief.md` (1.8 KB): self vs 代理分层 + 用法 + 3 模式 (agent/self/both) + 核心约束 + 引用
+
+**改 SKILL.md** (1500 → 1473 行, 净减 27 行):
+
+- §参考文献与赛后审计清单 (32 行) + §跑题后自动检查 (3 行) + §跑题后 mavis 代理审计 (3 行) → 合并为 1 段指针 (6 行)
+- 净 -32 行 + 6 行 = -27 行 ✓
+
+**改 SKILL.md 1500 行硬约束护栏 (check 35) 缓解**:
+
+- 后续 hotfix 加新章节时, 不必先拆旧章节腾空间, 直接加 ≤ 27 行
+- 历史 v1.5.7.20-39 累计加 ~80 行, 拆 -27 行, 缓冲 27 行, 后续 hotfix 仍有 ~50 行空间可加 (按当前平均每次 +10 行算, 5 个 hotfix 不拆)
+
+**影响文件**:
+
+- 新建 `references/audit/post-solution-audit-list.md` (2.5 KB)
+- 新建 `references/audit/auto-check-list.md` (2.2 KB)
+- 新建 `references/audit/agent-audit-brief.md` (1.8 KB)
+- 改 SKILL.md (-27 行)
+- 改 CHANGELOG.md (主文件更新标题)
+
+**dryrun**: 30/47 green + 17 yellow + 0 red (check 35 green SKILL.md 1473 ≤ 1500 ✓ + check 33 green leading words 11 个全在 ✓).
+
+**v1.5.7.41 配套拆段后续 hotfix 设计模式** (可复用):
+
+- SKILL.md 1500 行临界是 writing-for-agents 硬约束 (check 35 护栏)
+- 每次加新章节先评估: 现有内容能否拆到 references/? (e.g. §审计清单 → references/audit/, §绘图规范 → references/plot/, §AIGC 策略 → references/aigc/)
+- 拆段准则: SKILL.md 留 1 段指针 (~5-10 行) + references/ 留完整文档. 用户查找成本可接受
+- 不拆: 单文件大文档 (e.g. paper-spec.md 33 KB, 主题独立); SKILL.md 核心流程 (流程必须 inline, 不能拆)
 
 ---
 
