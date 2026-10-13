@@ -1,10 +1,56 @@
-# CHANGELOG (v1.5.7.37 — AIGC 扫描增强, Sep 13 AIGC 报告实战提炼)
+# CHANGELOG (v1.5.7.38 — 改审计逻辑, 用户要求审计时调 mavis 代理)
 
 > **v1.5.7.20 之前 15 个 hotfix** (v1.5.7.5 ~ v1.5.7.19) → [`CHANGELOG-archive.md`](CHANGELOG-archive.md).
 >
 > **拆分原因**: 392 行累积, human 翻历史困难. 主文件只留最新 4 个 (writing-for-agents 审计 hotfix).
 >
 > **查找旧版本**: 用 grep 搜 `CHANGELOG-archive.md` (e.g. `grep -n v1.5.7.10 CHANGELOG-archive.md`).
+
+## v1.5.7.38 — 改审计逻辑: 用户要求审计时调 mavis 代理 (v1.5.7.37 hotfix)
+
+**核心**: dryrun self-audit 47 项 hardcode 是 mechanical 防线 (DPI/格式/语法), 抓不到内容级问题 (v15 P0-1 表9 365冒334 / v17 P0-A 编造拆分 / v17 P0-C claude2025 误列 / 数字级 LP 复现 等). 这类问题需要上下文推理 + cross-file 比对, 必须靠 mavis worker sub-session 代理审计.
+
+**设计**:
+- self-audit 47 项保留 (mechanical 防线, 防止明显 syntax/DPI/格式问题)
+- **用户要求审计时**, 跑 `python references/scripts/dryrun.py --agent-audit --paper-dir <论文目录>`, 输出 markdown brief (含 14 类 P0 反例 + 文件清单 + 报告输出格式约定)
+- 复制 brief 到 mavis 主对话 → mavis spawn mavis worker sub-session (独立 fresh context, **不缓存**)
+- worker 实际读 paper + result + LP 复现 + 比对, 写报告, 返回 mavis 主对话 → 用户
+
+**新建 `references/scripts/agent_audit.py`** (10.9 KB, 327 行):
+- 扫 paper dir + 关键文件 (13 章节 .tex / figures/ / 求解/ / 数据/) 自动列清单
+- 生成 markdown brief (含 14 类 P0 实战反例: v15 P0-1~4, v17 P0-A~E, 论文综合 §2.4/§六.1/§六.2, 结果图文献 §3.4/§3.5)
+- 报告输出格式模板 (P0/P1/P2 + 数字一致性比对表 + 参考文献核验表)
+- **重要约束**: 不缓存, 每次 fresh, worker 用独立 context, 不复用主对话历史
+
+**改 `references/scripts/dryrun.py`** (+30 行):
+- `--agent-audit` flag 解析: 调 agent_audit.py 生成 brief, 不跑 47 项 check
+- 修 3 处 `\includegraphics` SyntaxWarning (raw string `r"""`)
+
+**改 SKILL.md** (1500 行 ≤ 1500 ✓, 临界):
+- 合并 §绘图自检 + §AIGC 扫描增强 → §跑题后自动检查 (省 6 行)
+- 新增 §跑题后 mavis 代理审计 (5 行): 何时用 / 用法 / fresh 约束 / brief 模板指针
+
+**影响文件**:
+
+- 新建 `references/scripts/agent_audit.py` (327 行)
+- 改 `references/scripts/dryrun.py` (+30 行)
+- 改 SKILL.md (净 -1 行, 1500 ≤ 1500 ✓)
+
+**dryrun**: 30/47 green + 17 yellow + 0 red (check 35 green SKILL.md 1500 ≤ 1500 ✓ + check 33 green leading words 11 个全在 ✓).
+
+**v1.5.7.34 → v1.5.7.38 审计架构演进**:
+
+| 版本 | 审计层 | 内容 |
+|---|---|---|
+| v1.5.7.34 | 参考文献 L1-L5 self-audit (4 check) | 机械: 编号对应 / AI 禁列 / 占位符强化 / 数字留位 |
+| v1.5.7.35 | 赛后审计扩 L1-L16 self-audit (4 new + 词扩 14 项) | +L6 result 文件 / L7 附件 / L11 旧图 / L12 口径 + 14 AI 关键词 |
+| v1.5.7.36 | 绘图自检 L14/L15 self-audit (2 check) | +L14 冗余图 / L15 图注 vs axes |
+| v1.5.7.37 | AIGC 扫描 L16/L17 self-audit (2 check) | +L16 段首重复率 / L17 连接词密度 |
+| **v1.5.7.38** | **+ 用户要求审计时调 mavis 代理 (fresh, 不缓存)** | **新层: 上下文推理 + LP 复现 + cross-file 比对, 抓硬编码抓不到的内容级问题** |
+
+self-audit 47 项保留 (mechanical 防线), 用户主动要求审计时走代理 (deep audit).
+
+---
 
 ## v1.5.7.37 — AIGC 扫描增强 L16/L17 (v1.5.7.36 hotfix, Sep 13 AIGC 报告实战提炼)
 
@@ -79,54 +125,6 @@
 | 结果图文献 §四 图3 英文标签 (v4 P1 已修, 防回腐) | 绘图规范 §十 R4 + visual_qa.check_layout |
 
 ---
-
-## v1.5.7.35 — 赛后审计扩到 16 层 L1-L16 (v1.5.7.34 hotfix, v17 复审+论文综合+结果图文献实战提炼)
-
-**核心**: 比赛时审计历史 27 个报告 (Sep 11-13) 揭示 5 类 L1-L5 之外的新检查点. 加 4 项 auto check + 1 项关键词扩 + 扩 documents。
-
-- **check 40 (L6 result 文件 ↔ 论文数字, auto 简化版)**: regex 提取 .tex "数字+元/万" + resultX.xlsx 各 sheet 求和, 数量级比对 (0.5-2.0x green). 防 v15 P0-1 (§5.3 表9 365天冒名334天) + 论文综合 10 处 P0 数字偏差 + v17 P0-A 表9 编造拆分.
-- **check 41 (L7 附件 ↔ 正文 mtime, auto)**: 数据/附件/附件N/*.xlsx mtime vs 论文最新 mtime vs 求解/最新 mtime. 附件旧于求解 2h+ 红, 旧于论文 2h+ 黄. 防 v15 P0-4 + v17 P0-E 附件5 旧版.
-- **check 45 (L11 旧图 ↔ result mtime, auto)**: includegraphics 引用的 .png vs 求解/最新 mtime. 旧于求解 12h+ 红, 2h+ 黄. 防 v15 P0-3 §5.4 图7/图8 + v17 P0-E.
-- **check 46 (L12 口径混用, auto)**: 扫摘要 + §5.X 含 334 天/365 天/2.1-12.31/1.1-12.31/2025.2.1/2025.1.1 关键词. ≥ 2 种口径 红. 防 v15 P0-1 + 论文综合 §2.4 Q4 论文数与任一口径都不符.
-- **check 37 关键词扩 (L13 AI 工具条目强化, 26 → 40 项)**: 加 Claude Sonnet/Anthropic/OpenAI/GPT-4 Turbo/GPT-4V/o1-preview/o3-mini/Sora/Mistral/Mixtral/Claude Opus/Claude Haiku/Claude 3.5/Claude 4. 防 v17 P0-C claude2025 AI 修复时把自己写进参考文献 [14].
-
-**改 documents**:
-
-- 扩 `references/audit/参考文献审计清单.md` (11.6 KB → 27 KB): 从 L1-L5 扩到 L1-L16, 加 L6/L7/L11/L12 auto + L8 灵敏度 / L9 SOC末值 / L10 假设vs代码 / L15 双向题vs窗口 / L16 Q1表1表2 manual 兜底. 每层 8 类 v15/v17 反例对照表.
-
-**改 SKILL.md** (1463 → 1492 行, ≤ 1500 ✓):
-
-- §参考文献审计清单 改名为 §参考文献与赛后审计清单 (17 行 → 32 行), 加 16 层表 + 跑题后必做顺序 + 总耗时 90 min.
-
-**影响文件**:
-
-- 改 `references/scripts/dryrun.py` (+310 行: AI_TOOL_FORBIDDEN_KEYWORDS 26→40 + check_result_vs_paper_numeric + check_attachments_vs_paper_mtime + check_figure_mtime_vs_solve + check_calendar_window_consistency + CHECKS 4 行)
-- 改 SKILL.md (+29 行)
-- 改 CHANGELOG.md (主文件更新标题 + 移 v1.5.7.30 → archive 在 v1.5.7.34 已做)
-- 改 `references/audit/参考文献审计清单.md` (11.6 KB → 27 KB)
-
-**dryrun**: 29/43 green + 14 yellow + 0 red (check 35 green SKILL.md 1492 ≤ 1500 ✓ + check 33 green leading words 11 个全在 ✓).
-
-**v15 终审 (Sep 13) + v17 复审 (Sep 13) + 论文综合 (Sep 12) + 结果图文献 (Sep 11) P0 防御映射**:
-
-| 报告问题 | 防御 check / docs |
-|---|---|
-| v15 P0-1 §5.3 表9 365天冒名334天 | L12 check 46 (auto) + L6 check 40 (auto) |
-| v15 P0-2 "Bertsimas-Sim" 声称与代码不符 | L10 manual + SKILL.md §Step 4.1 |
-| v15 P0-3 g_adj 无上界 → 14,797 格物理不可行 | L10 manual + L11 check 45 (auto) |
-| v15 P0-4 附件5 旧版 | L7 check 41 (auto) |
-| v17 P0-A 表9 编造拆分 | L5 + L9 manual + L6 check 40 (auto) |
-| v17 P0-B 表q1_robust 全表编造 | L5 + L6 manual + L10 manual |
-| v17 P0-C claude2025 列为正式文献 | **L13 check 37 关键词扩 (v1.5.7.35 新, 防御核心)** |
-| v17 P0-D li2018/zhang2022 幻觉文献 | L14 + L4 步骤 2/4/6 (manual) |
-| v17 P0-E 旧图未刷新 + 附件5 仅 2/5 刷新 | L11 check 45 + L7 check 41 (auto) |
-| 论文综合 §2.4 Q4 论文数与任一口径都不符 | L6 check 40 + L12 check 46 (auto) |
-| 论文综合 §3.1 §3 假设 5 "完美预测" 矛盾 | L10 manual |
-| 结果图文献 §3.3 SOC 13424 > 10800 违反约束 | L9 manual |
-| 结果图文献 §3.4 Q1 未按题面表1/表2 格式 | L16 manual |
-| 结果图文献 §3.5 灵敏度表无代码支撑 | L8 manual |
-
-**跑题后必做 16 层总耗时**: dryrun auto (1 min) + L4 manual (30 min) + L5 (10 min) + L8 (10 min) + L9 (10 min) + L10 (15 min) + L15 (5 min) + L16 (10 min) = **约 90 分钟**. 比评委扣分划算.
 
 ---
 

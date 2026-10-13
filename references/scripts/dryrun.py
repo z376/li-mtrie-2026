@@ -15,6 +15,7 @@ LICENSE / pack exclude / fitz compat / 全文件存在性), 凑齐 14 项覆盖 
     python references/scripts/dryrun.py            # 跑 14 项 checkable
     python references/scripts/dryrun.py --json    # 输出 JSON 报告 (可管道)
     python references/scripts/dryrun.py --ci      # CI 模式, 输出 GitHub Actions 友好格式
+    python references/scripts/dryrun.py --agent-audit  # v1.5.7.38: 调 mavis 代理审计 (生成 brief, 不跑 47 项 check)
 """
 import json
 import sys
@@ -2029,7 +2030,7 @@ def check_connector_density():
 # ===== v1.5.7.36 新增 2 项: 绘图自检 L14 (冗余图) + L15 (图注 vs axes) =====
 
 def check_unused_figures():
-    """checkable 47: figures/ 中未被 \includegraphics 引用的图 (auto).
+    r"""checkable 47: figures/ 中未被 \includegraphics 引用的图 (auto).
 
     背景: 论文综合 (Sep 12) §六.2 反例 — 8 张冗余未引用图残留
     (q2_季节PV箱线图.png / q2_月度发电量对比.png / q2_全年汇总.png /
@@ -2071,7 +2072,7 @@ def check_unused_figures():
 
     if not unused:
         return ("green",
-                f"figures/ {len(cited)} 张图全部被 \includegraphics 引用 (无冗余)",
+                f"figures/ {len(cited)} 张图全部被 \\includegraphics 引用 (无冗余)",
                 None)
 
     # 有冗余
@@ -2080,7 +2081,7 @@ def check_unused_figures():
                 f"example 模板有意保留 {len(unused)} 张冗余图 (设计意图, 跑题时清理才 GREEN)",
                 f"冗余示例: {unused[:3]}. 跑题用户复制 example-paper 后删冗余图")
     return ("yellow",
-            f"figures/ 有 {len(unused)} 张图未被任何正文 \includegraphics 引用 (论文综合 §六.2 反例)",
+            f"figures/ 有 {len(unused)} 张图未被任何正文 \\includegraphics 引用 (论文综合 §六.2 反例)",
             f"删除冗余图: {unused[:5]}. 引用图: {len(cited)} 张")
 
 
@@ -2197,6 +2198,25 @@ CHECKS = [
 def main():
     json_mode = "--json" in sys.argv
     ci_mode = "--ci" in sys.argv
+    # v1.5.7.38: --agent-audit 模式: 调 mavis 代理审计, 不跑 47 项 check
+    agent_audit_mode = "--agent-audit" in sys.argv
+    if agent_audit_mode:
+        # 调 agent_audit.py 生成 brief (不跑 self-audit check)
+        import subprocess
+        paper_dir = get_paper_dir()
+        cmd = [sys.executable, str(SCRIPTS_DIR / "agent_audit.py"),
+               "--paper-dir", str(paper_dir)]
+        r = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8')
+        if r.returncode != 0:
+            print(f"[ERROR] agent_audit.py 失败 (rc={r.returncode})", file=sys.stderr)
+            print(r.stderr, file=sys.stderr)
+            sys.exit(1)
+        print(r.stdout)
+        print("\n" + "=" * 70)
+        print("📋 上方是 mavis 代理审计 brief. 复制整段到 mavis 主对话, mavis 会")
+        print("   spawn mavis worker sub-session 独立 fresh 审计 (每次 fresh, 不缓存).")
+        print("=" * 70)
+        sys.exit(0)
     results = {}
 
     for name, fn in CHECKS:
