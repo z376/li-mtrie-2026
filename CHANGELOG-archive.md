@@ -1,8 +1,51 @@
-# CHANGELOG-archive (v1.5.7.42 — v1.5.7.41 SKILL.md 拆段入档, v1.5.7.19 及之前)
+# CHANGELOG-archive (v1.5.7.43 — v1.5.7.42 manual 兜底入档, v1.5.7.19 及之前)
 
 > **历史归档** — v1.5.7.30 之前的 hotfix. 最新 hotfix 见 [`CHANGELOG.md`](CHANGELOG.md).
 >
 > **保留原位说明**: 拆 CHANGELOG 不删历史 (git log 仍在, 文件仍在). 这个 archive 文件让 human 不需要 scroll 392 行.
+
+---
+
+## v1.5.7.42 — 5 类 manual 兜底清单 L8/L9/L10/L15/L16 (v1.5.7.41 hotfix, user 指令 "继续" → B manual 兜底)
+
+**核心**: dryrun 47 项 hardcode 是 mechanical 防线, 5 类留位 manual (L8 灵敏度 / L9 SOC 末值 / L10 假设 vs 代码 / L15 双向题 vs 4h 窗口 / L16 Q1 表1/表2 格式) 之前只在 `references/audit/参考文献审计清单.md` 简述, 缺详细步骤 + PowerShell 命令 + 实战反例. v1.5.7.42 新建独立文件, 5 类 manual 详细描述.
+
+**新建 `references/audit/manual-checklist.md`** (14.2 KB):
+
+- **L8 灵敏度表 ↔ 代码** (manual, 10 min): 4 步法 (提 §6/§7/§8 表 / grep noise_injection / sweep / sensitivity / 跑 .py 验证 / 补写或删表) + 修复命令 (脚本存在但数字对不上 / 脚本不存在) + 结果图文献 §3.5 反例
+- **L9 SOC 末值合理性** (manual, 10 min): 4 步法 (提 §5.X 四季表 / grep result SOC 末值 / 比对 ≤ SOC_max / 改论文) + 修复命令 (论文 SOC 末 ≠ 实际 / > SOC_max / 跨日 SOC 连续性) + 结果图文献 §3.3 反例 (SOC 13424 > 10800)
+- **L10 假设 ↔ 代码** (manual, 15 min): 4 步法 (读 planner.py 找方法名 / 读 §3 假设 / 验证 1:1 对应 / 检查关键参数) + 修复命令 (方法名不一致 / 参数不一致 / §3 写"完美预测"但代码鲁棒) + v15 P0-2 + 论文综合 §3.1 反例
+- **L15 双向题 vs 4h 窗口** (manual, 5 min): Q3 双向罚验证 (读 .py over_price/under_price / 跑 result over_total/under_total / §5.3 总费 = 调整购电费 + 双向罚) + Q1 6 时段验证 (result1.xlsx 合规 sheet) + 修复命令 + 论文综合 §2.3 反例
+- **L16 Q1 表1/表2 格式** (manual, 10 min): 4 步法 (找合规 sheet "表1-指定时段购电" / 提取 6 个 10 分钟时段 / §5.1.2 表 2 4 小时窗口) + 修复命令 (自定义分时段 / 论文表与 result 不符 / SOC 最小值错误) + 结果图文献 §3.4 反例
+
+**总耗时**: 50 min (L8 10 + L9 10 + L10 15 + L15 5 + L16 10)
+
+**5 类 manual 优先级**:
+- **高 (一票否决级)**: L9 SOC 末值 / L10 假设 / L15 双向罚
+- **中 (扣分级)**: L8 灵敏度 / L16 Q1 格式
+
+**改 SKILL.md** (1473 → 1474, +1 行, ≤ 1500 ✓):
+
+- §跑题后审计清单 段加 1 行指针: "5 类 manual 兜底清单 (L8/L9/L10/L15/L16) → references/audit/manual-checklist.md (v1.5.7.42 新增, 详细步骤 + PowerShell 命令 + 实战反例)"
+
+**影响文件**:
+
+- 新建 `references/audit/manual-checklist.md` (14.2 KB, 5 类 manual 详细描述)
+- 改 `references/audit/post-solution-audit-list.md` (引用区加 1 行 manual-checklist.md 指针)
+- 改 SKILL.md (+1 行)
+- 改 CHANGELOG.md (主文件更新标题)
+
+**dryrun**: 30/47 green + 17 yellow + 0 red (check 35 green SKILL.md 1474 ≤ 1500 ✓ + check 33 green leading words 11 个全在 ✓).
+
+**v1.5.7.42 配套 design pattern**: 5 类 manual 兜底集中到一个文件 (`manual-checklist.md`) 而非散在多个 sub-document, 用户跑题后 manual 阶段单点访问. 优势: 一次读完所有 manual, 5 类反例交叉对照 (e.g. L9 SOC 末值反例 + L10 假设反例 同源). 缺点: 单文件大, 后续 v1.5.7.X 可拆.
+
+**v1.5.7.34 → v1.5.7.42 累计 9 hotfix** (跨 5 session, 4 个日历日):
+
+- 47 项 dryrun check: 31 → 47 (净增 16 项)
+- 文档: 经验汇总 13 KB, 参考文献审计清单 27 KB, 绘图规范 36 KB, references/audit/ 6 个子文件 (post-solution-audit-list / auto-check-list / agent-audit-brief / manual-checklist / 参考文献审计清单 / post-solution-audit)
+- 代码: agent_audit.py 10.9 KB
+- 审计架构: 单一 self → self + agent 双层 (默认 agent)
+- 跑题后必做总耗时: dryrun 1 min + manual 5 类 50 min + 跨文件比对 L4 30 min = 81 min (vs 之前 90 min, manual 集中 → 节省 9 min)
 
 ---
 

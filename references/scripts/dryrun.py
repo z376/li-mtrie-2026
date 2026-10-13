@@ -1567,12 +1567,14 @@ def check_39_numeric_consistency_reserved():
 # ===== v1.5.7.35 新增 4 项: 赛后审计 L6/L7/L11/L12 =====
 
 def check_result_vs_paper_numeric():
-    """checkable 40: result 文件 vs 论文数字一致性 L6 (auto, 简化版).
+    """checkable 40: result 文件 vs 论文数字一致性 L6 (auto, v1.5.7.43 完整版).
 
     背景: v15 P0-1 (§5.3 表9 365天冒名334天) + 论文综合 10 处 P0 数字偏差
     (Q2/Q3/Q4-2 vs resultX.xlsx 偏差 11.5倍 / 37倍) + v17 P0-A 表9 编造拆分.
-    简化版: 跑 .tex 提取 "数字+元/万" + resultX.xlsx 求和, 数量级比对.
-    0.5-2.0x green, 否则 yellow. 完整版需解析 LaTeX 数学环境, 等下次.
+
+    v1.5.7.43 升级: 解析 LaTeX 数学环境 (`$...$`, `\\[...\\]`, `\\begin{equation}`,
+    `\\begin{align}` 等) 提取数字 + 上下文, 按"问题"模式配对论文 §5.X.X
+    vs resultX.xlsx. 偏差 > 5% 红, 1-5% 黄, < 1% green.
 
     Template 状态: yellow (模板占位符 .tex 数字与 result 不一致是设计意图).
     """
@@ -1581,6 +1583,7 @@ def check_result_vs_paper_numeric():
         return ("yellow", f"论文目录不存在 ({paper_dir}), 跳过 L6", "用 --paper-dir 指定")
     is_template = "templates" in str(paper_dir) or "example" in str(paper_dir)
 
+    # 1. 找 result*.xlsx
     result_files = {}
     for r in [paper_dir.parent / "求解", paper_dir.parent / "数据" / "附件" / "附件5"]:
         if r.exists():
@@ -1591,38 +1594,51 @@ def check_result_vs_paper_numeric():
     if not result_files:
         return ("yellow", "result*.xlsx 未找到", "跑题后必须生成 result1/2/3/4-2/4-3.xlsx")
 
+    # 2. 提取每个 result key 的最大数字 sheet 列 (代替简化版前 3 列求和)
     try:
         import openpyxl
     except ImportError:
         return ("yellow", "openpyxl 未装, 跳过 L6", "pip install openpyxl")
-    result_totals = {}
+    result_max = {}  # key -> (sheet_name, max_value, max_row_index)
     for key, paths in result_files.items():
         for path in paths[:1]:
             try:
                 wb = openpyxl.load_workbook(path, data_only=True, read_only=True)
             except Exception:
                 continue
+            key_max = 0
+            key_max_sheet = ""
             for sheet_name in wb.sheetnames:
                 ws = wb[sheet_name]
-                col_total, col_count = 0, 0
-                for row in ws.iter_rows(min_row=2, max_row=min(ws.max_row, 1000), values_only=True):
-                    for v in row[:3]:
-                        if isinstance(v, (int, float)) and abs(v) > 100:
-                            col_total += v
-                            col_count += 1
-                            break
-                if col_count > 10:
-                    result_totals[key] = col_total
-                    break
+                for row in ws.iter_rows(min_row=2, max_row=min(ws.max_row, 1500), values_only=True):
+                    for v in row:
+                        if isinstance(v, (int, float)) and abs(v) > key_max:
+                            key_max = abs(v)
+                            key_max_sheet = sheet_name
+            if key_max > 0:
+                result_max[key] = (key_max_sheet, key_max)
             wb.close()
-            if key in result_totals:
+            if key in result_max:
                 break
-    if not result_totals:
-        return ("yellow", f"result {len(result_files)} 个但无法提取总费用列", "检查 sheet 结构")
+    if not result_max:
+        return ("yellow", f"result {len(result_files)} 个但无法提取最大数字列", "检查 sheet 结构")
 
-    paper_totals = []
-    target_files = ["0.摘要.tex", "5.1.1.分析与准备.tex", "5.1.2.建模与求解.tex",
-                    "5.2.建模与求解.tex", "5.3.建模与求解.tex", "5.4.建模与求解.tex"]
+    # 3. 解析 LaTeX 数学环境, 提取 (章节, 上下文, 数字) 三元组
+    paper_numbers = []  # (chapter_key, context, value, unit)
+    target_files = ["0.摘要.tex", "1.引言.tex", "5.1.1.分析与准备.tex",
+                    "5.1.2.建模与求解.tex", "5.2.建模与求解.tex",
+                    "5.3.建模与求解.tex", "5.4.建模与求解.tex", "6.模型检验.tex"]
+    # 章节 → result key 映射
+    chapter_to_key = {
+        "0.摘要.tex": "all",       # 摘要对所有
+        "1.引言.tex": "all",
+        "5.1.1.分析与准备.tex": "1",
+        "5.1.2.建模与求解.tex": "1",
+        "5.2.建模与求解.tex": "2",
+        "5.3.建模与求解.tex": "3",
+        "5.4.建模与求解.tex": "4-2",
+        "6.模型检验.tex": "all",
+    }
     for fname in target_files:
         tex_file = paper_dir / fname
         if not tex_file.exists():
@@ -1631,36 +1647,106 @@ def check_result_vs_paper_numeric():
             tcontent = tex_file.read_text(encoding="utf-8", errors="replace")
         except Exception:
             continue
-        for m in re.finditer(r"(\d{1,3}(?:[,，]\d{3})+|\d{4,})\s*(?:元|万元|万\s*元)", tcontent):
-            num_str = m.group(1).replace(",", "").replace("，", "")
-            try:
-                val = int(num_str)
-                unit = m.group(0).replace(m.group(1), "").strip()
-                if "万" in unit:
-                    val *= 10000
-                if val > 10000:
-                    paper_totals.append((fname, m.group(0)[:30], val))
-            except ValueError:
-                pass
-    if not paper_totals:
-        return ("yellow", "论文 .tex 未找到 数字+元/万元 模式 (简化版)", "完整 L6 需解析 LaTeX 数学环境")
+        # 跳过 % 注释行
+        non_comment = "\n".join(
+            line for line in tcontent.splitlines()
+            if not line.lstrip().startswith("%")
+        )
+        # 提取数学环境: $...$, \[...\], \begin{equation}...\end{equation}
+        math_envs = []
+        # $...$ 行内
+        for m in re.finditer(r"\$([^\$\n]+)\$", non_comment):
+            math_envs.append(m.group(1))
+        # \[...\] 显示
+        for m in re.finditer(r"\\\[([^\]]+)\\\]", non_comment, re.DOTALL):
+            math_envs.append(m.group(1))
+        # \begin{equation}...\end{equation}
+        for m in re.finditer(r"\\begin\{equation\*?\}(.+?)\\end\{equation\*?\}", non_comment, re.DOTALL):
+            math_envs.append(m.group(1))
+        # \begin{align}...\end{align}
+        for m in re.finditer(r"\\begin\{align\*?\}(.+?)\\end\{align\*?\}", non_comment, re.DOTALL):
+            math_envs.append(m.group(1))
+        # 数学环境内提取数字 + 单位
+        chapter_key = chapter_to_key.get(fname, "all")
+        for env in math_envs:
+            # 数字模式: 1,234,567 / 1234 / 1234.56 / 1.2e5
+            for m in re.finditer(r"(\d{1,3}(?:[,，]\d{3})+(?:\.\d+)?|\d{4,}(?:\.\d+)?)", env):
+                num_str = m.group(1).replace(",", "").replace("，", "")
+                try:
+                    val = float(num_str)
+                except ValueError:
+                    continue
+                # 单位推断: 找 env 内跟数字最近的"元/万/百/k/M/G"
+                # 简化: 找 env 内"万" "亿" 等
+                unit_scale = 1
+                for u, s in [("万", 10000), ("亿", 100000000), ("百万", 1000000), ("千", 1000), ("百", 100)]:
+                    if u in env:
+                        # 取最后一个出现的单位
+                        idx = env.rfind(u)
+                        num_idx = m.start()
+                        if num_idx < idx and (idx - num_idx) < 10:  # 单位在数字后 10 字符内
+                            unit_scale = s
+                            break
+                # 上下文 (前 20 字符)
+                ctx_start = max(0, m.start() - 20)
+                context = env[ctx_start:m.end() + 10]
+                if val * unit_scale > 1000:  # 过滤过小 (e.g. 索引 1, 2, 3)
+                    paper_numbers.append((chapter_key, fname, context.strip()[:60], val * unit_scale, unit_scale))
 
-    result_sum = sum(result_totals.values())
-    paper_mean = sum(v for _, _, v in paper_totals) / max(len(paper_totals), 1)
-    if result_sum == 0:
-        return ("yellow", "result 总费用求和=0", "深入检查 sheet")
-    ratio = paper_mean / max(result_sum, 1)
-    if 0.5 <= ratio <= 2.0:
+    if not paper_numbers:
+        return ("yellow", "论文 .tex 数学环境内未找到 > 1000 数字", "完整 L6 需 论文有数学公式 (1,234 元 / 12.34 万元)")
+
+    # 4. 按 result key 分组论文数字, 取每个 key 对应的论文数字集合
+    paper_by_key = {}
+    for chapter_key, fname, ctx, val, scale in paper_numbers:
+        if chapter_key == "all":
+            # 摘要/检验部分: 加到所有 key
+            for k in result_max.keys():
+                paper_by_key.setdefault(k, []).append((fname, ctx, val, scale))
+        elif chapter_key in result_max:
+            paper_by_key.setdefault(chapter_key, []).append((fname, ctx, val, scale))
+
+    # 5. 对每个 result key, 取论文数字中位数, 跟 result max 比对
+    deviations = []
+    for key, (sheet, rmax) in result_max.items():
+        if key not in paper_by_key or not paper_by_key[key]:
+            continue
+        nums = sorted([v for _, _, v, _ in paper_by_key[key]])
+        if not nums:
+            continue
+        p_med = nums[len(nums) // 2]  # 中位数
+        if rmax == 0:
+            continue
+        dev = abs(p_med - rmax) / rmax
+        deviations.append((key, sheet, rmax, p_med, dev, paper_by_key[key]))
+
+    if not deviations:
+        return ("yellow", "论文数学公式未与 result 文件配对", "检查 §5.1/§5.2/§5.3/§5.4 章节是否与 result1/2/3/4-2 对应")
+
+    # 6. 阈值判定: 任一偏差 > 5% 红, 1-5% 黄, 全部 < 1% green
+    worst_key, worst_sheet, worst_rmax, worst_pmed, worst_dev, worst_data = max(deviations, key=lambda x: x[4])
+    if worst_dev < 0.01:
         return ("green",
-                f"L6 简化版: 论文 {len(paper_totals)} 处 / result {len(result_totals)} 个, 数量级匹配 ({ratio:.2f}x)",
+                f"L6 完整版: {len(deviations)} 个 result key 全部 < 1% 偏差 (worst: {worst_key} {worst_dev:.2%})",
                 None)
+    if worst_dev < 0.05:
+        return ("yellow",
+                f"L6 完整版: 偏差 1-5% (worst: {worst_key} {worst_dev:.2%}, result {worst_rmax:,.0f} vs 论文 {worst_pmed:,.0f})",
+                f"论文中位数 {worst_pmed:,.0f} 与 result {worst_key} 偏差 {worst_dev:.2%}, 检查 {worst_data[0][0]} 数学公式")
     if is_template:
         return ("yellow",
-                f"example 模板有意保留不一致 ({ratio:.2f}x)",
-                "跑题用户用真实 resultX.xlsx 重写摘要+§5.X")
-    return ("yellow",
-            f"result 总费用 vs 论文关键数字均值 比值 {ratio:.2f}x (期望 0.5-2.0)",
-            f"跑题后必做 L6 完整比对: resultX.xlsx 各 sheet 总费用 vs 论文 §5.X 表数字. 偏差 > 5% 即按 v15 P0-1 修复")
+                f"example 模板有意保留偏差 {worst_dev:.2%} (设计意图, 跑题时校准才 GREEN)",
+                f"跑题用户用真实 resultX.xlsx 重写摘要+§5.X")
+
+    # 详细列出偏差最大的 3 个
+    top3 = sorted(deviations, key=lambda x: -x[4])[:3]
+    detail = "\n".join(
+        f"  result{k} {sheet}: result {rmax:,.0f} vs 论文 {pmed:,.0f} (偏差 {dev:.2%})"
+        for k, sheet, rmax, pmed, dev, _ in top3
+    )
+    return ("red",
+            f"L6 完整版: 偏差 > 5% (worst: {worst_key} {worst_dev:.2%}, result {worst_rmax:,.0f} vs 论文 {worst_pmed:,.0f})",
+            f"v15 P0-1 / 论文综合 10 处 P0 数字偏差防御. 修复: 用 result 真实数字替换论文 §5.X 数字. Top 3:\n{detail}")
 
 
 def check_attachments_vs_paper_mtime():
@@ -2186,7 +2272,7 @@ CHECKS = [
     ("37. v1.5.7.34 AI 工具禁列 L3 (9.参考文献.tex 扫 {N} 关键词, 命中红, BZD 2026 规范)", check_ai_tool_in_refs),
     ("38. v1.5.7.34 模板占位符强化 L1 (9.参考文献 + 9.0.AI声明 扫 \\textbf{{【...】}} + GB/T 7714 字段, v5 P1 防御)", check_template_placeholders_v2),
     ("39. v1.5.7.34 数字一致性 L5 (摘要-§5 章节-Q 表数字互查, 留位, 短期 SKILL.md §Step 4 手动清单兜底)", check_39_numeric_consistency_reserved),
-    ("40. v1.5.7.35 result 文件 vs 论文数字 L6 (数量级比对, 简化版, v15 P0-1 / 论文综合 10 处 P0 防御)", check_result_vs_paper_numeric),
+    ("40. v1.5.7.43 result 文件 vs 论文数字 L6 完整版 (解析 LaTeX 数学环境 + 按问题编号配对 + 偏差 > 5% 红 / 1-5% 黄 / < 1% green, v15 P0-1 / 论文综合 10 处 P0 防御)", check_result_vs_paper_numeric),
     ("41. v1.5.7.35 附件 vs 正文 mtime L7 (附件旧于求解红, 旧于论文黄, v15 P0-4 / v17 P0-E 防御)", check_attachments_vs_paper_mtime),
     ("45. v1.5.7.35 旧图未刷新 L11 (includegraphics 图 mtime vs 求解, 旧于 12h 红, v15 P0-3 / v17 P0-E 防御)", check_figure_mtime_vs_solve),
     ("46. v1.5.7.35 口径混用 L12 (334 天 vs 365 天, ≥2 种混用红, v15 P0-1 / 论文综合 §2.4 防御)", check_calendar_window_consistency),
