@@ -11,7 +11,7 @@ description: |
 
 metadata:
 
-  version: "1.5.7.39"
+  version: "1.5.7.40"
 
   category: competition-workflow
 

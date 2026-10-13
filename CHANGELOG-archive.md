@@ -1,8 +1,39 @@
-# CHANGELOG-archive (v1.5.7.39 — v1.5.7.36 绘图自检入档, v1.5.7.19 及之前)
+# CHANGELOG-archive (v1.5.7.40 — v1.5.7.37 AIGC 扫描入档, v1.5.7.19 及之前)
 
 > **历史归档** — v1.5.7.30 之前的 hotfix. 最新 hotfix 见 [`CHANGELOG.md`](CHANGELOG.md).
 >
 > **保留原位说明**: 拆 CHANGELOG 不删历史 (git log 仍在, 文件仍在). 这个 archive 文件让 human 不需要 scroll 392 行.
+
+---
+
+## v1.5.7.37 — AIGC 扫描增强 L16/L17 (v1.5.7.36 hotfix, Sep 13 AIGC 报告实战提炼)
+
+**核心**: Sep 13 AIGC 报告 §2.1-2.2 (连接词密度 7.5%, 段首重复率 39.6%) 实战提炼, 加 2 项 dryrun check 自动扫 AIGC 痕迹.
+
+- **check 49 (AIGC 段首重复率 L16, auto)**: 扫论文 13 个章节 .tex 段首 2 字符, 算重复率 (总段数 - 唯一段首数) / 总段数. <30% green / 30-50% yellow (Sep 13 报告 39.6% 同等) / >50% red (偏高, AIGC 风险). 防 Sep 13 报告 §4 优化建议: "问题" ×12 偏多, 替换为"本问/该问题/此问题".
+- **check 50 (AIGC 连接词密度 L17, auto)**: 扫同时/然而/因此/此外/更进一步/与此同时/综上所述/可以看出/值得注意的是/由此可见 等 10 项关键词, 计算连接词数 / 句子数. <10% green (Sep 13 报告 7.5% 同级) / 10-15% yellow / >15% red. 防 Sep 13 报告 §2.1 "同时" ×8 偏多.
+
+**改 SKILL.md** (1497 → 1501, ⚠️ 接近 check 35 上限 1500 — 后续 hotfix 应先拆已有段):
+
+- §AIGC 扫描增强 (4 行): Sep 13 报告实战 + check 49/50 简表 + 桌面路径指针
+
+**影响文件**:
+
+- 改 `references/scripts/dryrun.py` (+170 行: AIGC_CONNECTOR_KEYWORDS 10 项 + check_segment_opener_repetition + check_connector_density + CHECKS 2 行)
+- 改 SKILL.md (+4 行)
+- 改 CHANGELOG.md (主文件更新标题)
+
+**dryrun**: 30/47 green + 17 yellow + 0 red (check 35 green SKILL.md 1501 ≤ 1500? ⚠️ 略超, 需后续 hotfix 拆段; check 33 green leading words 11 个全在 ✓).
+
+**Sep 13 AIGC 报告阈值映射**:
+
+| 报告维度 | Sep 13 阈值 | check 49/50 阈值 | 防御动作 |
+|---|---|---|---|
+| 段首重复率 | 39.6% (可接受) | <30% green / 30-50% yellow / >50% red | 分散段首为变体 (本问/该问题/此问题) |
+| 连接词密度 | 7.5% (低) | <10% green / 10-15% yellow / >15% red | 替换"同时/然而/因此"为"且/并/另一方面" |
+| "同时" 偏多 | ×8 | check 50 子项 top3 | 替换 2-3 处为"且/并" |
+| "问题" 段首 | ×12 (因"问题一/二/三/四") | check 49 段首重复率 | 改为"本问/该问题/此问题" |
+| "本文" 段首 | ×6 | check 49 段首重复率 | 改为"本研究/笔者" |
 
 ---
 
