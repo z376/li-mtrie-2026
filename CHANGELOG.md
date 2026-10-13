@@ -1,4 +1,4 @@
-# CHANGELOG (v1.5.7.40 — 收匠期 v2, 跨 v1.5.7.34-39 实战提炼 6 类方法论)
+# CHANGELOG (v1.5.7.41 — SKILL.md 拆段, 1500 行临界缓解)
 
 > **v1.5.7.20 之前 15 个 hotfix** (v1.5.7.5 ~ v1.5.7.19) → [`CHANGELOG-archive.md`](CHANGELOG-archive.md).
 >
@@ -6,43 +6,51 @@
 >
 > **查找旧版本**: 用 grep 搜 `CHANGELOG-archive.md` (e.g. `grep -n v1.5.7.10 CHANGELOG-archive.md`).
 
-## v1.5.7.40 — 收匠期 v2: 跨 v1.5.7.34-39 实战提炼 6 类方法论 (user 指令 "继续" → A 收匠期)
+## v1.5.7.41 — SKILL.md 拆段, 1500 行临界缓解 (v1.5.7.40 hotfix, user 指令 "继续" → A 拆段)
 
-**核心**: v1.5.7.30 收匠期 (跨 v1.5.7.10-29) 之后, v1.5.7.34-39 又跨 3 session (Oct 3 × 2 + Oct 14 × 1) 完成 6 个 hotfix, 加 14 项 check + 改审计逻辑 (self → agent 默认). 把 v1.5.7.34-39 实战提炼 3 大类方法论加到现有经验汇总, 同时同步 user.md 跨项目方法论.
+**核心**: v1.5.7.40 SKILL.md 1500 行 (临界, check 35 护栏 ≤ 1500). v1.5.7.41 拆 3 段 (37 行) → `references/audit/` 子文件, 留 6 行指针, **净减 27 行 (1500 → 1473)**, 留 27 行 buffer 给后续 hotfix.
 
-**3 大新方法论** (在 v1.5.7.30 经验汇总的 A/B/C 3 类基础上, 扩展为 6 类):
+**拆段设计** (3 段 → 3 子文件 + 1 指针段):
 
-- **D. 实战反例驱动 check 设计** (v1.5.7.34-37 实战): 跑题后审计历史 6 份关键报告 (Sep 11-13) → 提炼 18 类 P0 反例 → 14 项 auto check. 4 步法: 找 P0 反例 / 分类映射 L1-L16 / 决定 check 类型 (mechanical auto / 上下文 manual / 跨文件 brief) / 加阈值 (报告实测值作基准)
-- **E. self-audit vs 代理审计分层** (v1.5.7.38-39 实战): self-audit 47 项 hardcode = mechanical 防线, mavis worker 代理 = 内容级. user 原话"模型自主审计也调用代理" → 改默认走代理, self 模式 opt-in (`--mode self`)
-- **F. 代理审计 brief 模板设计** (v1.5.7.38 实战): agent_audit.py brief 4 段结构 (审计目标 / 文件清单 / checklist / 报告格式) + 14 类 P0 反例清单 + 关键设计原则 (每次 fresh / 不要省略数字 / 不要给模糊建议 / 不要只看封面 / 报告 ≤ 30 KB)
+| SKILL.md 拆出段 (行数) | 拆到文件 | 子文件大小 |
+|---|---|---|
+| §参考文献与赛后审计清单 (32 行, v1.5.7.35 加, 16 层表) | `references/audit/post-solution-audit-list.md` | 2.5 KB |
+| §跑题后自动检查 (3 行, v1.5.7.36-37 合并) | `references/audit/auto-check-list.md` | 2.2 KB |
+| §跑题后 mavis 代理审计 (3 行, v1.5.7.38-39 加) | `references/audit/agent-audit-brief.md` | 1.8 KB |
+| **合 1 段指针 (6 行)** | 留 SKILL.md | — |
 
-**改 documents**:
+**新建 3 个 references/audit/ 子文件**:
 
-- 扩 `references/技能总结/经验汇总.md` (5.8 KB → ~13 KB, 178 → ~330 行): v1.5.7.30 A/B/C → v1.5.7.40 A/B/C/D/E/F 6 类
-  - C.1 版本演进表加 v1.5.7.30 + v1.5.7.34-39 共 7 行
-  - C.3 dryrun 终极状态更新 (47 项, 30/47 green + 17 yellow + 0 red, 默认 agent 模式)
-  - D. 实战反例驱动 check 设计: 18 类 P0 反例 → check 映射表 + 4 步法 + 高频复用表
-  - E. self-audit vs 代理审计分层: 两层分工 + 改默认逻辑 + 3 模式 + agent vs self check 阈值差异
-  - F. 代理审计 brief 模板设计: 4 段结构 + 关键原则 + 14 类 P0 反例 + mavis 主对话 orchestration
-  - G. 引用 (v1.5.7.40 增): CHANGELOG + 5 个新 references 文档
-- 改 `user.md` (46 → 81 行, +35 行): 加 "赛后审计分层 + 代理审计 brief 设计 (2026-10-14, v1.5.7.34-39 实战提炼)" 跨项目方法论摘要, 涵盖核心问题 / 两层分工 / 4 步法 / brief 4 段 / 关键原则 / --mode 三种 / SKILL.md 行数预算 / 6 hotfix 总览
-- 改 SKILL.md (frontmatter bump v1.5.7.39 → v1.5.7.40)
+- `post-solution-audit-list.md` (2.5 KB): 16 层总表 + 跑题后必做顺序 + 90 min 总耗时 + v5/v15/v17 教训 + 引用
+- `auto-check-list.md` (2.2 KB): 绘图自检 3 check (45/47/48) + AIGC 扫描 2 check (49/50) + Sep 13 报告阈值映射 + 引用
+- `agent-audit-brief.md` (1.8 KB): self vs 代理分层 + 用法 + 3 模式 (agent/self/both) + 核心约束 + 引用
+
+**改 SKILL.md** (1500 → 1473 行, 净减 27 行):
+
+- §参考文献与赛后审计清单 (32 行) + §跑题后自动检查 (3 行) + §跑题后 mavis 代理审计 (3 行) → 合并为 1 段指针 (6 行)
+- 净 -32 行 + 6 行 = -27 行 ✓
+
+**改 SKILL.md 1500 行硬约束护栏 (check 35) 缓解**:
+
+- 后续 hotfix 加新章节时, 不必先拆旧章节腾空间, 直接加 ≤ 27 行
+- 历史 v1.5.7.20-39 累计加 ~80 行, 拆 -27 行, 缓冲 27 行, 后续 hotfix 仍有 ~50 行空间可加 (按当前平均每次 +10 行算, 5 个 hotfix 不拆)
+
+**影响文件**:
+
+- 新建 `references/audit/post-solution-audit-list.md` (2.5 KB)
+- 新建 `references/audit/auto-check-list.md` (2.2 KB)
+- 新建 `references/audit/agent-audit-brief.md` (1.8 KB)
+- 改 SKILL.md (-27 行)
 - 改 CHANGELOG.md (主文件更新标题)
 
-**dryrun**: 30/47 green + 17 yellow + 0 red (check 35 green SKILL.md 1500 ≤ 1500 ✓ + check 33 green leading words 11 个全在 ✓).
+**dryrun**: 30/47 green + 17 yellow + 0 red (check 35 green SKILL.md 1473 ≤ 1500 ✓ + check 33 green leading words 11 个全在 ✓).
 
-**跨项目适用性** (user.md 摘要):
-- 适用于所有需要 self-audit vs 代理审计分层的 AI agent / 数模 skill
-- 实战反例 → auto check 设计 4 步法, 适用于任何"赛后审计 → 下次防"循环
-- brief 模板 4 段结构 + 关键设计原则, 适用于任何"调 LLM 代理做内容审计"流程
-- SKILL.md ≤ 1500 行硬约束 + 每次加新章节必须先合并/拆旧章节, 适用于所有 writing-for-agents skill
+**v1.5.7.41 配套拆段后续 hotfix 设计模式** (可复用):
 
-**v1.5.7.34 → v1.5.7.40 累计 hotfix 7 个** (vs v1.5.7.10-29 共 20 个):
-- 47 项 dryrun check 增长: 31 (v1.5.7.29) → 47 (v1.5.7.40), 净增 16 项
-- 文档: 经验汇总 5.8 → 13 KB (D/E/F 3 大类新增), 参考文献审计清单 11.6 → 27 KB (L1-L16), 绘图规范 33 → 36 KB (R1-R5)
-- 代码: agent_audit.py 10.9 KB 新建
-- 审计架构: 单一 self-audit → self + agent 双层 (默认 agent, fresh worker)
-- 6 session 跨 4 个日历日 (Sep 28, Oct 3 × 2, Oct 14) 累计
+- SKILL.md 1500 行临界是 writing-for-agents 硬约束 (check 35 护栏)
+- 每次加新章节先评估: 现有内容能否拆到 references/? (e.g. §审计清单 → references/audit/, §绘图规范 → references/plot/, §AIGC 策略 → references/aigc/)
+- 拆段准则: SKILL.md 留 1 段指针 (~5-10 行) + references/ 留完整文档. 用户查找成本可接受
+- 不拆: 单文件大文档 (e.g. paper-spec.md 33 KB, 主题独立); SKILL.md 核心流程 (流程必须 inline, 不能拆)
 
 ---
 
