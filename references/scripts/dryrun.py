@@ -2766,6 +2766,91 @@ def check_result_struct():
             f"错处: {issues[:3]}; 对处: {ok[:3]}")
 
 
+# ===== v1.5.8.4 新增 1 项: 支撑材料超限预案 L24 (auto, P0-5 防御) =====
+
+def check_support_overlimit():
+    r"""checkable 57: 支撑材料/ 任一文件 >10MB 触发预案 (auto, v1.5.8.4 新增, P0-5 防御).
+
+    背景: 2026A 复盘 v1.1 §P0-5 — result2.xlsx 达 35→36MB, 单文件即超 20MB 包限.
+    方案: gzip CSV (两 sheet 约 5.6MB) + 包内说明 + 脚本一键重生.
+
+    防御: 扫用户跑题根的 `支撑材料/` 目录, 找 >10MB 文件, 判断:
+    - 任一文件 >10MB 但未触发预案 (未提供 csv.gz 等价压缩) → **red** (P0-5 翻车)
+    - 任一文件 >10MB 且有 csv.gz/npz 配套 → **yellow** (提示同步附录 A/D/J)
+    - 总包大小 >20MB → **red** (竞赛硬规则)
+    - 支撑材料/ 不存在 → **yellow** (跑前 skip)
+    - 全部 <10MB → **green** (无超限)
+    """
+    paper_dir = get_paper_dir()
+    if not paper_dir.exists():
+        return ("yellow",
+                f"论文目录不存在 ({paper_dir}), 跳过 L24 超限",
+                "用 --paper-dir 指定")
+    is_template = "templates" in str(paper_dir) or "example" in str(paper_dir)
+
+    project_root = paper_dir.parent
+    support_dir = project_root / "支撑材料"
+    if not support_dir.is_dir():
+        return ("yellow",
+                f"支撑材料/ 不存在 ({support_dir}), 跳过 L24 (跑前 skip)",
+                "Step 4.4 打包前才生成 支撑材料/ 目录")
+
+    # 1. 扫所有文件大小
+    big_files = []  # >10MB
+    all_files = []
+    total_size = 0
+    for f in support_dir.rglob("*"):
+        if f.is_file():
+            try:
+                size_mb = f.stat().st_size / (1024 * 1024)
+            except OSError:
+                continue
+            total_size += size_mb
+            all_files.append((f, size_mb))
+            if size_mb > 10:
+                big_files.append((f.relative_to(support_dir), size_mb))
+
+    if not big_files:
+        return ("green",
+                f"L24 支撑材料包: {len(all_files)} 文件, {total_size:.1f} MB, 无超限 (P0-5 防御绿)",
+                None)
+
+    # 2. 检查大文件是否已配套 csv.gz / npz
+    unbacked = []  # 大文件但无配套压缩
+    for rel, sz in big_files:
+        stem = rel.stem
+        has_companion = False
+        for ext in [".csv.gz", ".npz", ".xlsx.gz"]:
+            companion = rel.parent / (stem + ext)
+            if companion.exists():
+                has_companion = True
+                break
+        if not has_companion:
+            unbacked.append((rel, sz))
+
+    # 3. 检查总包
+    over_20mb = total_size > 20
+    over_10mb_files = [f"{r} ({s:.1f} MB)" for r, s in big_files]
+
+    if unbacked and over_20mb:
+        return ("red",
+                f"P0-5 支撑材料超限: 总 {total_size:.1f} MB > 20MB + {len(unbacked)} 大文件无配套压缩 (2026A result2 36MB 翻车)",
+                f"压缩 {unbacked[0][0]}: 跑 `df.to_csv(..., index=False)` + gzip. "
+                f"包内说明 + 重生脚本必留. 大文件: {over_10mb_files[:3]}")
+    if unbacked:
+        return ("red",
+                f"P0-5 支撑材料: {len(unbacked)} 大文件无 csv.gz/npz 配套 (>{10} MB 单文件超限)",
+                f"压缩方法: pd.read_excel().to_csv(...).gzip. 大文件: {over_10mb_files[:3]}")
+    if over_20mb:
+        return ("red",
+                f"P0-5 支撑材料总包 {total_size:.1f} MB > 20MB (竞赛硬规则)",
+                f"压缩最大文件 {over_10mb_files[0]}, 包内留重生脚本 + 改动说明")
+    # 全部有配套, 但总包没超 20
+    return ("yellow",
+            f"L24 支撑材料: {len(big_files)} 大文件均配套压缩, 总 {total_size:.1f} MB (P0-5 需同步附录 A/D/J 引用)",
+            f"大文件: {over_10mb_files[:3]}. 提醒: 附录 A 列表必须列 csv.gz 而不是原始 xlsx, 评审按包内清单查")
+
+
 # ===== v1.5.7.36 新增 2 项: 绘图自检 L14 (冗余图) + L15 (图注 vs axes) =====
 
 def check_unused_figures():
@@ -2937,6 +3022,7 @@ CHECKS = [
     ("54. v1.5.8.1 趋势数据 IQR 误用 L21 (IQR/boxplot + 紧邻 drop/删除/剔除 red / 纯描述统计 green / 找不到 yellow, 2026A 复盘 v1.1 §0 P0-2 防御, 升温/收缩段被全删边界条件腰斩)", check_iqr_outlier),
     ("55. v1.5.8.2 关键判据来源标记 L22 (Bi/Fo/收缩率/Re/Pr 含实算/print/resultX/公式 green / 无来源 yellow / 找不到 yellow, 2026A 复盘 v1.1 §0 P0-3 防御, 5.2.2 ρ/cp + 5.4.1 收缩率 + Bi_m=32 三个反例)", check_number_source),
     ("56. v1.5.8.3 resultX 结构 vs 附件3 模板 L23 (sheet 名/A 列名/dtype/行数 red / 全对 green / 找不到附件3 yellow, 2026A 复盘 §P0-4 防御, 4 个 result A 列名 '时间' 应为 '时间\\到药材中心的距离')", check_result_struct),
+    ("57. v1.5.8.4 支撑材料超限预案 L24 (>10MB 单文件 + 总 >20MB red / 大文件已配套 csv.gz yellow / 全部 <10MB green / 支撑材料/ 不存在 yellow, 2026A 复盘 §P0-5 防御, result2 36MB 翻车)", check_support_overlimit),
 ]
 
 

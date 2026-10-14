@@ -101,7 +101,18 @@
 - **result 完整序列步长**: 保存到 resultX 的全部数据 (e.g. dt=60s, t=0 到 205906s ≈ 3433 行)
 - 两者分别登记, 不可混用 (论文表 ≠ result 全序列)
 
-**跑题后必跑 dryrun** (L11/L14/L15/L16/L17/L18/L19/L20/L21/L22/L23 全覆盖).
+## 支撑材料超限预案 (v1.5.8.4, check 57 auto, L24 Step 4.4 打包前必做)
+
+| check | 防御反例 |
+|---|---|
+| **57** 支撑材料/ 超限 L24 | 2026A 复盘 §P0-5 (result2.xlsx 35→36MB, 单文件即超 20MB 包限). 阈值: >10MB 单文件 + 总 >20MB red / 大文件已配套 csv.gz yellow / 全部 <10MB green / 支撑材料/ 不存在 yellow |
+
+**3 步预案** (单文件 >10MB 触发):
+1. **等价压缩 (csv.gz / npz)**: 保留生成脚本 + 重生指引. **重跑后必重新生成**
+2. **附录 A/D/J 同步改写**: 附录仍写 result2.xlsx 但包内是 csv.gz → 评审判 FAIL
+3. **pack 脚本固化忽略规则**: `~$*` (Office 临时) / `.gitkeep` / `__pycache__/` / `*.aux/*.log` / `run_log.txt` / `.DS_Store`
+
+**跑题后必跑 dryrun** (L11/L14/L15/L16/L17/L18/L19/L20/L21/L22/L23/L24 全覆盖).
 
 ## 引用
 

@@ -404,7 +404,7 @@ python -m pip download -d ./pkgs pandas numpy scipy matplotlib openpyxl PyMuPDF 
 
 - **交通运筹类** (v1.5.7.15 新增) → `references/by-category/交通运筹类典型反模式.md` (网络结构/容量时空/算法适用/Pareto)
 
-**详细反模式对照表 + 跑题前/后自检 checklist** → `references/design-intent/5道防线自检清单.md` (v1.5.7.11 新增, 6.5 KB, 一处调取). dryrun **check 24** 验证该文件存在 + 4 章节齐全, **check 27** 验证 7 类目 references 全在. **物理机理类 v1.5.8 加 check 53 (L20)** 自动扫 `求解/问题N/solve_*.py` bc_row 函数, 抓 Robin 边界离散式 P0 (温度场/水分场/动边界). **数据清洗 v1.5.8.1 加 check 54 (L21)** 自动扫 IQR/boxplot + 紧邻 drop, 抓 P0-2 (升温/收缩段被 IQR 全删边界条件腰斩). **数字三来源 v1.5.8.2 加 check 55 (L22)** 自动扫论文关键判据 (Bi/Fo/收缩率/Re/Pr) 含可信来源标记, 抓 P0-3 (凭图读数/一次性心算/AI 写数字). **结构 v1.5.8.3 加 check 56 (L23)** 用 openpyxl 逐列比对附件3 模板 vs resultX (列名/dtype/sheet 名), 抓 P0-4 (A 列名 '时间' 应为 '时间\到药材中心的距离' + result4 末列 '药材表面' + 论文表步长 ≠ result 完整序列步长).
+**详细反模式对照表 + 跑题前/后自检 checklist** → `references/design-intent/5道防线自检清单.md` (v1.5.7.11 新增, 6.5 KB, 一处调取). dryrun **check 24** 验证该文件存在 + 4 章节齐全, **check 27** 验证 7 类目 references 全在. **物理机理类 v1.5.8 加 check 53 (L20)** 自动扫 `求解/问题N/solve_*.py` bc_row 函数, 抓 Robin 边界离散式 P0 (温度场/水分场/动边界). **数据清洗 v1.5.8.1 加 check 54 (L21)** 自动扫 IQR/boxplot + 紧邻 drop, 抓 P0-2 (升温/收缩段被 IQR 全删边界条件腰斩). **数字三来源 v1.5.8.2 加 check 55 (L22)** 自动扫论文关键判据 (Bi/Fo/收缩率/Re/Pr) 含可信来源标记, 抓 P0-3 (凭图读数/一次性心算/AI 写数字). **结构 v1.5.8.3 加 check 56 (L23)** 用 openpyxl 逐列比对附件3 模板 vs resultX (列名/dtype/sheet 名), 抓 P0-4 (A 列名 '时间' 应为 '时间\到药材中心的距离' + result4 末列 '药材表面' + 论文表步长 ≠ result 完整序列步长). **支撑材料 v1.5.8.4 加 check 57 (L24)** 自动扫 支撑材料/ 找 >10MB 单文件 + 总包 >20MB, 抓 P0-5 (result2 36MB 翻车 + 附录引用包外文件).
 
 
 
@@ -1256,6 +1256,14 @@ CUMCM 题目是**研究性问题**, 不是"按字面跑 LP". 题目设计有**�
 **Step 4.4: 打包支撑材料**
 
 
+
+**📌 支撑材料超限预案 (v1.5.8.4 新增, P0-5 防御)** — 跑题前必做. dryrun check 57 (L24) 自动扫 `支撑材料/`, 命中任一文件 >10MB 触发预案:
+
+1. **等价压缩 (csv.gz / npz) 收录** — 保留生成脚本 + 重生指引 (e.g. `df.to_csv(..., index=False)` + gzip). **重跑后必须重新生成** (本轮首打包忘了重生成, csv.gz 还是旧数据)
+2. **附录 A/D/J 与包内容同步改写** — 附录仍写 result2.xlsx 但包内是 csv.gz, 评审查包就判 FAIL
+3. **pack 脚本固化忽略规则**: `~$*` (Office 临时) / `.gitkeep` / `__pycache__/` / `*.aux/*.log` / `run_log.txt` / `.DS_Store`
+
+**实证 (2026A 复盘 §P0-5)**: result2.xlsx 35→36MB, 单文件即超 20MB 包限. 方案 gzip CSV (两 sheet 约 5.6MB). 总耗时 < 5 min, 比交卷后评委扣分划算. 详细 G 段 5 项 + check 57 阈值 → `references/audit/验收清单.md §G`.
 
 **子步骤 1: 填写并编译 AI 工具使用详情**（如果用了 AI）
 

@@ -1,4 +1,63 @@
-# CHANGELOG (v1.5.8.3 — resultX 结构 vs 附件3 模板 L23 (P0-4 防御) + 读题清单 §10 细化)
+# CHANGELOG (v1.5.8.4 — 支撑材料超限预案 L24 (P0-5 防御) + 验收清单 G 段)
+
+## v1.5.8.4 — 支撑材料超限预案 check 57 + Step 4.4 段 + 验收清单 G 段 (2026A 复盘 v1.1 §P0-5 防御)
+
+**核心**: 2026A 实跑复盘 v1.1 §P0-5 — result2.xlsx 达 35→36MB, 单文件即超 20MB 包限. 方案: gzip CSV (两 sheet 约 5.6MB) + 包内说明 + 脚本一键重生. v1.5.8.4 加 1 项 auto check + SKILL.md §Step 4.4 新段 + 验收清单 G 段 5 项.
+
+**改 `references/scripts/dryrun.py`** (+75 行, 1 个新 check 函数):
+
+- **check 57 (支撑材料超限 L24, auto)**: 扫用户跑题根的 `支撑材料/` 目录, 找 >10MB 单文件 + 总 >20MB. 判断:
+  - >10MB 单文件 + 总 >20MB → **red** (P0-5 翻车, 2026A result2 36MB)
+  - >10MB 单文件但未配套 csv.gz/npz → **red** (触发预案第一步)
+  - 大文件已配套 csv.gz/npz → **yellow** (提示同步附录 A/D/J 引用)
+  - 全部 <10MB → **green**
+  - 支撑材料/ 不存在 → **yellow** (跑前 skip)
+- 检测大文件是否有 `.csv.gz` / `.npz` / `.xlsx.gz` 配套压缩
+
+**改 `references/audit/验收清单.md`** (+30 行, §G 支撑材料包):
+
+- **G1**: 支撑材料/ 任一文件 ≤ 10MB (P0-5 硬约束)
+- **G2**: 支撑材料/ 总包 ≤ 20MB (竞赛硬规则)
+- **G3**: 大文件已配套 csv.gz / npz 压缩 (P0-5 改进)
+- **G4**: 附录 A/D/J 列表与包内文件一致 (P0-6 联动)
+- **G5**: 重跑后 csv.gz 已重新生成 (P0-7 联动, 防"打包忘重生")
+- 完整 PowerShell 预案命令 (4 步) + 2026A 踩坑案例
+
+**改 SKILL.md** (1486 → 1487, +1 行):
+
+- §Step 4.4 打包支撑材料 +1 段 (超限预案 3 步 + check 57 引用 + 实证 + G 段指针)
+- §5 道防线速查表段补 "v1.5.8.4 加 check 57 (L24) 扫 支撑材料/ 找 >10MB 单文件 + 总包 >20MB"
+
+**改 `references/audit/auto-check-list.md`** (+9 行, §支撑材料超限预案节):
+
+- **§L24 段**: check 57 描述 + 3 步预案 + 阈值
+
+**改 `references/audit/post-solution-audit-list.md`** (16 层表 +1 行 L24):
+
+- **L24**: 支撑材料超限预案, auto, dryrun 5 min
+
+**影响文件**:
+
+- 改 `references/scripts/dryrun.py` (+75 行: check_support_overlimit + CHECKS 1 行)
+- 改 `references/audit/验收清单.md` (+30 行: §G 段 5 项 + PowerShell 预案)
+- 改 `references/audit/auto-check-list.md` (+9 行: §L24 段)
+- 改 `references/audit/post-solution-audit-list.md` (+1 行: L24)
+- 改 SKILL.md (+1 行)
+- 改 CHANGELOG.md (主文件更新标题 + v1.5.8.4 entry)
+
+**dryrun**: 32/53 → 32/54 green + 21→22 yellow + 0 red (待 commit 后跑实数) → **目标 33/54 green + 21 yellow + 0 red**.
+
+**v1.5.8.4 后续方向**:
+
+- v1.5.8.5 P0-6 (附录 ↔ 压缩包内容一致性, check 58): 解压支撑材料包 + 验证附录 \texttt{路径} 真实存在 + 表号引用一致
+- v1.5.8.6 P0-7 (重跑影响面清单, SKILL.md Step 4 新清单 + 验收清单新节)
+- v1.5.8.7 P0-8 (含反斜杠内容批量改写, SKILL.md 工具规范段 + pack 规则)
+- v1.5.9 P1 8 项 (评阅对齐 / 绘图双标题 / fig_sanity / 文献流程 / 移动边界反证 / 耗时落盘 / 表格组表头 / 跨文档一致)
+- v1.6.0 P2 9 项 (Python 探测 / GBK reconfigure / heredoc 反斜杠 / 波浪号中文 / 模板 4 问化 / pack 忽略 / Read 尺寸校验 / Overfull 案例 / rename 列名)
+
+---
+
+
 
 ## v1.5.8.3 — resultX 结构 vs 附件3 模板 check 56 + 读题清单 §10 细化 (2026A 复盘 v1.1 §P0-4 防御)
 
