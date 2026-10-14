@@ -390,7 +390,7 @@ python -m pip download -d ./pkgs pandas numpy scipy matplotlib openpyxl PyMuPDF 
 
 - **滚动调度类** ⭐⭐⭐ → `references/data-usage/信息边界原则.md` + `references/design-intent/题目设计意图分析.md §6/§7` 直接用
 
-- **物理机理类** ⭐ → `references/by-category/物理机理类典型反模式.md` (网格收敛/守恒律/边界条件/单位声明)
+- **物理机理类** ⭐ → `references/by-category/物理机理类典型反模式.md` (网格收敛/守恒律/边界条件/单位声明 + v1.5.8 反模式 #9 Robin 边界离散式 + #10 独立换实现验算)
 
 - **数据分析类** ⭐ → `references/by-category/数据分析类典型反模式.md` (训练-测试 gap/类别不平衡/时序严格)
 
@@ -402,7 +402,7 @@ python -m pip download -d ./pkgs pandas numpy scipy matplotlib openpyxl PyMuPDF 
 
 - **交通运筹类** (v1.5.7.15 新增) → `references/by-category/交通运筹类典型反模式.md` (网络结构/容量时空/算法适用/Pareto)
 
-**详细反模式对照表 + 跑题前/后自检 checklist** → `references/design-intent/5道防线自检清单.md` (v1.5.7.11 新增, 6.5 KB, 一处调取). dryrun **check 24** 验证该文件存在 + 4 章节齐全, **check 27** 验证 7 类目 references 全在.
+**详细反模式对照表 + 跑题前/后自检 checklist** → `references/design-intent/5道防线自检清单.md` (v1.5.7.11 新增, 6.5 KB, 一处调取). dryrun **check 24** 验证该文件存在 + 4 章节齐全, **check 27** 验证 7 类目 references 全在. **物理机理类 v1.5.8 加 check 53 (L20)** 自动扫 `求解/问题N/solve_*.py` bc_row 函数, 抓 Robin 边界离散式 P0 (温度场/水分场/动边界).
 
 
 

@@ -2277,6 +2277,142 @@ def check_ngram_repetition():
             f"分散重复 3-gram: 同义改写 (e.g. '根据以上分析' → '综上可见', '问题一' → 'Q1')")
 
 
+# ===== v1.5.8 新增 1 项: FVM 表面 Robin 边界离散式 L20 (auto, P0-1 防御) =====
+
+def check_bc_robin_template():
+    r"""checkable 53: FVM 表面 Robin 边界离散式正确性 (auto, v1.5.8 新增, P0-1 防御).
+
+    背景: 2026A 实跑复盘 v1.1 §2.1 P0-1 (v15 终审) — 温度场 build_surface_row() 返回
+    (1.0, 1+β, β), β = h·Δr/α ≈ 29611, **式中无 Δt**, 表面钉死在烘房温度
+    (h→∞ 极限, 不是题面给的有限 h=25). 决定性证据: 正确格式
+    `dE/dt ÷ [h(T∞−Ts)·A] ≈ 0.995`, 错误格式 = 223 (不可能的 223 倍).
+
+    正确半控制体 FVM Robin 模板 (圆柱/球坐标通用, 中心节点因子 4):
+
+        (1 + 2μ + γ) · U^{n+1}_{N-1} − 2μ · U^{n+1}_{N-2} = U^{n}_{N-1} + γ · U_amb
+
+    其中:
+    - μ = D_eff · Δt / Δr² (Fourier 数 / 2)
+    - γ = 2 · h_eff · Δt / Δr (Biot 含 Δt, 不是经典 Bi = h·Δr/α)
+    - 4 = 中心节点权重 (半控制体), 边界节点因子 2 (全控制体)
+
+    反例模式 (P0-1, h→∞ 极限):
+        (1.0, 1 + beta, beta)           ← beta = h·Δr/α 形式, 无 Δt
+        (1, 1 + β, β)                  ← 同上 (中文 β)
+        return (1.0, 1 + h*L/k, h*L/k) ← 同上, h·Δr/α 形式
+        ← 把传热方程改写成代数方程时, β 项的物理意义是收敛到 h→∞
+        ← 不是"题面给的有限 h=25", 表面温度被错误地钉死成烘房温度 T_amb
+
+    检测方法:
+    - 扫 求解/问题N/*.py, 跳过 共享/ / _开头 / utils.py
+    - 找含 build_surface_row / bc_row / surface_row / build_bc / boundary_row
+      等关键词的函数定义
+    - 提取函数体内 return 元组或变量赋值, 判断:
+      错模式 (β = h·Δr/α 形式, 无 Δt, 无显式 γ=2h·Δt/Δr 项) → red
+      对模式 (含 2μ+γ 或显式 gamma=2*h_eff*dt/dr 项) → green
+      找不到 bc 函数 → yellow (e.g. 优化/数据分析/常微分题, 非 FVM 物理机理)
+
+    阈值: yellow 跳过 (非 FVM) / green (找到真 Robin) /
+          red (找到 (1, 1+β, β) 错误形式 — P0-1 反例).
+
+    防御反例: 2026A v15 P0-1 (温度场) + v15 水分场 Bi_m 错算 32 实 3.24 +
+              物理机理类 2024A/B 反模式 #2 (边界条件漏写/错写, P0).
+    """
+    paper_dir = get_paper_dir()
+    if not paper_dir.exists():
+        return ("yellow",
+                f"论文目录不存在 ({paper_dir}), 跳过 L20 bc",
+                "用 --paper-dir 指定")
+    is_template = "templates" in str(paper_dir) or "example" in str(paper_dir)
+
+    solve_dir = paper_dir.parent / "求解"
+    if not solve_dir.is_dir():
+        return ("yellow",
+                f"求解/ 不存在 ({solve_dir}), 跳过 L20 bc (非 PDE/ODE 物理机理题)",
+                "本题若是 FVM 物理机理题, 应有 求解/问题N/ 子目录")
+
+    # 启发式: bc_row / surface_row / build_bc 等 6 个常见命名
+    bc_fn_pattern = re.compile(
+        r'\bdef\s+(build_surface_row|bc_row|surface_row|build_bc|compute_bc|boundary_row)'
+        r'\s*\('
+    )
+    # 错模式: (1, 1+β, β) / (1.0, 1+beta, beta) / (1, 1 + h*L/k, h*L/k)
+    # 必须紧贴 ( [1/1.0] , 1 + x, x ) 这种 3 元组, 否则放宽为 warning
+    bad_pattern = re.compile(
+        r'\(\s*1(?:\.0)?\s*,\s*1\s*\+\s*[A-Za-z_β\u03b2\u0392]+\s*,\s*[A-Za-z_β\u03b2\u0392]+\s*\)'
+    )
+    # 对模式: γ 项 / 显式 gamma / 2μ + γ / (1+2*mu+gamma,) 三元组
+    gamma_clue = re.compile(
+        r'\bgamma\b|2\s*\*\s*mu|2\s*\*\s*[a-zA-Z_]+\s*\+|2\s*\u03bc|gamma\s*=\s*2'
+    )
+    correct_robin_pattern = re.compile(
+        r'\(\s*1\s*\+\s*2\s*\*\s*[a-zA-Z_]+\s*\+\s*[a-zA-Z_]+\s*,'
+        r'\s*-?\s*2\s*\*\s*[a-zA-Z_]+\s*,'
+        r'\s*[a-zA-Z_]+\s*\)'
+    )
+
+    bad_rows = []   # 错格式 (P0-1 反例)
+    good_rows = []  # 真 Robin
+    skipped = []    # 不含 bc 函数 (非 FVM, 静默跳过)
+
+    for py_file in solve_dir.rglob("*.py"):
+        # 跳过 __init__ / 共享 utils / 数据处理 helper
+        rel = str(py_file.relative_to(solve_dir))
+        if py_file.name.startswith("_"):
+            continue
+        if "共享" in rel or "shared" in rel.lower() or "utils" in rel.lower() or "data_utils" in rel.lower():
+            continue
+        try:
+            content = py_file.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            continue
+
+        # 1. 是否含 bc_row 类函数?
+        has_bc_fn = bool(bc_fn_pattern.search(content))
+        if not has_bc_fn:
+            continue
+
+        # 2. 检测错/对模式
+        bad_match = bad_pattern.search(content)
+        # 对模式: 显式 2μ + γ 三元组 或 gamma 变量
+        correct_match = correct_robin_pattern.search(content)
+        gamma_match = gamma_clue.search(content)
+
+        if bad_match and not (correct_match or gamma_match):
+            bad_rows.append(rel)
+        elif correct_match or gamma_match:
+            good_rows.append(rel)
+        else:
+            skipped.append(rel)
+
+    # 判定逻辑
+    if not (bad_rows or good_rows):
+        # 没找到 bc_row 类函数, 但 solve_dir 存在, 是优化类/数据分析类
+        return ("yellow",
+                f"求解/ 中未找到 bc_row/surface_row/build_bc 函数 ({len(skipped)} 个 .py 扫过)",
+                "本题若为 FVM 物理机理题, 应在 solve_*.py 显式定义 build_surface_row()/bc_row()")
+
+    if bad_rows and not good_rows:
+        # 纯错 (P0-1 反例)
+        return ("red",
+                f"P0-1 表面离散式错误 (2026A 复盘 v1.1 §2.1): h→∞ 极限 (1, 1+β, β) 无 Δt",
+                f"改用半控制体 FVM Robin: (1+2μ+γ)·U[N-1] - 2μ·U[N-2] = U_old + γ·U_amb; "
+                f"γ=2·h_eff·Δt/Δr. 命中: {bad_rows}")
+
+    if good_rows and not bad_rows:
+        return ("green",
+                f"L20 FVM 表面 Robin 离散式正确 (含 γ 项, 2026A P0-1 防御): "
+                f"{len(good_rows)} 个 bc_row 函数",
+                None)
+
+    # 混合: 部分对 + 部分错 (黄色警告, 人工核对)
+    return ("yellow",
+            f"L20 FVM 边界: {len(good_rows)} 个含 γ 项 + {len(bad_rows)} 个错格式 (需人工核对)",
+            f"错格式: {bad_rows[:3]}; 真 Robin: {good_rows[:3]}. "
+            f"若两套实现用于不同时刻/不同维度 (e.g. 温度场 + 水分场 + 动边界 3 套), "
+            f"分别核对 2026A 复盘 v1.1 §2.1 真模板")
+
+
 # ===== v1.5.7.36 新增 2 项: 绘图自检 L14 (冗余图) + L15 (图注 vs axes) =====
 
 def check_unused_figures():
@@ -2444,6 +2580,7 @@ CHECKS = [
     ("50. v1.5.7.37 AIGC 连接词密度 L17 (扫 同时/然而/因此/此外 等 10 项, <10% 低 green / 10-15% 中等 yellow / >15% 偏高 red, Sep 13 AIGC 报告 7.5% 阈值)", check_connector_density),
     ("51. v1.5.7.44 AIGC 2-gram TTR L18 (跳过注释 + 跳过数学环境, > 0.45 green / 0.35-0.45 yellow / < 0.35 red, Sep 13 AIGC 报告 0.457 阈值)", check_ngram_ttr),
     ("52. v1.5.7.44 AIGC 3-gram 重复率 L19 (1 - 唯一/总, < 60% green / 60-70% yellow / > 70% red, Sep 13 AIGC 报告 60.3% 阈值)", check_ngram_repetition),
+    ("53. v1.5.8 FVM 表面 Robin 离散式 L20 (build_surface_row 返回 (1, 1+β, β) 无 Δt 错格式 red / (1+2μ+γ, -2μ, γ) 真 Robin green / 非 FVM yellow, 2026A 复盘 v1.1 §2.1 P0-1 防御)", check_bc_robin_template),
 ]
 
 

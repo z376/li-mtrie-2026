@@ -1,4 +1,71 @@
-# CHANGELOG (v1.5.7.44 — AIGC 2-gram TTR + 3-gram 重复率 L18/L19)
+# CHANGELOG (v1.5.8 — FVM 表面 Robin 边界离散式 L20 (P0-1 防御))
+
+## v1.5.8 — FVM Robin 边界离散式 check 53 + §红线 5 (2026A 复盘 v1.1 §2.1 P0-1 防御)
+
+**核心**: 2026A 实跑复盘 v1.1 §2.1 P0-1 (v15 终审) — 温度场 `build_surface_row()` 返回 `(1.0, 1+β, β)`, β = h·Δr/α ≈ 29611 且**式中无 Δt**, 表面钉死在烘房温度 (h→∞ 极限, 不是题面 h=25). 决定性证据: 正确格式 `dE/dt ÷ [h(T∞−T_s)A] ≈ 0.995`, 错格式 = 223 (不可能). 水分场叠加错: 错离散式 + 错算 Bi_m = 32 (实 3.24) + 改用 Dirichlet 三层错误. v1.5.8 加 1 项 auto check + §红线 5 + 物理机理类 #9/#10 反模式, 静态扫 `求解/问题N/solve_*.py` bc_row 函数.
+
+**改 `references/scripts/dryrun.py`** (+140 行, 1 个新 check 函数):
+
+- **check 53 (FVM Robin 边界离散式 L20, auto)**: 启发式扫 `求解/问题N/*.py`, 找 6 个常见命名 (`build_surface_row` / `bc_row` / `surface_row` / `build_bc` / `compute_bc` / `boundary_row`) 函数. 检测:
+  - 错模式 `\((1, 1+β, β)\)` (β = h·Δr/D, 无 Δt) → **red** (P0-1 反例, 表面 h→∞ 钉死)
+  - 真 Robin 含 `2μ + γ` 三元组 `(1+2μ+γ, -2μ, γ)` 或显式 `gamma = 2*h_eff*dt/dr` → **green**
+  - 找不到 bc_row 函数 → **yellow** (非 FVM 物理机理题, e.g. 优化/数据分析/常微分)
+- 跳过 `__init__` / 共享 utils / `_` 开头
+
+**改 `references/read-checklist/题意红线.md`** (+67 行, §红线 5):
+
+- **§红线 5 (物理机理类必读)**: 边界离散式两道校验 + 半控制体 FVM Robin 模板
+  - **校验 1**: 能量/质量守恒校验 `dE/dt ÷ [h(T∞−T_s)A]`, \|比值 − 1\| < 0.05 绿
+  - **校验 2**: 独立换实现重算 (FVM → 解析极限/FDM/FEniCS), 同一特征量对比 相对误差 < 1% 绿
+  - **正确模板**: `(1+2μ+γ)·U[N-1] − 2μ·U[N-2] = U_old + γ·U_amb`, μ = D_eff·Δt/Δr², γ = 2·h_eff·Δt/Δr (Biot 含 Δt, 不同于经典 Bi = h·Δr/D)
+  - **3 类错模式 vs 2 类对模式对照表**: 错 1 `(1, 1+β, β)` β=h·Δr/D 无 Δt = h→∞ / 错 2 项错位传热方向反 / 错 3 β 无 Δt 维数不一致 / 对 1 显式半控制体 Robin / 对 2 Crank-Nicolson 时间中心
+  - **适用题**: 物理机理类 (本科 A/生物/传染病/扩散/传热/动边界), 含 2026A 热-质耦合干燥
+
+**改 `references/by-category/物理机理类典型反模式.md`** (+5 行, §1 反模式表 #9/#10 + §3 期望对照两行):
+
+- **#9 Robin 边界离散式错**: `(1, 1+β, β)` 形式 → 表面钉死, 改用真 Robin 模板. dryrun check 53 自动扫
+- **#10 求解后不换实现独立验算**: 跑完仅一套 FVM 不换方法 → 红. 守恒比值 + 独立换实现 2 道校验
+- **§3 跑完后对照 2 行**: Robin 边界能量守恒 \|比值 − 1\| < 0.05 / 独立换实现 相对误差 < 1%
+
+**改 `references/audit/auto-check-list.md`** (+13 行, §FVM Robin 边界离散式节):
+
+- **§L20 段**: check 53 描述 + 真模板代码块 (μ, γ 公式) + 跳到 §红线 5 完整反例对照表
+
+**改 `references/audit/post-solution-audit-list.md`** (16 层表 +1 行 L20):
+
+- **L20**: FVM Robin 边界离散式, auto (check 53) + manual 两道校验, dryrun 10 min
+
+**改 SKILL.md** (1475 → 1477, +2 行):
+
+- §Step 0 类目适配 物理机理类 ⭐ 行补 "v1.5.8 反模式 #9/#10"
+- §5 道防线速查表段补 "物理机理类 check 53 (L20) 自动扫 bc_row, 抓 Robin 边界 P0"
+
+**干系人协同 (新条目 §红线 5 引用)**:
+
+- `references/read-checklist/题意红线.md §红线 5` 加 1 段 "跟 li-mtrie 协同" 跨 3 文件
+- `references/by-category/物理机理类典型反模式.md §5 引用` 加 v1.5.8 链接 (待 v1.5.8 hotfix 合并后)
+
+**影响文件**:
+
+- 改 `references/scripts/dryrun.py` (+140 行: check_bc_robin_template + CHECKS 1 行)
+- 改 `references/read-checklist/题意红线.md` (+67 行: §红线 5)
+- 改 `references/by-category/物理机理类典型反模式.md` (+5 行: 反模式 #9/#10)
+- 改 `references/audit/auto-check-list.md` (+13 行: §L20 节)
+- 改 `references/audit/post-solution-audit-list.md` (+1 行: L20)
+- 改 SKILL.md (+2 行)
+- 改 CHANGELOG.md (主文件更新标题)
+
+**dryrun**: 32/49 + 17 yellow + 0 red (待 v1.5.8 commit 后跑实数) → **目标 33/50 green + 17 yellow + 0 red**.
+
+**v1.5.8 后续方向** (Sep 28 改进意见 25 项中, 留位):
+
+- **v1.5.8 剩余 P0** (P0-2 IQR 禁用 / P0-3 数字三来源 / P0-4 check_struct) 等用户确认
+- **v1.5.9 P1 8 项** (评阅对齐 / 绘图双标题 / fig_sanity / 文献流程 / 移动边界反证 / 耗时落盘 / 表格组表头 / 跨文档一致) 等用户确认
+- **v1.6.0 P2 9 项** (Python 探测 / GBK reconfigure / heredoc 反斜杠 / 波浪号中文 / 模板 4 问化 / pack 忽略 / Read 尺寸校验 / Overfull 案例 / rename 列名) 等用户确认
+
+---
+
+
 
 > **v1.5.7.20 之前 15 个 hotfix** (v1.5.7.5 ~ v1.5.7.19) → [`CHANGELOG-archive.md`](CHANGELOG-archive.md).
 >
