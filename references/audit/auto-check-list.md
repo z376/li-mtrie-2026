@@ -159,7 +159,28 @@ A1 物理定律引用 / A2 守恒律验证 (v1.5.8 §红线 5) / A3 网格收敛
 
 **配套文档**: `references/评阅要点对齐.md` (5.0 KB, 6 节, 权威源) + `references/paper/paper-spec.md` §一 新增 2 段 (4 大通用 + 5 大专属对照表)
 
-**跑题后必跑 dryrun** (L11/L14/L15/L16/L17/L18/L19/L20/L21/L22/L23/L24/L25/L26 全覆盖).
+## meta.json 3 件套 (v1.5.9.4, check 60 auto, L27 评阅关注点 2 '高效' 必填)
+
+| check | 防御反例 |
+|---|---|
+| **60** meta.json 含 3 件套 L27 | 2026A 复盘 §P1-7 (脚本 print 了 elapsed 但未入交付文件, 论文靠会话记忆). 阈值: 7 字段全填 green / 任一缺 red / meta.json 不存在 red |
+
+**必填 7 字段** (code-template 强制落盘):
+1. **elapsed_sec** — 实测耗时 (s) ★ 评阅关注点 3
+2. **steps** — 时间步数
+3. **grid** — 网格数 (e.g. `N_r=100, N_t=3433`)
+4. **dt** — 时间步长 ★ 步长依据
+5. **dr** — 空间步长 (PDE/网格题) ★ 步长依据
+6. **complexity** — O(复杂度) (e.g. `O(N_r·N_t)`) ★ 评阅关注点 3
+7. **version** — Python 版本 + code-template 版本
+
+**论文 §5.X.2 "模型求解" 段必引 3 件套**: 步长依据 (dt/dr) + O(复杂度) (complexity) + 实测耗时 (elapsed_sec)
+
+**配套脚本**:
+- `references/code-template.py` (改, 末尾加 meta 段)
+- `references/scripts/check_meta.py` (新建, 3.6 KB, audit_meta + CLI)
+
+**跑题后必跑 dryrun** (L11/L14/L15/L16/L17/L18/L19/L20/L21/L22/L23/L24/L25/L26/L27 全覆盖).
 
 ## 引用
 

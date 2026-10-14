@@ -71,7 +71,9 @@ if sys.platform == 'win32':
 """
 import pandas as pd
 import numpy as np
-import os, sys, warnings
+import os, sys, warnings, time
+from pathlib import Path
+_t0 = time.time()  # v1.5.9.4 P1-7: meta.json 计时起点
 warnings.filterwarnings('ignore')
 
 # ==================== ⚠️ Windows GBK 终端兼容(自动应用) ====================
@@ -355,5 +357,28 @@ print("=" * 60)
 
 # TODO: 保存结果
 # save_csv(result_df, '问题X_结果.csv')
+
+# ==================== v1.5.9.4 P1-7 计算效率叙事: meta.json 落盘 (强制) ====================
+# 评阅关注点 3 强调"高效数值计算过程". 必给实测耗时 + O(复杂度) + 步长依据.
+# 必填字段: elapsed_sec / steps / grid / dt / dr / complexity / version
+# 论文 §5.X.2 "模型求解"段必引此 3 件套: 步长依据 + O(复杂度) + 实测耗时.
+# 跑题用户必跑 `python references/scripts/check_meta.py` 验证 meta.json 含 3 件套.
+import json as _json_meta
+import platform as _platform_meta
+_meta_elapsed = round(time.time() - _t0, 3)
+_meta = {
+    "elapsed_sec": _meta_elapsed,
+    "steps": None,  # TODO: 填时间步数, e.g. len(t_arr) - 1
+    "grid": None,   # TODO: 填网格数, e.g. f"N_r={Nr}, N_t={Nt}" 或具体 dict
+    "dt": None,     # TODO: 填时间步长
+    "dr": None,     # TODO: 填空间步长 (PDE/网格题)
+    "complexity": None,  # TODO: 填 O(复杂度) 描述, e.g. "O(Nr*Nt)"
+    "version": f"Python {_platform_meta.python_version()}, code-template v1.5.9.4",
+}
+_meta_path = Path("求解/问题X/结果/meta.json")
+_meta_path.parent.mkdir(parents=True, exist_ok=True)
+with open(_meta_path, "w", encoding="utf-8") as _f:
+    _json_meta.dump(_meta, _f, indent=2, ensure_ascii=False)
+print(f"[META] {_meta_elapsed:.3f}s -> {_meta_path}")
 
 print("\n✅ 问题X求解完成！")
