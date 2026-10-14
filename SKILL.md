@@ -406,6 +406,8 @@ python -m pip download -d ./pkgs pandas numpy scipy matplotlib openpyxl PyMuPDF 
 
 **详细反模式对照表 + 跑题前/后自检 checklist** → `references/design-intent/5道防线自检清单.md` (v1.5.7.11 新增, 6.5 KB, 一处调取). dryrun **check 24** 验证该文件存在 + 4 章节齐全, **check 27** 验证 7 类目 references 全在. **物理机理类 v1.5.8 加 check 53 (L20)** 自动扫 `求解/问题N/solve_*.py` bc_row 函数, 抓 Robin 边界离散式 P0 (温度场/水分场/动边界). **数据清洗 v1.5.8.1 加 check 54 (L21)** 自动扫 IQR/boxplot + 紧邻 drop, 抓 P0-2 (升温/收缩段被 IQR 全删边界条件腰斩). **数字三来源 v1.5.8.2 加 check 55 (L22)** 自动扫论文关键判据 (Bi/Fo/收缩率/Re/Pr) 含可信来源标记, 抓 P0-3 (凭图读数/一次性心算/AI 写数字). **结构 v1.5.8.3 加 check 56 (L23)** 用 openpyxl 逐列比对附件3 模板 vs resultX (列名/dtype/sheet 名), 抓 P0-4 (A 列名 '时间' 应为 '时间\到药材中心的距离' + result4 末列 '药材表面' + 论文表步长 ≠ result 完整序列步长). **支撑材料 v1.5.8.4 加 check 57 (L24)** 自动扫 支撑材料/ 找 >10MB 单文件 + 总包 >20MB, 抓 P0-5 (result2 36MB 翻车 + 附录引用包外文件). **附录一致性 v1.5.8.5 加 check 58 (L25)** 自动扫 10.附录.tex `\texttt{路径}` vs 支撑材料/ 包内文件存在性, 抓 P0-6 (附录 J 引 `_frag/gen_tables.py` 不在包内 + 附录 A 列已剔除 result2.xlsx).
 
+**📌 重跑影响面清单 (v1.5.8.6 新增, P0-7 防御, Step 4 必做)** — 修边界/重跑后手写内容**必然过期** (`tab:conv 37.6379→33.5279`, `tab:integrity 行数 3190→3433`, `result4 2956→3031`, 附录 E verbatim 旧 `191330s`, AI 详情手写编号叠加成"4.1 3.1", 审计报告留旧"Dirichlet"结论未标注). 6 项: (1) 重跑 gen_tables (2) 手写数值表重填 (3) 附录 verbatim 与源码逐字一致 (4) AI 详情对账 (5) 过程日志加"历史版本·已被取代"头注 (6) 引用/编号编译后查 .aux `\newlabel`. 详细 + PowerShell → `references/audit/验收清单.md §H`.
+
 
 
 **📌 AI 跑题前必读 3 文件 (v1.5.7.7 强化, 不读可能踩 v1.5.7.6/1.5.7.7 反模式)**:
