@@ -1,4 +1,47 @@
-# CHANGELOG (v1.5.8.4 — 支撑材料超限预案 L24 (P0-5 防御) + 验收清单 G 段)
+# CHANGELOG (v1.5.8.5 — 附录 ↔ 支撑材料包一致性 L25 (P0-6 防御))
+
+## v1.5.8.5 — 附录 ↔ 包一致性 check 58 (2026A 复盘 v1.1 §P0-6 防御)
+
+**核心**: 2026A 实跑复盘 v1.1 §P0-6 — 附录 J 引用 `论文/_frag/gen_tables.py` 不在包内; 附录 A 仍列已剔除的 result2.xlsx; 附录 J 表号错位 (写"表1↔result1" 但符号说明+边界数据占了表1/表2, 题面结果表实为表3-表8). 均为提交前审计才发现. v1.5.8.5 加 1 项 auto check.
+
+**改 `references/scripts/dryrun.py`** (+65 行, 1 个新 check 函数):
+
+- **check 58 (附录 ↔ 支撑材料包内容一致性 L25, auto)**: 扫 `paper_dir/10.附录.tex` + `10.0.附录固定说明.tex`, regex 提 `\texttt{...}` 中所有路径, 验证 `Path(path).name` 在 `支撑材料/` 下某处存在 (rglob basename). 缺一 → red (P0-6 翻车)
+- 简化: 不解压 .rar/.zip, 直接扫 `支撑材料/` 目录 (因为 Step 4.4 打包前已生成)
+- 表号错位 (`表1↔result1` vs 实际 `\newlabel{tab:xxx}`) 留给 v1.5.9 P1 fig_sanity
+
+**改 SKILL.md** (1487 → 1487, +0 行):
+
+- §5 道防线速查表段补 "v1.5.8.5 加 check 58 (L25) 自动扫 10.附录.tex \texttt{路径} vs 支撑材料/ 包内文件存在性"
+
+**改 `references/audit/auto-check-list.md`** (+10 行, §附录 ↔ 支撑材料包一致性节):
+
+- **§L25 段**: check 58 描述 + 防御方式 (静态分析, 不解压 .rar) + 留给 v1.5.9 P1 fig_sanity
+
+**改 `references/audit/post-solution-audit-list.md`** (16 层表 +1 行 L25):
+
+- **L25**: 附录 ↔ 支撑材料包一致性, auto, dryrun 5 min
+
+**影响文件**:
+
+- 改 `references/scripts/dryrun.py` (+65 行: check_appendix_consistency + CHECKS 1 行)
+- 改 `references/audit/auto-check-list.md` (+10 行: §L25 段)
+- 改 `references/audit/post-solution-audit-list.md` (+1 行: L25)
+- 改 SKILL.md (+0 行, 合并覆盖)
+- 改 CHANGELOG.md (主文件更新标题 + v1.5.8.5 entry)
+
+**dryrun**: 32/54 → 32/55 green + 22→23 yellow + 0 red → **目标 33/55 green + 22 yellow + 0 red**.
+
+**v1.5.8.5 后续方向**:
+
+- v1.5.8.6 P0-7 (重跑影响面清单, SKILL.md Step 4 新清单 + 验收清单新节 H)
+- v1.5.8.7 P0-8 (含反斜杠内容批量改写, SKILL.md 工具规范段 + pack 规则)
+- v1.5.9 P1 8 项 (评阅对齐 / 绘图双标题 / fig_sanity [含表号错位!] / 文献流程 / 移动边界反证 / 耗时落盘 / 表格组表头 / 跨文档一致)
+- v1.6.0 P2 9 项
+
+---
+
+
 
 ## v1.5.8.4 — 支撑材料超限预案 check 57 + Step 4.4 段 + 验收清单 G 段 (2026A 复盘 v1.1 §P0-5 防御)
 

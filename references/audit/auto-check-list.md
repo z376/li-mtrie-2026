@@ -112,7 +112,21 @@
 2. **附录 A/D/J 同步改写**: 附录仍写 result2.xlsx 但包内是 csv.gz → 评审判 FAIL
 3. **pack 脚本固化忽略规则**: `~$*` (Office 临时) / `.gitkeep` / `__pycache__/` / `*.aux/*.log` / `run_log.txt` / `.DS_Store`
 
-**跑题后必跑 dryrun** (L11/L14/L15/L16/L17/L18/L19/L20/L21/L22/L23/L24 全覆盖).
+## 附录 ↔ 支撑材料包一致性 (v1.5.8.5, check 58 auto, L25 终审必做)
+
+| check | 防御反例 |
+|---|---|
+| **58** 附录 `\texttt{路径}` vs 支撑材料/ 包内文件 L25 | 2026A 复盘 §P0-6 (附录 J 引用 `论文/_frag/gen_tables.py` 不在包内; 附录 A 仍列已剔除 result2.xlsx; 附录 J 表号错位 "表1↔result1" 但符号说明+边界数据占了表1/表2, 题面结果表实为表3-表8). 阈值: 包外文件 red / 全在包内 green / 附录无路径 yellow / 支撑材料 不存在 yellow |
+
+**防御** (静态分析, 不解压 .rar):
+- 扫 `paper_dir/10.附录.tex` + `10.0.附录固定说明.tex`
+- regex `\\texttt\{([^}]+)\}` 提所有路径
+- 验证 `Path(path).name` 在 `支撑材料/` 下某处存在 (rglob basename)
+- 缺一 → red (P0-6 翻车)
+
+**留给 v1.5.9 P1 fig_sanity**: 附录表号引用 (e.g. `表1↔result1`) vs 编译 .aux 实际 `\newlabel{tab:xxx}` 一致性 (复杂度高, 跨编译阶段)
+
+**跑题后必跑 dryrun** (L11/L14/L15/L16/L17/L18/L19/L20/L21/L22/L23/L24/L25 全覆盖).
 
 ## 引用
 

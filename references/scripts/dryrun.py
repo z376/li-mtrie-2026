@@ -2851,6 +2851,108 @@ def check_support_overlimit():
             f"大文件: {over_10mb_files[:3]}. 提醒: 附录 A 列表必须列 csv.gz 而不是原始 xlsx, 评审按包内清单查")
 
 
+# ===== v1.5.8.5 新增 1 项: 附录 ↔ 支撑材料包内容一致性 L25 (auto, P0-6 防御) =====
+
+def check_appendix_consistency():
+    r"""checkable 58: 附录 .tex 中 \texttt{路径} 必须真实存在于 支撑材料/ (auto, P0-6 防御).
+
+    背景: 2026A 复盘 v1.1 §P0-6 — 附录 J 引用 `论文/_frag/gen_tables.py` 不在
+    包内; 附录 A 仍列已剔除的 result2.xlsx; 附录 J 表号错位 (写"表1↔result1"
+    但符号说明+边界数据占了表1/表2, 题面结果表实为表3-表8).
+
+    防御: 扫 paper_dir/10.附录.tex + 10.0.附录固定说明.tex, regex 提
+    `\texttt{...}` 中所有路径, 验证每个路径在 `支撑材料/` 下真实存在.
+    缺一个 → red (P0-6 翻车).
+
+    注: 表号错位 (附录写"表1↔result1"但实际表号是3) 留给 v1.5.9 P1 fig_sanity
+    处理 (需要解析编译后 .aux 文件 `\newlabel`, 复杂度高).
+
+    阈值: 附录引用包外文件 red / 全在包内 green / 附录不存在 yellow / 支撑材料
+    不存在 yellow.
+    """
+    paper_dir = get_paper_dir()
+    if not paper_dir.exists():
+        return ("yellow",
+                f"论文目录不存在 ({paper_dir}), 跳过 L25 附录一致性",
+                "用 --paper-dir 指定")
+    is_template = "templates" in str(paper_dir) or "example" in str(paper_dir)
+
+    project_root = paper_dir.parent
+    support_dir = project_root / "支撑材料"
+    if not support_dir.is_dir():
+        return ("yellow",
+                f"支撑材料/ 不存在 ({support_dir}), 跳过 L25 (跑前 skip)",
+                "Step 4.4 打包前才生成")
+
+    # 1. 扫附录 .tex 提所有 \texttt{路径}
+    appendix_files = ["10.附录.tex", "10.0.附录固定说明.tex"]
+    appendix_paths = []  # [(tex_file, path, line_no)]
+    path_re = re.compile(r'\\texttt\{([^}]+)\}')
+    for af in appendix_files:
+        p = paper_dir / af
+        if not p.exists():
+            continue
+        try:
+            text = p.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            continue
+        for line_no, line in enumerate(text.splitlines(), 1):
+            # 跳过注释
+            if line.lstrip().startswith("%"):
+                continue
+            for m in path_re.finditer(line):
+                raw = m.group(1).strip()
+                # 过滤非路径 (e.g. 中文/短文本)
+                if not raw or "/" not in raw and "\\" not in raw:
+                    continue
+                if len(raw) < 3 or len(raw) > 200:
+                    continue
+                appendix_paths.append((af, raw, line_no))
+
+    if not appendix_paths:
+        return ("yellow",
+                f"L25 附录 .tex 未找到 \\texttt{{路径}} 引用 (非附录型论文)",
+                f"如有附录, 在 {appendix_files[0]} 列文件路径用 \\texttt{{...}} 包裹")
+
+    # 2. 验证每个路径在支撑材料/ 下存在
+    missing = []  # 找不到的路径
+    for af, p, line_no in appendix_paths:
+        # 处理路径 (e.g. 求解/问题1/问题1_xxx.py) — 相对项目根, 不在支撑材料/
+        # 实际 "支撑材料/" 内是用户放入的, 路径形式多样 (相对/绝对/含 ..)
+        # 简化: 检查 .basename 在 支撑材料/ 下某处存在
+        from pathlib import PurePosixPath
+        basename = PurePosixPath(p).name
+        if not basename or basename in (".", ".."):
+            continue
+        # 找
+        found = False
+        try:
+            for f in support_dir.rglob(basename):
+                if f.is_file():
+                    found = True
+                    break
+        except Exception:
+            pass
+        if not found:
+            missing.append((af, p, line_no))
+
+    if not missing:
+        return ("green",
+                f"L25 附录 ↔ 支撑材料包: {len(appendix_paths)} 个 \\texttt{{路径}} 全部在包内 (P0-6 防御)",
+                None)
+
+    if not appendix_paths:
+        return ("yellow",
+                "L25 附录 .tex 无路径引用 (跳过)",
+                "本检查仅适用于有附录引用包内文件的论文")
+
+    # 部分缺失 = red (P0-6 翻车)
+    miss_str = [f"{af}:L{ln} {p}" for af, p, ln in missing[:3]]
+    return ("red",
+            f"P0-6 附录引用 {len(missing)}/{len(appendix_paths)} 个包外文件 (2026A 复盘 §P0-6 翻车)",
+            f"把下列路径改为包内真实存在的文件 (或补到 支撑材料/): {miss_str}")
+
+
 # ===== v1.5.7.36 新增 2 项: 绘图自检 L14 (冗余图) + L15 (图注 vs axes) =====
 
 def check_unused_figures():
@@ -3023,6 +3125,7 @@ CHECKS = [
     ("55. v1.5.8.2 关键判据来源标记 L22 (Bi/Fo/收缩率/Re/Pr 含实算/print/resultX/公式 green / 无来源 yellow / 找不到 yellow, 2026A 复盘 v1.1 §0 P0-3 防御, 5.2.2 ρ/cp + 5.4.1 收缩率 + Bi_m=32 三个反例)", check_number_source),
     ("56. v1.5.8.3 resultX 结构 vs 附件3 模板 L23 (sheet 名/A 列名/dtype/行数 red / 全对 green / 找不到附件3 yellow, 2026A 复盘 §P0-4 防御, 4 个 result A 列名 '时间' 应为 '时间\\到药材中心的距离')", check_result_struct),
     ("57. v1.5.8.4 支撑材料超限预案 L24 (>10MB 单文件 + 总 >20MB red / 大文件已配套 csv.gz yellow / 全部 <10MB green / 支撑材料/ 不存在 yellow, 2026A 复盘 §P0-5 防御, result2 36MB 翻车)", check_support_overlimit),
+    ("58. v1.5.8.5 附录 ↔ 支撑材料包内容一致性 L25 (\\texttt{{路径}} 包外文件 red / 全在包内 green / 附录无路径 yellow / 支撑材料 不存在 yellow, 2026A 复盘 §P0-6 防御, 附录 J 引 _frag/gen_tables.py 不在包内 + 附录 A 列 result2.xlsx 已剔除)", check_appendix_consistency),
 ]
 
 

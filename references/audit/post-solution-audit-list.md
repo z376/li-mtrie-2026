@@ -26,6 +26,7 @@
 | L22 | 关键判据数字三来源 | auto + manual 数值台账 | check 55 (v1.5.8.2 新增) | dryrun + number_ledger.py check (15 min) |
 | L23 | resultX 结构 vs 附件3 模板 | auto + manual 读题清单 §10 | check 56 (v1.5.8.3 新增) | dryrun (5 min) |
 | L24 | 支撑材料超限预案 | auto | check 57 (v1.5.8.4 新增) | dryrun (5 min) |
+| L25 | 附录 ↔ 支撑材料包一致性 | auto | check 58 (v1.5.8.5 新增) | dryrun (5 min) |
 | L14 | 幻觉文献 | manual (L4 步骤 2-7 覆盖) | — | (L4 内) |
 | L15 | 双向题 vs 4h 窗口 | manual | — | 5 min |
 | L16 | Q1 表1/表2 格式 | manual | — | 10 min |
