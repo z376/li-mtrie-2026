@@ -19,6 +19,8 @@
 | L11 | 旧图 ↔ result mtime | auto | check 45 | dryrun |
 | L12 | 口径混用 (334/365) | auto | check 46 | dryrun |
 | L13 | AI 工具条目强化 | auto | check 37 关键词扩 | dryrun |
+| L18 | AIGC 2-gram TTR | auto | check 51 (v1.5.7.44 新增) | dryrun |
+| L19 | AIGC 3-gram 重复率 | auto | check 52 (v1.5.7.44 新增) | dryrun |
 | L14 | 幻觉文献 | manual (L4 步骤 2-7 覆盖) | — | (L4 内) |
 | L15 | 双向题 vs 4h 窗口 | manual | — | 5 min |
 | L16 | Q1 表1/表2 格式 | manual | — | 10 min |

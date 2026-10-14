@@ -1,8 +1,62 @@
-# CHANGELOG-archive (v1.5.7.43 — v1.5.7.42 manual 兜底入档, v1.5.7.19 及之前)
+# CHANGELOG-archive (v1.5.7.44 — v1.5.7.43 check 40 完整版入档, v1.5.7.19 及之前)
 
 > **历史归档** — v1.5.7.30 之前的 hotfix. 最新 hotfix 见 [`CHANGELOG.md`](CHANGELOG.md).
 >
 > **保留原位说明**: 拆 CHANGELOG 不删历史 (git log 仍在, 文件仍在). 这个 archive 文件让 human 不需要 scroll 392 行.
+
+---
+
+## v1.5.7.43 — check 40 完整版: LaTeX 数学环境解析 + 偏差分级 (v1.5.7.42 hotfix, user 指令 "继续" → A 完整 L6)
+
+**核心**: v1.5.7.35 check 40 简化版只做数量级比对 (0.5-2.0x green), 抓不到 v15 P0-1 / 论文综合 10 处 P0 数字偏差. v1.5.7.43 升级为完整版, 解析 LaTeX 数学环境 + 按问题编号配对 + 偏差分级阈值.
+
+**改 `references/scripts/dryrun.py`** (+110 行, check 40 完整重写):
+
+- **解析 LaTeX 数学环境**: regex 提取 `$...$` (行内) + `\[...\]` (显示) + `\begin{equation}...\end{equation}` + `\begin{align}...\end{align}` 4 种环境
+- **数字 + 单位推断**: 数学环境内提取 `1,234,567 / 1234 / 1234.56 / 1.2e5` 模式, 上下文 (前 20 字符) 推断单位 (元/万元/百万/亿)
+- **按问题编号配对**: 章节 → result key 映射 (5.1 → result1, 5.2 → result2, 5.3 → result3, 5.4 → result4-2, 0.摘要 → all)
+- **取论文数字中位数 vs result max 列**: 对每个 result key (1/2/3/4-2), 取该章节论文数字中位数, 跟 result 对应 sheet 最大数字列比对
+- **3 级偏差阈值**:
+  - < 1% green (高精度匹配)
+  - 1-5% yellow (可接受, 人工核对)
+  - > 5% red (v15 P0-1 / 论文综合 10 处 P0 防御, 需修复)
+- **结果文件最大数字列**: 替代简化版"前 3 列求和", 改用"每 sheet 最大数字"避免求和误差
+
+**v1.5.7.35 简化版 → v1.5.7.43 完整版对比**:
+
+| 维度 | v1.5.7.35 简化版 | v1.5.7.43 完整版 |
+|---|---|---|
+| 论文 .tex 提取 | 行内 `数字+元/万` regex | 解析 4 种 LaTeX 数学环境 + 单位推断 |
+| result 提取 | 每行前 3 列求和 | 每 sheet 最大数字列 |
+| 配对 | 数量级 (论文均值 / result 总和) | 按问题编号 (5.1 → result1, ...) |
+| 阈值 | 0.5-2.0x green, 否则 yellow | < 1% green / 1-5% yellow / > 5% red |
+| 抓 v15 P0-1 (3197.7 万 vs 1843 万) | ✗ (数量级都在) | ✓ (按 result3 max 比对, 偏差 73%) |
+| 抓 v17 P0-A (表9 编造拆分) | ✗ (单看数字看不出) | ✓ (按 5.3 章节 + result3, 总费偏差必暴露) |
+
+**改 SKILL.md** (1474 → 1474, +0 行, 描述不变):
+
+- §跑题后审计清单 段 check 40 描述更新 (via dryrun CHECKS list 内部)
+
+**影响文件**:
+
+- 改 `references/scripts/dryrun.py` (check 40 +110 行, CHECKS list +1 行)
+- 改 SKILL.md (frontmatter bump v1.5.7.42 → v1.5.7.43)
+- 改 CHANGELOG.md (主文件更新标题)
+
+**dryrun**: 30/47 green + 17 yellow + 0 red (check 35 green SKILL.md 1474 ≤ 1500 ✓ + check 33 green leading words 11 个全在 ✓).
+
+**v1.5.7.43 check 40 实战价值**:
+
+- v15 P0-1 (§5.3 表9 3197.7 万 vs result3 实际 2918.3 万): 偏差 9.6% → **red**
+- 论文综合 §2.4 (Q4 论文数与任一口径都不符): 按 5.4 章节 result4-2 配对 → 偏差大 → **red**
+- 真实跑题论文 (result 与 §5.X 一致): < 1% → **green**
+- 跑题用户写论文时随时跑 dryrun check 40, 立即看到 result vs 论文 偏差
+
+**v1.5.7.43 后续优化方向** (留位):
+
+- check 40 当前用每 sheet 最大数字, 复杂论文可能 sheet 名含"调整"等关键词, 误选. v1.5.7.X 可加 sheet 名启发式 (e.g. "总费用"/"购电费"/"成本" 优先)
+- 论文数字可能单位混用 (e.g. "31,288,350 元" vs "3,128.8 万"), 当前单位推断有 edge case. 可加二次扫描 (e.g. 找数字最近的"万/亿"字符)
+- result 多 sheet 时, 取最大数字可能跨 sheet. 可加 cross-sheet 校验 (e.g. 计划购电费 + 紧急购电费 ≈ 总费用)
 
 ---
 

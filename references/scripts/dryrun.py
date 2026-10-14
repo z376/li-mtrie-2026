@@ -2115,6 +2115,168 @@ def check_connector_density():
             f"替换'同时/然而/因此'为变体: '且/并/另一方面/从而/除此之外'")
 
 
+# ===== v1.5.7.44 新增 2 项: AIGC 2-gram TTR + 3-gram 重复率 L18/L19 =====
+
+def _extract_ngrams(text, n):
+    """提取 n-gram 集 (sliding window).
+
+    输入: 散文文本 (已跳过注释 + 数学环境)
+    输出: n-gram 元组 list
+    """
+    ngrams = []
+    for i in range(len(text) - n + 1):
+        ng = text[i:i+n]
+        # 过滤纯标点 / 空白 n-gram
+        if all(c in ' \t\n\r，。；：、！？（）()【】《》' for c in ng):
+            continue
+        ngrams.append(ng)
+    return ngrams
+
+
+def check_ngram_ttr():
+    """checkable 51: AIGC 2-gram TTR L18 (auto, Sep 13 实战).
+
+    背景: Sep 13 AIGC 报告 2-gram TTR = 0.457 (Sep 13 阈值, 实际 > 0.35 正常).
+    防御: 跑论文所有 .tex 散文 (跳过注释 + 跳过数学环境), 计算 2-gram 唯一数 / 总 2-gram 数.
+
+    阈值: > 0.45 green (Sep 13 0.457 同级) / 0.35-0.45 yellow / < 0.35 red (词汇多样性低, AIGC 风险).
+    """
+    paper_dir = get_paper_dir()
+    if not paper_dir.exists():
+        return ("yellow", f"论文目录不存在 ({paper_dir}), 跳过 L18", "用 --paper-dir 指定")
+    is_template = "templates" in str(paper_dir) or "example" in str(paper_dir)
+
+    target_files = ["0.摘要.tex", "1.引言.tex", "2.总体分析.tex", "5.1.1.分析与准备.tex",
+                    "5.1.2.建模与求解.tex", "5.2.建模与求解.tex", "5.3.建模与求解.tex",
+                    "5.4.建模与求解.tex", "6.模型检验.tex", "7.模型评价.tex", "8.模型改进推广.tex"]
+    total_ngrams = 0
+    unique_ngrams = 0
+    per_file = {}
+    for fname in target_files:
+        tex_file = paper_dir / fname
+        if not tex_file.exists():
+            continue
+        try:
+            tcontent = tex_file.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            continue
+        # 跳过 % 注释
+        non_comment = "\n".join(
+            line for line in tcontent.splitlines()
+            if not line.lstrip().startswith("%")
+        )
+        # 跳过数学环境 (4 种)
+        text = non_comment
+        for pat in [r"\$[^\$\n]+\$", r"\\\[[^\]]+\\\]",
+                    r"\\begin\{equation\*?\}(.+?)\\end\{equation\*?\}",
+                    r"\\begin\{align\*?\}(.+?)\\end\{align\*?\}"]:
+            text = re.sub(pat, "", text, flags=re.DOTALL)
+        # 提取 2-gram
+        ngs = _extract_ngrams(text, 2)
+        if not ngs:
+            continue
+        total_ngrams += len(ngs)
+        unique_ngrams += len(set(ngs))
+        per_file[fname] = (len(ngs), len(set(ngs)))
+
+    if total_ngrams < 100:
+        return ("yellow", f"论文 .tex 散文 2-gram 总数 {total_ngrams} < 100 (可能全文公式/短句)",
+                "跑题用户应写完整摘要 + §5.X 正文")
+
+    ttr = unique_ngrams / total_ngrams
+
+    if ttr > 0.45:
+        return ("green",
+                f"AIGC 2-gram TTR {ttr:.3f} 高 ({total_ngrams} ngrams, {unique_ngrams} 唯一) — Sep 13 报告 0.457 同级",
+                None)
+    if ttr > 0.35:
+        if is_template:
+            return ("yellow",
+                    f"example 模板有意保留 2-gram TTR {ttr:.3f} (设计意图, 跑题时分散才 GREEN)",
+                    f"分散词汇: 用同义词替换高频 2-gram")
+        return ("yellow",
+                f"AIGC 2-gram TTR {ttr:.3f} 中等 (Sep 13 报告 0.457 同等)",
+                f"分散词汇: 用同义词替换高频 2-gram (e.g. 储能/电池/蓄电池, 优化/调度/规划)")
+    if is_template:
+        return ("yellow",
+                f"example 模板有意保留 2-gram TTR 偏低 {ttr:.3f} (设计意图)",
+                f"分散词汇")
+    return ("red",
+            f"AIGC 2-gram TTR {ttr:.3f} 偏低 (词汇多样性差, AIGC 风险)",
+            f"分散词汇: 用同义词替换高频 2-gram (Sep 13 报告 §2.3 优化建议)")
+
+
+def check_ngram_repetition():
+    """checkable 52: AIGC 3-gram 重复率 L19 (auto, Sep 13 实战).
+
+    背景: Sep 13 AIGC 报告 3-gram 重复率 60.3% (Sep 13 阈值, < 70% 可接受).
+    防御: 跑论文所有 .tex 散文, 计算 (1 - 3-gram 唯一数/总 3-gram 数) 重复率.
+
+    阈值: < 60% green (Sep 13 60.3% 同级) / 60-70% yellow / > 70% red (词汇重复度高, AIGC 风险).
+    """
+    paper_dir = get_paper_dir()
+    if not paper_dir.exists():
+        return ("yellow", f"论文目录不存在 ({paper_dir}), 跳过 L19", "用 --paper-dir 指定")
+    is_template = "templates" in str(paper_dir) or "example" in str(paper_dir)
+
+    target_files = ["0.摘要.tex", "1.引言.tex", "2.总体分析.tex", "5.1.1.分析与准备.tex",
+                    "5.1.2.建模与求解.tex", "5.2.建模与求解.tex", "5.3.建模与求解.tex",
+                    "5.4.建模与求解.tex", "6.模型检验.tex", "7.模型评价.tex", "8.模型改进推广.tex"]
+    total_ngrams = 0
+    unique_ngrams = 0
+    for fname in target_files:
+        tex_file = paper_dir / fname
+        if not tex_file.exists():
+            continue
+        try:
+            tcontent = tex_file.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            continue
+        # 跳过注释
+        non_comment = "\n".join(
+            line for line in tcontent.splitlines()
+            if not line.lstrip().startswith("%")
+        )
+        # 跳过数学环境
+        text = non_comment
+        for pat in [r"\$[^\$\n]+\$", r"\\\[[^\]]+\\\]",
+                    r"\\begin\{equation\*?\}(.+?)\\end\{equation\*?\}",
+                    r"\\begin\{align\*?\}(.+?)\\end\{align\*?\}"]:
+            text = re.sub(pat, "", text, flags=re.DOTALL)
+        # 提取 3-gram
+        ngs = _extract_ngrams(text, 3)
+        if not ngs:
+            continue
+        total_ngrams += len(ngs)
+        unique_ngrams += len(set(ngs))
+
+    if total_ngrams < 100:
+        return ("yellow", f"论文 .tex 散文 3-gram 总数 {total_ngrams} < 100 (可能全文公式/短句)",
+                "跑题用户应写完整摘要 + §5.X 正文")
+
+    repetition = 1.0 - unique_ngrams / total_ngrams
+
+    if repetition < 0.60:
+        return ("green",
+                f"AIGC 3-gram 重复率 {repetition:.1%} 低 ({total_ngrams} ngrams, {unique_ngrams} 唯一) — Sep 13 报告 60.3% 同级",
+                None)
+    if repetition < 0.70:
+        if is_template:
+            return ("yellow",
+                    f"example 模板有意保留 3-gram 重复 {repetition:.1%} (设计意图)",
+                    f"分散重复 3-gram (e.g. 储能 SOC 初始 → 储能荷电状态初值)")
+        return ("yellow",
+                f"AIGC 3-gram 重复率 {repetition:.1%} 中等 (Sep 13 报告 60.3% 同等)",
+                f"分散重复 3-gram: 同义改写高频 3-gram (Sep 13 报告 §2.3 优化建议)")
+    if is_template:
+        return ("yellow",
+                f"example 模板有意保留 3-gram 重复 {repetition:.1%} (设计意图)",
+                f"分散 3-gram")
+    return ("red",
+            f"AIGC 3-gram 重复率 {repetition:.1%} 偏高 (词汇重复度高, AIGC 风险)",
+            f"分散重复 3-gram: 同义改写 (e.g. '根据以上分析' → '综上可见', '问题一' → 'Q1')")
+
+
 # ===== v1.5.7.36 新增 2 项: 绘图自检 L14 (冗余图) + L15 (图注 vs axes) =====
 
 def check_unused_figures():
@@ -2280,6 +2442,8 @@ CHECKS = [
     ("48. v1.5.7.36 图注 vs axes L15 (PDF caption 含多面板语义但 figure 实际 axes 不够, 论文综合 §六.1 反例)", check_caption_axes_consistency),
     ("49. v1.5.7.37 AIGC 段首重复率 L16 (<30% 低 green / 30-50% 中等 yellow / >50% 偏高 red, Sep 13 AIGC 报告 39.6% 阈值)", check_segment_opener_repetition),
     ("50. v1.5.7.37 AIGC 连接词密度 L17 (扫 同时/然而/因此/此外 等 10 项, <10% 低 green / 10-15% 中等 yellow / >15% 偏高 red, Sep 13 AIGC 报告 7.5% 阈值)", check_connector_density),
+    ("51. v1.5.7.44 AIGC 2-gram TTR L18 (跳过注释 + 跳过数学环境, > 0.45 green / 0.35-0.45 yellow / < 0.35 red, Sep 13 AIGC 报告 0.457 阈值)", check_ngram_ttr),
+    ("52. v1.5.7.44 AIGC 3-gram 重复率 L19 (1 - 唯一/总, < 60% green / 60-70% yellow / > 70% red, Sep 13 AIGC 报告 60.3% 阈值)", check_ngram_repetition),
 ]
 
 
