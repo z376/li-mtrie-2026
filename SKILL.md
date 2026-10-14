@@ -404,7 +404,7 @@ python -m pip download -d ./pkgs pandas numpy scipy matplotlib openpyxl PyMuPDF 
 
 - **交通运筹类** (v1.5.7.15 新增) → `references/by-category/交通运筹类典型反模式.md` (网络结构/容量时空/算法适用/Pareto)
 
-**详细反模式对照表 + 跑题前/后自检 checklist** → `references/design-intent/5道防线自检清单.md` (v1.5.7.11 新增, 6.5 KB, 一处调取). dryrun **check 24** 验证该文件存在 + 4 章节齐全, **check 27** 验证 7 类目 references 全在. **物理机理类 v1.5.8 加 check 53 (L20)** 自动扫 `求解/问题N/solve_*.py` bc_row 函数, 抓 Robin 边界离散式 P0 (温度场/水分场/动边界). **数据清洗 v1.5.8.1 加 check 54 (L21)** 自动扫 IQR/boxplot + 紧邻 drop, 抓 P0-2 (升温/收缩段被 IQR 全删边界条件腰斩).
+**详细反模式对照表 + 跑题前/后自检 checklist** → `references/design-intent/5道防线自检清单.md` (v1.5.7.11 新增, 6.5 KB, 一处调取). dryrun **check 24** 验证该文件存在 + 4 章节齐全, **check 27** 验证 7 类目 references 全在. **物理机理类 v1.5.8 加 check 53 (L20)** 自动扫 `求解/问题N/solve_*.py` bc_row 函数, 抓 Robin 边界离散式 P0 (温度场/水分场/动边界). **数据清洗 v1.5.8.1 加 check 54 (L21)** 自动扫 IQR/boxplot + 紧邻 drop, 抓 P0-2 (升温/收缩段被 IQR 全删边界条件腰斩). **数字三来源 v1.5.8.2 加 check 55 (L22)** 自动扫论文关键判据 (Bi/Fo/收缩率/Re/Pr) 含可信来源标记, 抓 P0-3 (凭图读数/一次性心算/AI 写数字).
 
 
 
@@ -1091,6 +1091,16 @@ CUMCM 题目是**研究性问题**, 不是"按字面跑 LP". 题目设计有**�
 - 严格：只标确实由 AI 生成的（乱标 = 评审反向扣"AI 标注不规范"分）
 
 - 完整 4 条规则 + 3 类禁用场景 → 见 `references/data-usage/合规检查清单.md §1.3` + `§3 禁用场景`
+
+
+
+**📌 论文数字三来源红线 (v1.5.8.2 新增, P0-3 防御, Step 3 起手必做)** — 论文中所有非题面数字 (除 0/1/2/3 等小整数) 必来自 3 类可信来源之一, 配套 `求解/数值台账.csv` 4 列强制:
+
+1. **脚本 print 落盘** (求解日志, 来源=1) — `solver 输出 "T_max=33.5279, t_dry=205906 s"`
+2. **从 resultX.xlsx / 表N.csv 程序读取** (gen_tables.py, 来源=2) — `pd.read_excel('result1.xlsx').iloc[:, 1].tolist()`
+3. **论文写作现场用公式当场计算 + 关键判据二次独立复算** (来源=3) — `Bi = h·L/k = 25·0.02/0.5 = 1.0` (纸上演算 + 单位独立验算)
+
+**禁止** (3 类): ❌ 凭图读数 (目测) / ❌ 一次性心算 (关键判据会错 10 倍, Bi_m=32 实 3.24) / ❌ AI 写数字. **2026A 反例**: 5.2.2 ρ/cp/k 起止值目测错 (实 976.4→667.3) + 5.4.1 收缩率目测错 (实 5h、71.8%, 错写 10h、78%) + Bi_m 一次心算 32 (实 3.24). 完整 4 道防线 (Step 3 起手/每章/Step 4.3/Step 4.5) + 数值台账 4 列结构 + 反例对照 → `references/audit/数值台账规范.md` (4.6 KB 权威源). 配套脚本 `references/scripts/number_ledger.py` (8.3 KB, 4 子命令 init/add/check/show). dryrun check 55 (L22) 自动扫关键判据 (Bi/Fo/收缩率/Re/Pr) 含可信来源标记.
 
 
 

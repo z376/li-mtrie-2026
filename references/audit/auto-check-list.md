@@ -66,7 +66,25 @@
 
 完整 4 类代码模板 + 边界/驱动默认保留 + 阶段变化识别 → `references/data-usage/数据清洗规范.md` (6.4 KB, 7 节) + `references/read-checklist/题意红线.md §红线 6`.
 
-**跑题后必跑 dryrun** (L11/L14/L15/L16/L17/L18/L19/L20/L21 全覆盖).
+## 关键判据数字三来源 (v1.5.8.2, check 55 auto, L22 Step 3 必做)
+
+| check | 防御反例 |
+|---|---|
+| **55** 关键判据 (Bi/Fo/收缩率/Re/Pr) 来源标记 L22 | 2026A 复盘 v1.1 §0 P0-3 (5.2.2 ρ/cp/k 起止值目测错实 976.4→667.3; 5.4.1"前 10h→1.424cm、78%"目测错实 5h、71.8%; **Bi_m 一次心算 32 实 3.24 差 10 倍**). 阈值: 关键判据 + 含 `实算/print/resultX.xlsx/公式/solver 算` 紧邻 100 字符 green / 无来源 yellow / 找不到关键判据 yellow 跳过 |
+
+**3 类可信来源** (Step 3 强约束):
+1. **脚本 print 落盘** (来源=1) — solver 输出 `T_max=33.5279, t_dry=205906 s`
+2. **从 resultX.xlsx 读** (来源=2) — `pd.read_excel('result1.xlsx').iloc[:, 1].tolist()`
+3. **公式现场算 + 二次独立复算** (来源=3) — `Bi = h·L/k = 25·0.02/0.5 = 1.0`
+
+**禁止** (3 类): ❌ 凭图读数 / ❌ 一次性心算 / ❌ AI 写数字
+
+**配套工具**:
+- `求解/数值台账.csv` 4 列 (符号/值/来源/生成脚本), Step 3 起手必建
+- `references/scripts/number_ledger.py` 4 子命令 (init/add/check/show), 8.3 KB
+- `references/audit/数值台账规范.md` 权威源 4.6 KB 6 节 (3 来源约束 + 4 道防线 + 反例对照 + check 55 协同)
+
+**跑题后必跑 dryrun** (L11/L14/L15/L16/L17/L18/L19/L20/L21/L22 全覆盖).
 
 ## 引用
 

@@ -2526,6 +2526,111 @@ def check_iqr_outlier():
             f"若纯描述报告, 当前 OK")
 
 
+# ===== v1.5.8.2 新增 1 项: 论文数字三来源 L22 (auto, P0-3 防御) =====
+
+def check_number_source():
+    r"""checkable 55: 论文关键判据 (Bi/Fo/收缩率/Re/Pr) 必含可信来源标记 (auto, P0-3 防御).
+
+    背景: 2026A 复盘 v1.1 §0 P0-3 — 5.2.2 ρ/cp/k 起止值系目视读图臆造 (实 976.4→667.3);
+    5.4.1"前 10h→1.424cm、占 78%"同为目测错 (实 5h、71.8%); **Bi_m 一次心算错 32 实 3.24
+    (差 10 倍)**, 决定性证据: 评审找代理公式复算时全部暴露, 评"模型不严谨" 0 分.
+
+    防御: 扫论文 11 章节 .tex, 找 5 类关键判据 (Bi / Fo / 收缩率 / Re / Pr) 出现位置,
+    检测紧邻文字是否含可信来源标记 ("实算" / "print" / "resultX.xlsx" / "代码" / "solver 算"
+    / "公式" / 公式环境), 判断:
+    - 关键判据 + 含可信来源 → **green**
+    - 关键判据 + 无来源 → **yellow** (警告: 补公式 + 二次复算, P0-3 反例)
+    - 找不到关键判据 → **yellow** (非机理题, e.g. 优化/数据无 Bi/Fo, 跳过)
+
+    阈值: yellow 跳过 (非机理) / green (关键判据含来源) /
+          yellow 警告 (关键判据无来源, 提示补).
+
+    防御反例: 2026A v15 P0-3 (5.2.2 ρ/cp/k + 5.4.1 收缩率 + Bi_m=32 三个反例).
+    """
+    paper_dir = get_paper_dir()
+    if not paper_dir.exists():
+        return ("yellow",
+                f"论文目录不存在 ({paper_dir}), 跳过 L22 数字来源",
+                "用 --paper-dir 指定")
+    is_template = "templates" in str(paper_dir) or "example" in str(paper_dir)
+
+    target_files = ["0.摘要.tex", "1.引言.tex", "2.总体分析.tex",
+                    "5.1.1.分析与准备.tex", "5.1.2.建模与求解.tex",
+                    "5.2.建模与求解.tex", "5.3.建模与求解.tex", "5.4.建模与求解.tex",
+                    "6.模型检验.tex", "7.模型评价.tex", "8.模型改进推广.tex"]
+
+    # 5 类关键判据 (中文 + LaTeX 符号)
+    key_indicators = [
+        (r'毕渥数|Bi\b|\\Bi\b', "Bi"),
+        (r'傅里叶数|Fo\b|\\Fo\b', "Fo"),
+        (r'收缩率', "收缩率"),
+        (r'雷诺数|Re\b|\\Re\b', "Re"),
+        (r'普朗特数|Pr\b|\\Pr\b', "Pr"),
+    ]
+    # 可信来源标记 (论文写作现场应含)
+    source_markers = re.compile(
+        r'实算|print|result.*\.xlsx|solver 算|公式|\\begin\{equation|'
+        r'\\begin\{align|台账|附录.*源|solve_.*\.py|code|代码|'
+        r'由.*计算|根据.*公式|代入.*得'
+    )
+
+    total_found = 0
+    no_source = []  # 关键判据出现但无来源 (P0-3 反例)
+    with_source = []  # 含来源
+
+    for fname in target_files:
+        tex_file = paper_dir / fname
+        if not tex_file.exists():
+            continue
+        try:
+            text = tex_file.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            continue
+        # 跳过注释
+        non_comment = "\n".join(
+            line for line in text.splitlines()
+            if not line.lstrip().startswith("%")
+        )
+
+        for pat, name in key_indicators:
+            for m in re.finditer(pat, non_comment):
+                total_found += 1
+                # 检查紧邻 100 字符内是否含来源标记
+                start = max(0, m.start() - 50)
+                end = min(len(non_comment), m.end() + 100)
+                context = non_comment[start:end]
+                if source_markers.search(context):
+                    with_source.append((fname, name, m.group()))
+                else:
+                    no_source.append((fname, name, m.group()))
+
+    # 判定逻辑
+    if total_found == 0:
+        return ("yellow",
+                f"L22 关键判据: 论文未发现 Bi/Fo/收缩率/Re/Pr 5 类关键判据 (非机理题, 跳过)",
+                "本题若为物理机理题, 应在 §5.X 给出关键判据 (Bi/Fo) + 公式 + 二次复算")
+
+    if no_source and not with_source:
+        # 全部关键判据都无来源 (P0-3 翻车)
+        return ("yellow",
+                f"L22 关键判据 {total_found} 处全无来源标记 (P0-3 翻车警告)",
+                f"补公式 + 二次独立复算, 例: 'Bi = h·L/k = 25·0.02/0.5 = 1.0 (实算, 单位独立验算)'. "
+                f"命中: {[(f, n) for f, n, _ in no_source[:3]]}. "
+                f"完整规范: references/audit/数值台账规范.md")
+
+    if no_source:
+        # 部分有来源, 部分无 (混合, yellow 警告)
+        return ("yellow",
+                f"L22 关键判据: {len(with_source)} 含来源 + {len(no_source)} 无来源 (P0-3 警告)",
+                f"无来源: {[(f, n) for f, n, _ in no_source[:3]]}. "
+                f"建议: 跑 python references/scripts/number_ledger.py init 建台账 + 补 '实算/print/resultX.xlsx/公式' 标记")
+
+    # 全部含来源
+    return ("green",
+            f"L22 关键判据 {total_found} 处全含来源标记 (P0-3 防御: {len(with_source)} 处实算/print/resultX/公式)",
+            None)
+
+
 # ===== v1.5.7.36 新增 2 项: 绘图自检 L14 (冗余图) + L15 (图注 vs axes) =====
 
 def check_unused_figures():
@@ -2695,6 +2800,7 @@ CHECKS = [
     ("52. v1.5.7.44 AIGC 3-gram 重复率 L19 (1 - 唯一/总, < 60% green / 60-70% yellow / > 70% red, Sep 13 AIGC 报告 60.3% 阈值)", check_ngram_repetition),
     ("53. v1.5.8 FVM 表面 Robin 离散式 L20 (build_surface_row 返回 (1, 1+β, β) 无 Δt 错格式 red / (1+2μ+γ, -2μ, γ) 真 Robin green / 非 FVM yellow, 2026A 复盘 v1.1 §2.1 P0-1 防御)", check_bc_robin_template),
     ("54. v1.5.8.1 趋势数据 IQR 误用 L21 (IQR/boxplot + 紧邻 drop/删除/剔除 red / 纯描述统计 green / 找不到 yellow, 2026A 复盘 v1.1 §0 P0-2 防御, 升温/收缩段被全删边界条件腰斩)", check_iqr_outlier),
+    ("55. v1.5.8.2 关键判据来源标记 L22 (Bi/Fo/收缩率/Re/Pr 含实算/print/resultX/公式 green / 无来源 yellow / 找不到 yellow, 2026A 复盘 v1.1 §0 P0-3 防御, 5.2.2 ρ/cp + 5.4.1 收缩率 + Bi_m=32 三个反例)", check_number_source),
 ]
 
 

@@ -1,4 +1,76 @@
-# CHANGELOG (v1.5.8.1 — 趋势数据 IQR 误用 L21 (P0-2 防御) + 数据清洗规范)
+# CHANGELOG (v1.5.8.2 — 论文数字三来源 L22 (P0-3 防御) + 数值台账规范)
+
+## v1.5.8.2 — 论文数字三来源 check 55 + §红线 7 + 数值台账 (2026A 复盘 v1.1 §0 P0-3 防御)
+
+**核心**: 2026A 实跑复盘 v1.1 §0 P0-3 — 5.2.2 节 ρ/cp/k 起止值系**目视读图臆造** (实 976.4→667.3 等); 5.4.1"前 10h→1.424cm、占 78%"**同为目测错** (实 5h、71.8%); **本轮新增**: 连"手算的关键判据"也会错 — `Bi_m` 被算成 32 (实 3.24, 差 10 倍), 决定性证据: 评审找代理公式复算时全部暴露, 评"模型不严谨" 0 分. v1.5.8.2 加 1 项 auto check + §红线 7 + 2 个新文件 (数值台账规范 + number_ledger 脚本).
+
+**改 `references/scripts/dryrun.py`** (+95 行, 1 个新 check 函数):
+
+- **check 55 (关键判据来源标记 L22, auto)**: 扫论文 11 章节 .tex, 找 5 类关键判据 (Bi / Fo / 收缩率 / Re / Pr) 出现位置, 检测紧邻 100 字符内是否含可信来源标记 (`实算/print/resultX.xlsx/solver 算/公式/\\begin{equation/align/台账/solve_*.py/代码/由.*计算/根据.*公式/代入.*得`). 判断:
+  - 关键判据 + 含来源 → **green** (P0-3 防御)
+  - 关键判据 + 无来源 → **yellow** (P0-3 警告, 提示补公式 + 二次复算)
+  - 找不到关键判据 → **yellow** (非机理题, 跳过)
+
+**新建 `references/audit/数值台账规范.md`** (4.6 KB, 6 节, P0-3 权威源):
+
+- **§1 三来源约束**: 论文数字只准 3 类 (1=脚本 print 落盘 / 2=resultX.xlsx 程序读 / 3=公式现场算 + 关键判据二次复算)
+- **§2 数值台账.csv 4 列结构**: 符号 / 值 / 来源 / 生成脚本. Step 3 起手必建
+- **§3 4 道防线时序**: Step 3 起手 init / 每章写完 add / Step 4.3 check / Step 4.5 dryrun
+- **§4 反例对照**: 5.2.2 ρ/cp/k + 5.4.1 收缩率 + Bi_m=32 三个反例 (vs 正确做法)
+- **§5 dryrun check 55 协同**: 关键判据 + 来源标记 → green
+- **§6 引用**: 跨 4 文件协同
+
+**新建 `references/scripts/number_ledger.py`** (8.3 KB, 4 子命令 init/add/check/show):
+
+- **init**: 建空台账 + 扫描现有 result*.xlsx 提数字 (限 3 result × 2 sheet × 5 行 × 5 列 = 150 数字)
+- **add**: 单条添加 (--sym, --val, --source, --script, 来源必须 1/2/3)
+- **check**: 扫论文 .tex, 提所有数字, vs 台账匹配率, 匹配率 < 70% return 1 (红)
+- **show**: 打印台账
+
+**改 `references/read-checklist/题意红线.md`** (+50 行, §红线 7):
+
+- **§红线 7 (Step 3 必做)**: 论文数字三来源红线 + 数值台账
+  - **3 类可信来源**: 1=solver print / 2=resultX.xlsx / 3=公式现场算
+  - **3 类禁止**: 凭图读数 / 一次性心算 / AI 写数字
+  - **数值台账 4 列结构**: 符号/值/来源/生成脚本
+  - **4 道防线时序**: Step 3 起手/每章/Step 4.3/Step 4.5
+  - 2026A 反例: 5.2.2 ρ/cp/k + 5.4.1 收缩率 + Bi_m=32 三个 P0 翻车
+
+**改 SKILL.md** (1476 → 1478, +2 行):
+
+- §Step 3 +1 段 (数字三来源红线 + 数值台账 4 列 + 3 禁止 + 2026A 3 反例 + 4 道防线 + check 55)
+- §5 道防线速查表段补"v1.5.8.2 加 check 55 (L22)"
+
+**改 `references/audit/auto-check-list.md`** (+12 行, §关键判据数字三来源节):
+
+- **§L22 段**: check 55 描述 + 3 类可信来源列表 + 3 类禁止 + 配套工具 (数值台账 + number_ledger.py + 规范)
+
+**改 `references/audit/post-solution-audit-list.md`** (16 层表 +1 行 L22):
+
+- **L22**: 关键判据数字三来源, auto + manual 数值台账, dryrun + number_ledger.py check (15 min)
+
+**影响文件**:
+
+- 改 `references/scripts/dryrun.py` (+95 行: check_number_source + CHECKS 1 行)
+- **新建** `references/audit/数值台账规范.md` (4.6 KB, 6 节权威源)
+- **新建** `references/scripts/number_ledger.py` (8.3 KB, 4 子命令)
+- 改 `references/read-checklist/题意红线.md` (+50 行: §红线 7)
+- 改 `references/audit/auto-check-list.md` (+12 行: §L22 段)
+- 改 `references/audit/post-solution-audit-list.md` (+1 行: L22)
+- 改 SKILL.md (+2 行)
+- 改 CHANGELOG.md (主文件更新标题 + v1.5.8.2 entry)
+
+**dryrun**: 32/51 → 32/52 green + 19→20 yellow + 0 red (待 v1.5.8.2 commit 后跑实数) → **目标 33/52 green + 19 yellow + 0 red**.
+
+**v1.5.8.2 后续方向** (Sep 28 改进意见 25 项, 留位):
+
+- **v1.5.8 剩余 P0** (P0-4 check_struct / P0-5 支撑材料超限 / P0-6 附录一致性 / P0-7 重跑影响面 / P0-8 反斜杠批量改写) 等用户确认
+- **v1.5.9 P1 8 项** (评阅对齐 / 绘图双标题 / fig_sanity / 文献流程 / 移动边界反证 / 耗时落盘 / 表格组表头 / 跨文档一致) 等用户确认
+- **v1.6.0 P2 9 项** (Python 探测 / GBK reconfigure / heredoc 反斜杠 / 波浪号中文 / 模板 4 问化 / pack 忽略 / Read 尺寸校验 / Overfull 案例 / rename 列名) 等用户确认
+
+---
+
+
 
 ## v1.5.8.1 — 趋势数据 IQR 误用 check 54 + §红线 6 + 数据清洗规范 (2026A 复盘 v1.1 §0 P0-2 防御)
 
