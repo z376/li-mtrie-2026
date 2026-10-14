@@ -1,4 +1,60 @@
-# CHANGELOG (v1.5.9.3 — 移动/变形坐标方程退化反证 §红线 6 (P1-6 防御))
+# CHANGELOG (v1.5.9.4 — meta.json 3 件套 L27 (P1-7 防御, code-template 强制 + check_meta.py)
+
+## v1.5.9.4 — meta.json 3 件套 check 60 + code-template 强制 (2026A 复盘 v1.1 §P1-7 防御)
+
+**核心**: 2026A 复盘 v1.1 §P1-7 — 评阅关注点 2 强调"**高效**数值计算过程", 但脚本 print 了 elapsed 但**未入交付文件**, 论文靠会话记忆. 改进: code-template 强制 `meta.json` 落盘 (耗时/步数/网格/版本), 论文 §5.X.2 必引 3 件套 (步长依据+O(复杂度)+实测耗时). v1.5.9.4 加 1 项 auto check + 改 1 文件 + 新建 1 文件.
+
+**改 `references/code-template.py`** (+25 行, 模板末尾加 meta 段):
+
+- 文件开头加 `_t0 = time.time()` (P1-7 计时起点)
+- 文件末尾加 meta 段 (`import json/platform` + 7 字段 dict + 落 `求解/问题X/结果/meta.json`)
+- **必填 7 字段**: elapsed_sec / steps / grid / dt / dr / complexity / version
+- 论文 §5.X.2 "模型求解"段必引 3 件套: 步长依据 (dt/dr) + O(复杂度) (complexity) + 实测耗时 (elapsed_sec)
+
+**新建 `references/scripts/check_meta.py`** (3.6 KB, 4 函数):
+
+- **`audit_meta(meta_path)`**: 单 meta.json 审计, 返回 `{ok, missing, fields}`
+- **CLI**: `py check_meta.py --root <跑题根>` 扫所有问题 / `--problem 1` 单问题
+- 验证 7 字段都不为 None, 缺一 → exit 1 (red)
+- 跟 v1.5.8.2 number_ledger.py 风格一致 (init/add/check/show 4 子命令)
+
+**改 `references/scripts/dryrun.py`** (+50 行, 1 个新 check 函数):
+
+- **check 60 (meta.json 3 件套 L27, auto)**: 调 `check_meta.audit_meta` 扫 `求解/问题N/结果/meta.json`:
+  - 7 字段全填 → **green** (P1-7 防御)
+  - 任一缺 → **red** (P1-7 翻车)
+  - meta.json 不存在 → **red** (code-template 必落盘)
+  - 求解/ 不存在 → **yellow** (跑前 skip)
+- 跑题用户必跑 dryrun + 论文必引 3 件套
+
+**改 `references/audit/auto-check-list.md`** (+12 行, §meta.json 3 件套节):
+
+- **§L27 段**: check 60 + 必填 7 字段 + 3 件套协同 + 配套脚本
+- 跨 v1.5.9.1 §评阅要点对齐关注点 3 联动
+
+**改 `references/audit/post-solution-audit-list.md`** (16 层表 +1 行 L27):
+
+- **L27**: meta.json 3 件套 (评阅关注点 2 '高效'), auto (check_meta.py), dryrun 1 min
+
+**影响文件**:
+
+- 改 `references/code-template.py` (+25 行: 开头 _t0 + 末尾 meta 段)
+- **新建** `references/scripts/check_meta.py` (3.6 KB)
+- 改 `references/scripts/dryrun.py` (+50 行: check_meta_3pcs + CHECKS 1 行)
+- 改 `references/audit/auto-check-list.md` (+12 行: §L27 段)
+- 改 `references/audit/post-solution-audit-list.md` (+1 行: L27)
+- 改 CHANGELOG.md (主文件更新标题 + v1.5.9.4 entry)
+
+**dryrun**: 32/56 → 32/57 green + 24→25 yellow + 0 red (待 commit 后跑实数) → **目标 33/57 green + 24 yellow + 0 red**.
+
+**v1.5.9.4 后续方向**:
+
+- v1.5.9.5 P1-8 题面表格格式合规 (gen_tables.py 模板两行表头 + check_struct 增比对)
+- v1.6.0 P2 9 项
+
+---
+
+
 
 ## v1.5.9.3 — 移动/变形坐标方程退化反证 (2026A 复盘 v1.1 §P1-6 防御)
 

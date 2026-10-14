@@ -71,7 +71,9 @@ if sys.platform == 'win32':
 """
 import pandas as pd
 import numpy as np
-import os, sys, warnings
+import os, sys, warnings, time
+from pathlib import Path
+_t0 = time.time()  # v1.5.9.4 P1-7: meta.json 计时起点
 warnings.filterwarnings('ignore')
 
 # ==================== ⚠️ Windows GBK 终端兼容(自动应用) ====================
@@ -200,6 +202,24 @@ OUT_DIR = os.path.join(BASE_DIR, '结果')
 if __name__ == "__main__":
     os.makedirs(FIG_DIR, exist_ok=True)
     os.makedirs(OUT_DIR, exist_ok=True)
+    # v1.5.9.4 P1-7: meta.json 落盘 (3 件套)
+    _meta_path = Path(OUT_DIR) / "meta.json"
+    _meta_path.parent.mkdir(parents=True, exist_ok=True)
+    _meta_elapsed = round(time.time() - _t0, 3)
+    import json as _json_meta2
+    import platform as _platform_meta2
+    _meta = {
+        "elapsed_sec": _meta_elapsed,
+        "steps": None,  # TODO: 填时间步数
+        "grid": None,   # TODO: 填网格数
+        "dt": None,     # TODO: 填时间步长
+        "dr": None,     # TODO: 填空间步长
+        "complexity": None,  # TODO: 填 O(复杂度)
+        "version": f"Python {_platform_meta2.python_version()}, code-template v1.5.9.4",
+    }
+    with open(_meta_path, "w", encoding="utf-8") as _f:
+        _json_meta2.dump(_meta, _f, indent=2, ensure_ascii=False)
+    print(f"[META] {_meta_elapsed:.3f}s -> {_meta_path}")
 
 # ==================== 工具函数 ====================
 

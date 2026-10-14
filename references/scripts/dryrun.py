@@ -3052,6 +3052,86 @@ def check_fig_content_sanity():
             None)
 
 
+# ===== v1.5.9.4 新增 1 项: meta.json 3 件套验证 L27 (auto, P1-7 防御) =====
+
+def check_meta_3pcs():
+    r"""checkable 60: 求解/问题N/结果/meta.json 含 3 件套 (auto, v1.5.9.4 新增, P1-7 防御).
+
+    背景: 2026A 复盘 v1.1 §P1-7 — 评阅关注点 2 强调"高效数值计算过程", 但脚本
+    print 了 elapsed 未入交付文件, 论文靠会话记忆. 改进: code-template 强制
+    `meta.json` 落盘 (elapsed_sec / steps / grid / dt / dr / complexity / version).
+
+    防御: 扫 `求解/问题N/结果/meta.json`, 验证 7 字段都不为 None. 缺一 → red.
+    论文 §5.X.2 必引 3 件套: 步长依据 (dt/dr) + O(复杂度) (complexity) + 实测耗时 (elapsed_sec).
+
+    阈值: 7 字段全填 green / 任一缺 red / meta.json 不存在 red / 求解/ 不存在 yellow.
+    """
+    paper_dir = get_paper_dir()
+    if not paper_dir.exists():
+        return ("yellow",
+                f"论文目录不存在 ({paper_dir}), 跳过 L27 meta",
+                "用 --paper-dir 指定")
+    is_template = "templates" in str(paper_dir) or "example" in str(paper_dir)
+
+    project_root = paper_dir.parent
+    solve_dir = project_root / "求解"
+    if not solve_dir.is_dir():
+        return ("yellow",
+                f"求解/ 不存在 ({solve_dir}), 跳过 L27 meta (跑前 skip)",
+                "跑完求解后才有 meta.json")
+
+    try:
+        sys.path.insert(0, str(SCRIPTS_DIR))
+        from check_meta import audit_meta
+    except ImportError as e:
+        return ("yellow",
+                f"check_meta.py 导入失败: {e}",
+                "检查 references/scripts/check_meta.py 完整性")
+
+    # 扫所有问题目录
+    problem_dirs = sorted([d for d in solve_dir.iterdir()
+                          if d.is_dir() and (d.name.startswith("问题") or d.name.startswith("Q"))])
+    if not problem_dirs:
+        return ("yellow",
+                f"求解/ 下无问题目录 ({solve_dir})",
+                "跑题后必有 求解/问题N/ 子目录")
+
+    n_total = 0
+    n_red = 0
+    n_green = 0
+    red_files = []
+    for pdir in problem_dirs:
+        meta_files = list(pdir.rglob("meta.json"))
+        if not meta_files:
+            n_total += 1
+            n_red += 1
+            red_files.append((pdir.name + "/meta.json 缺失", []))
+            continue
+        for mf in meta_files:
+            n_total += 1
+            result = audit_meta(mf)
+            if result["ok"]:
+                n_green += 1
+            else:
+                n_red += 1
+                red_files.append((str(mf.relative_to(project_root)), result["missing"]))
+
+    if n_total == 0:
+        return ("yellow",
+                f"求解/ 下无 meta.json (跑完求解后才有), 跳过 L27",
+                "跑题后 code-template 必落 meta.json")
+
+    if n_red == 0:
+        return ("green",
+                f"L27 meta.json 3 件套全过: {n_green}/{n_total} 问题含 7 字段 (P1-7 防御, 评阅关注点 2 '高效' 必填)",
+                None)
+
+    sample = [f"{f}: 缺 {m[:3]}" for f, m in red_files[:3]]
+    return ("red",
+            f"P1-7 meta.json 缺字段: {n_red}/{n_total} 问题未含 3 件套 (2026A 复盘 §P1-7)",
+            f"跑 code-template 自动落盘, 必填 elapsed_sec / steps / grid / dt / dr / complexity / version. 命中: {sample}")
+
+
 # ===== v1.5.7.36 新增 2 项: 绘图自检 L14 (冗余图) + L15 (图注 vs axes) =====
 
 def check_unused_figures():
@@ -3226,6 +3306,7 @@ CHECKS = [
     ("57. v1.5.8.4 支撑材料超限预案 L24 (>10MB 单文件 + 总 >20MB red / 大文件已配套 csv.gz yellow / 全部 <10MB green / 支撑材料/ 不存在 yellow, 2026A 复盘 §P0-5 防御, result2 36MB 翻车)", check_support_overlimit),
     ("58. v1.5.8.5 附录 ↔ 支撑材料包内容一致性 L25 (\\texttt{{路径}} 包外文件 red / 全在包内 green / 附录无路径 yellow / 支撑材料 不存在 yellow, 2026A 复盘 §P0-6 防御, 附录 J 引 _frag/gen_tables.py 不在包内 + 附录 A 列 result2.xlsx 已剔除)", check_appendix_consistency),
     ("59. v1.5.9 图形内容自检 L26 (np.ptp=0 曲线恒为常数 red / U+2080 下标 C₀ 乱码 yellow / 顶部暗像素 > 0.06 残留 set_title red, 2026A 复盘 §P1-3 防御, 与 check_figure.py 格式自检互补)", check_fig_content_sanity),
+    ("60. v1.5.9.4 meta.json 3 件套 L27 (code-template 必落 7 字段 / 缺字段 red / 全填 green / meta.json 不存在 red, 2026A 复盘 §P1-7 防御, 评阅关注点 2 强调'高效' 必填实测耗时+O(复杂度)+步长依据)", check_meta_3pcs),
 ]
 
 
