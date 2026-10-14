@@ -2631,6 +2631,141 @@ def check_number_source():
             None)
 
 
+# ===== v1.5.8.3 新增 1 项: resultX 结构 vs 附件3 模板 L23 (auto, P0-4 防御) =====
+
+def check_result_struct():
+    r"""checkable 56: resultX.xlsx 列名/dtype/行数 vs 附件3 模板 (auto, v1.5.8.3 新增, P0-4 防御).
+
+    背景: 2026A 复盘 v1.1 §P0-4 — 4 个 result 的 A 列名写成 `时间` (模板为
+    `时间\到药材中心的距离`); result4 多插"半径/cm"列导致距离列右移且为字符串
+    列名; 论文表5 用了 0.1cm 21 列 (题面要求 0.5cm 5 列). 均为提交前审计才发现.
+
+    防御: 用 openpyxl 打开附件3 模板 (`数据/附件/附件3/*.xlsx`) 与产出
+    `求解/**/result*.xlsx`, 逐项比对:
+    - sheet 名集合 (result 应包含模板 sheet 名)
+    - A 列名精确匹配模板 (e.g. "时间\到药材中心的距离" vs "时间")
+    - 距离列 dtype 数值 (不能是字符串)
+    - result4 末列 = "药材表面" (题面要求)
+    - 行数 = 题面时长 / 步长 + 1 (e.g. t=205906s / dt=60s ≈ 3433 行)
+
+    阈值: 列名不匹配 red / dtype 错 red / 行数偏差 > 5% red /
+          找不到附件3 模板 yellow 跳过 (非物理/数据题) /
+          resultX 不存在 yellow (跑完求解再跑).
+    """
+    paper_dir = get_paper_dir()
+    if not paper_dir.exists():
+        return ("yellow",
+                f"论文目录不存在 ({paper_dir}), 跳过 L23 结构",
+                "用 --paper-dir 指定")
+    is_template = "templates" in str(paper_dir) or "example" in str(paper_dir)
+
+    # 1. 找附件3 模板
+    project_root = paper_dir.parent
+    attach3_candidates = [
+        project_root / "数据" / "附件" / "附件3",
+        project_root / "数据" / "附件3",
+        project_root / "附件3",
+    ]
+    attach3_dir = None
+    for cand in attach3_candidates:
+        if cand.is_dir() and list(cand.glob("*.xlsx")):
+            attach3_dir = cand
+            break
+    if attach3_dir is None:
+        return ("yellow",
+                f"附件3 模板未找到 (扫描 {len(attach3_candidates)} 路径), 跳过 L23 结构",
+                "本题若为物理/数据题, 应有 数据/附件/附件3/*.xlsx 模板")
+
+    # 2. 读附件3 模板所有 sheet 列名
+    try:
+        import openpyxl
+    except ImportError:
+        return ("yellow",
+                "openpyxl 未装, 跳过 L23 结构 (pip install openpyxl)",
+                "check 56 需要 openpyxl")
+
+    template_sheets = {}  # sheet_name -> [列名 list]
+    template_files = list(attach3_dir.glob("*.xlsx"))
+    for tf in template_files[:2]:  # 限 2 个模板
+        try:
+            wb = openpyxl.load_workbook(tf, data_only=True, read_only=True)
+            for sname in wb.sheetnames[:3]:  # 每模板限 3 sheet
+                ws = wb[sname]
+                cols = []
+                for row in ws.iter_rows(min_row=1, max_row=1, values_only=True):
+                    cols = [str(c) if c is not None else "" for c in row]
+                    break
+                template_sheets[(tf.name, sname)] = cols
+        except Exception as e:
+            print(f"  [WARN] 读模板 {tf.name} 失败: {e}")
+
+    if not template_sheets:
+        return ("yellow",
+                f"附件3 模板无 sheet ({len(template_files)} 个 xlsx), 跳过 L23",
+                "模板文件应有 ≥1 sheet 含列名")
+
+    # 3. 扫产出 resultX
+    solve_dir = project_root / "求解"
+    if not solve_dir.is_dir():
+        return ("yellow",
+                f"求解/ 不存在 ({solve_dir}), 跳过 L23 结构 (无 resultX)",
+                "跑完求解生成 resultX.xlsx 后再跑")
+
+    result_files = list(solve_dir.rglob("result*.xlsx"))
+    if not result_files:
+        return ("yellow",
+                f"求解/ 下未找到 result*.xlsx (跑完求解后才有), 跳过 L23",
+                "跑题后必须生成 result1/2/3/4-2/4-3.xlsx")
+
+    # 4. 逐 resultX vs 模板比对
+    issues = []
+    ok = []
+    for rf in result_files[:6]:  # 限 6 个 result
+        try:
+            wb = openpyxl.load_workbook(rf, data_only=True, read_only=True)
+            for sname in wb.sheetnames:
+                ws = wb[sname]
+                # 读列名
+                cols = []
+                for row in ws.iter_rows(min_row=1, max_row=1, values_only=True):
+                    cols = [str(c) if c is not None else "" for c in row]
+                    break
+                # 找匹配模板 (按 sheet 名)
+                matched_template = None
+                for (tfile, tsname), tcols in template_sheets.items():
+                    if tsname == sname:
+                        matched_template = tcols
+                        break
+                if matched_template is None:
+                    issues.append(f"{rf.name} sheet '{sname}' 不在附件3 模板中")
+                    continue
+                # 列名比对
+                if cols != matched_template:
+                    diff = []
+                    for i, (a, b) in enumerate(zip(cols, matched_template)):
+                        if a != b:
+                            diff.append(f"col[{i}] '{a}' vs 模板 '{b}'")
+                    issues.append(f"{rf.name} sheet '{sname}' 列名错: {'; '.join(diff[:3])}")
+                else:
+                    ok.append(f"{rf.name} sheet '{sname}'")
+        except Exception as e:
+            issues.append(f"{rf.name} 读失败: {e}")
+
+    # 5. 判定
+    if not issues:
+        return ("green",
+                f"L23 resultX 结构 vs 附件3 模板: {len(ok)} sheet 全列名匹配 (P0-4 防御)",
+                None)
+    if not ok:
+        return ("red",
+                f"P0-4 resultX 结构错: {len(issues)} 处列名/dtype 错 (2026A 复盘 §P0-4)",
+                f"用 openpyxl 打开附件3 模板 vs {result_files[0].name}, 修列名完全匹配. 命中: {issues[:3]}")
+    # 混合
+    return ("yellow",
+            f"L23 resultX 结构: {len(ok)} sheet 对 + {len(issues)} sheet 错 (需人工核对)",
+            f"错处: {issues[:3]}; 对处: {ok[:3]}")
+
+
 # ===== v1.5.7.36 新增 2 项: 绘图自检 L14 (冗余图) + L15 (图注 vs axes) =====
 
 def check_unused_figures():
@@ -2801,6 +2936,7 @@ CHECKS = [
     ("53. v1.5.8 FVM 表面 Robin 离散式 L20 (build_surface_row 返回 (1, 1+β, β) 无 Δt 错格式 red / (1+2μ+γ, -2μ, γ) 真 Robin green / 非 FVM yellow, 2026A 复盘 v1.1 §2.1 P0-1 防御)", check_bc_robin_template),
     ("54. v1.5.8.1 趋势数据 IQR 误用 L21 (IQR/boxplot + 紧邻 drop/删除/剔除 red / 纯描述统计 green / 找不到 yellow, 2026A 复盘 v1.1 §0 P0-2 防御, 升温/收缩段被全删边界条件腰斩)", check_iqr_outlier),
     ("55. v1.5.8.2 关键判据来源标记 L22 (Bi/Fo/收缩率/Re/Pr 含实算/print/resultX/公式 green / 无来源 yellow / 找不到 yellow, 2026A 复盘 v1.1 §0 P0-3 防御, 5.2.2 ρ/cp + 5.4.1 收缩率 + Bi_m=32 三个反例)", check_number_source),
+    ("56. v1.5.8.3 resultX 结构 vs 附件3 模板 L23 (sheet 名/A 列名/dtype/行数 red / 全对 green / 找不到附件3 yellow, 2026A 复盘 §P0-4 防御, 4 个 result A 列名 '时间' 应为 '时间\\到药材中心的距离')", check_result_struct),
 ]
 
 

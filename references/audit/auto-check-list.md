@@ -84,7 +84,24 @@
 - `references/scripts/number_ledger.py` 4 子命令 (init/add/check/show), 8.3 KB
 - `references/audit/数值台账规范.md` 权威源 4.6 KB 6 节 (3 来源约束 + 4 道防线 + 反例对照 + check 55 协同)
 
-**跑题后必跑 dryrun** (L11/L14/L15/L16/L17/L18/L19/L20/L21/L22 全覆盖).
+## resultX 结构 vs 附件3 模板 (v1.5.8.3, check 56 auto, L23 物理/数据题必做)
+
+| check | 防御反例 |
+|---|---|
+| **56** resultX 列名/dtype/sheet vs 附件3 模板 L23 | 2026A 复盘 §P0-4 (4 个 result 的 A 列名写成 `时间`, 模板为 `时间\到药材中心的距离`; result4 多插"半径/cm"列导致距离列右移且为字符串; 论文表5 用了 0.1cm 21 列, 题面要求 0.5cm 5 列). 阈值: 列名不匹配 red / dtype 错 red / 找不到附件3 模板 yellow / resultX 不存在 yellow |
+
+**比对 4 维度** (openpyxl 逐列扫描):
+1. **sheet 名集合**: result 应包含模板所有 sheet 名
+2. **A 列名精确匹配**: 模板 `时间\到药材中心的距离` vs result `时间` → 错
+3. **距离列 dtype 数值**: 不能是字符串 (e.g. `r/cm` 列误为 str)
+4. **result4 末列 = "药材表面"**: 题面要求, 不能漏
+
+**论文表步长 vs result 完整序列步长** (读题清单 §10 细化):
+- **论文表步长**: 报给评委的最终输出 (e.g. 0.5cm 5 行)
+- **result 完整序列步长**: 保存到 resultX 的全部数据 (e.g. dt=60s, t=0 到 205906s ≈ 3433 行)
+- 两者分别登记, 不可混用 (论文表 ≠ result 全序列)
+
+**跑题后必跑 dryrun** (L11/L14/L15/L16/L17/L18/L19/L20/L21/L22/L23 全覆盖).
 
 ## 引用
 

@@ -1,4 +1,56 @@
-# CHANGELOG (v1.5.8.2 — 论文数字三来源 L22 (P0-3 防御) + 数值台账规范)
+# CHANGELOG (v1.5.8.3 — resultX 结构 vs 附件3 模板 L23 (P0-4 防御) + 读题清单 §10 细化)
+
+## v1.5.8.3 — resultX 结构 vs 附件3 模板 check 56 + 读题清单 §10 细化 (2026A 复盘 v1.1 §P0-4 防御)
+
+**核心**: 2026A 实跑复盘 v1.1 §P0-4 — 4 个 result 的 A 列名写成 `时间` (模板为 `时间\到药材中心的距离`); result4 多插"半径/cm"列导致距离列右移且为字符串列名; 论文表5 用了 0.1cm 21 列 (题面要求 0.5cm 5 列). 均为提交前审计才发现. v1.5.8.3 加 1 项 auto check + 读题清单第 10 项细化 (论文表步长 vs result 完整序列步长分别登记).
+
+**改 `references/scripts/dryrun.py`** (+110 行, 1 个新 check 函数):
+
+- **check 56 (resultX 结构 vs 附件3 模板 L23, auto)**: 用 openpyxl 打开附件3 模板 (`数据/附件/附件3/*.xlsx`) + 产出 `求解/**/result*.xlsx`, 逐项比对 4 维度:
+  1. **sheet 名集合**: result 应包含模板所有 sheet 名
+  2. **A 列名精确匹配**: 模板 `时间\到药材中心的距离` vs result `时间` → red
+  3. **距离列 dtype 数值**: 不能是字符串 (e.g. `r/cm` 列误为 str)
+  4. **result4 末列 = "药材表面"**: 题面要求, 不能漏
+- 阈值: 列名不匹配 red / dtype 错 red / 找不到附件3 模板 yellow / resultX 不存在 yellow
+
+**改 `references/read-checklist/读题清单.md`** (+30 行, §10 输出形式细化):
+
+- **§10.1 论文表步长**: 报给评委的最终输出 (e.g. 0.5cm 5 行) — dryrun check 19 + 56
+- **§10.2 result 完整序列步长**: 保存到 resultX 的全部数据 (e.g. dt=60s, t=0 到 205906s ≈ 3433 行)
+- **§10.3 resultX 列名严格按附件3 模板**: A 列必须写 `时间\到药材中心的距离`, 不能简写 `时间` 或 `t` — dryrun check 56 openpyxl 逐列比对
+
+**改 SKILL.md** (1486 → 1487, +1 行):
+
+- §5 道防线速查表段补 "v1.5.8.3 加 check 56 (L23) 用 openpyxl 逐列比对附件3 模板 vs resultX"
+
+**改 `references/audit/auto-check-list.md`** (+11 行, §resultX 结构 vs 附件3 模板节):
+
+- **§L23 段**: check 56 描述 + 4 维度比对 + 论文表步长 vs result 完整序列步长
+
+**改 `references/audit/post-solution-audit-list.md`** (16 层表 +1 行 L23):
+
+- **L23**: resultX 结构 vs 附件3 模板, auto + manual 读题清单 §10, dryrun 5 min
+
+**影响文件**:
+
+- 改 `references/scripts/dryrun.py` (+110 行: check_result_struct + CHECKS 1 行)
+- 改 `references/read-checklist/读题清单.md` (+30 行: §10 三段细化)
+- 改 `references/audit/auto-check-list.md` (+11 行: §L23 段)
+- 改 `references/audit/post-solution-audit-list.md` (+1 行: L23)
+- 改 SKILL.md (+1 行)
+- 改 CHANGELOG.md (主文件更新标题 + v1.5.8.3 entry)
+
+**dryrun**: 32/52 → 32/53 green + 20→21 yellow + 0 red (待 v1.5.8.3 commit 后跑实数) → **目标 33/53 green + 20 yellow + 0 red**.
+
+**v1.5.8.3 后续方向** (Sep 28 改进意见 25 项, 留位):
+
+- **v1.5.8 剩余 P0** (P0-5 支撑材料超限 / P0-6 附录一致性 / P0-7 重跑影响面 / P0-8 反斜杠批量改写) 等用户确认
+- **v1.5.9 P1 8 项** (评阅对齐 / 绘图双标题 / fig_sanity / 文献流程 / 移动边界反证 / 耗时落盘 / 表格组表头 / 跨文档一致) 等用户确认
+- **v1.6.0 P2 9 项** (Python 探测 / GBK reconfigure / heredoc 反斜杠 / 波浪号中文 / 模板 4 问化 / pack 忽略 / Read 尺寸校验 / Overfull 案例 / rename 列名) 等用户确认
+
+---
+
+
 
 ## v1.5.8.2 — 论文数字三来源 check 55 + §红线 7 + 数值台账 (2026A 复盘 v1.1 §0 P0-3 防御)
 
