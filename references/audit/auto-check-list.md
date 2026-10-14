@@ -126,7 +126,23 @@
 
 **留给 v1.5.9 P1 fig_sanity**: 附录表号引用 (e.g. `表1↔result1`) vs 编译 .aux 实际 `\newlabel{tab:xxx}` 一致性 (复杂度高, 跨编译阶段)
 
-**跑题后必跑 dryrun** (L11/L14/L15/L16/L17/L18/L19/L20/L21/L22/L23/L24/L25 全覆盖).
+## 图形程序化内容自检 (v1.5.9, check 59 auto, L26 跑题后必做)
+
+| check | 防御反例 |
+|---|---|
+| **59** 图形内容 (np.ptp=0 / U+2080 / 顶暗像素) L26 | 2026A 复盘 §P1-3 (Q1 干燥前沿因阈值写成 `2.5*C0` 曲线恒为 0; C₀ 字形□乱码 U+2080 下标; 22 张图带 set_title 双标题). 阈值: np.ptp=0 red / 顶暗像素 > 0.06 red / U+2080 yellow / 全 green |
+
+**与 check_figure.py 互补**: check_figure.py 是格式层 (DPI/字体), fig_sanity.py 是内容层 (np.ptp/U+2080/顶像素). 两者协同: 内容错走 fig_sanity, 格式错走 check_figure.
+
+**3 类内容自检** (fig_sanity.py):
+1. **np.ptp(y) == 0 曲线恒为常数** (阈值写错, Q1 干燥前沿 2.5*C0) → red
+2. **全 NaN 列** → red
+3. **顶部暗像素占比 > 0.06** (残留 set_title, 双标题) → red
+4. **U+2080 下标** (C₀ □乱码) → yellow
+
+**配套脚本**: `references/scripts/fig_sanity.py` (8.5 KB, 含 audit_content 单图 / CLI 扫目录 / 物理范围阈值表)
+
+**跑题后必跑 dryrun** (L11/L14/L15/L16/L17/L18/L19/L20/L21/L22/L23/L24/L25/L26 全覆盖).
 
 ## 引用
 

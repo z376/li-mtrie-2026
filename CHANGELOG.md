@@ -1,4 +1,86 @@
-# CHANGELOG (v1.5.8.7 — 含反斜杠内容批量改写 + 验收清单 I 段 (P0-8 防御))
+# CHANGELOG (v1.5.9 — 图形内容自检 L26 (P1-3 防御) + 代理审计 prompt 模板 (P1-4 防御))
+
+## v1.5.9 — 图形内容自检 check 59 + 代理审计 prompt 模板 (2026A 复盘 v1.1 §P1-3/4 防御)
+
+**核心**: 2026A 复盘 v1.1 §P1-3 — Q1 干燥前沿因阈值写成 `2.5*C0` 曲线恒为 0, 靠肉眼发现; 另有 C₀ 字形□乱码 (U+2080 下标). 用 PIL 对 22 张图做"顶部中央暗像素占比"检测 (标题带 >0.06 判红), 全部 ≤0.045 → 确认无残留图内标题. P1-4 代理交叉审计: 三轮只读代理审计共抓出**十余项真问题**, 其中第二轮抓出 2 个模型级错误 (温度表面离散式、水分 Dirichlet) — **自查永远查不出**, 只有"独立换实现重算 + 能量守恒反证"能抓出. v1.5.9 加 1 项 auto check + 1 个新文件 (代理审计 prompt 模板).
+
+**新建 `references/scripts/fig_sanity.py`** (8.5 KB, 4 段子命令):
+
+- **主入口 `audit_content(path)`**: 1 张图内容自检, 返回 `{issues, warnings, ok}`
+- **顶部暗像素占比** (PIL Image + numpy): 顶部 5% 区域 R<100 占比 > 0.06 → red (残留 set_title 双标题)
+- **np.ptp(y)==0 曲线恒为常数** (numpy 读对应 csv): 阈值写错 (Q1 干燥前沿 `2.5*C0` 反例) → red
+- **全 NaN 列** → red
+- **U+2080 下标** (`.py` 源文件含 `\u2080`-`\u2089`): C₀ □乱码 → yellow 警告
+- **物理范围阈值表** (T ∈ [-50, 200]℃, C ∈ [0, 1], R ∈ [0, 0.5]m 等 9 项)
+- **CLI** (4 子命令): `py fig_sanity.py figures/` / `--threshold 0.06` / `--exit-red-on-issue` / Python API `from fig_sanity import audit_content`
+
+**改 `references/scripts/dryrun.py`** (+95 行, 1 个新 check 函数):
+
+- **check 59 (图形内容自检 L26, auto)**: 调 `fig_sanity.audit_content` 扫 `paper_dir/figures/` 全部 .png/.jpg/.pdf/.svg:
+  - 任何 issues → red (P1-3 翻车)
+  - 仅 warnings → yellow
+  - 全 ok → green
+- 跳过 `__pycache__` / 共享 utils
+- 跨 PNG/JPG/PDF/SVG 多格式
+
+**新建 `references/代理审计prompt.md`** (8.9 KB, 5 节, P1-4 强化):
+
+- §0 审计目标 (paper_dir / solve_dir / data_dir / 跑题项目根)
+- §1 文件清单 (14 章 .tex + figures/ + 求解/ + 数据/ + 支撑材料/ + 审计存档)
+- §2 审计 checklist 7 板块 (A 模型层 / B 数据层 / C 求解层 / D 写作层 / E 参考文献 / F 附录 / **G 跨文档一致性 v1.5.9 新增**)
+- §3 报告输出格式 (P0 复现值 + P1/P2 列表 + 数字一致性比对表 + 参考文献核验表 + 总耗时 ≤ 30 KB)
+- §4 关键强化 (A 板块**必含**"边界离散式逐项对拍 + 能量守恒 + 独立换实现重算" + G 板块 6 项跨文档一致)
+- §5 不缓存, 每次 fresh (worker 独立 context, 不复用主对话历史)
+- **A 板块 5 项** (边界离散式 / 能量守恒 / 数据清洗 / 关键判据二次复算 / resultX 结构)
+- **G 板块 6 项** (附录 verbatim / AI 详情 / 手写表 / 过程日志头注 / 引用编号 / csv.gz 重生)
+
+**改 `references/plot/绘图规范与避坑.md`** (+15 行, §〇 第 0 条, P1-2 防御):
+
+- **第 0 条 (P1-2 强制)**: 入论文的图**删掉图内 title**, 标题只由 `\caption` 承担
+- 多面板图仅允许保留"面板级"短标签 (且优先用 y 轴标签/图例区分)
+- 出图模板默认不调 `set_title`, 留接口不强制删
+- 干 `fig_sanity.py` 自动检测残留: 顶部暗像素 > 0.06 报 red
+- 3 类反例 (错 / 对 / 2×2 面板对)
+
+**改 SKILL.md** (1498 → 1498, +0 行):
+
+- §5 道防线速查表段补 "v1.5.9 加 check 59 (L26) PIL 顶像素 + np.ptp + U+2080"
+- §跑题后 mavis 代理审计段补 "v1.5.9 强化: A 板块必含独立换实现重算 + G 板块跨文档一致性 6 项"
+
+**改 `references/audit/auto-check-list.md`** (+10 行, §图形程序化内容自检节):
+
+- **§L26 段**: check 59 + 与 check_figure.py 互补 + 4 类内容自检 (np.ptp=0 / 全 NaN / 顶暗像素 / U+2080)
+
+**改 `references/audit/post-solution-audit-list.md`** (16 层表 +1 行 L26):
+
+- **L26**: 图形程序化内容自检, auto (fig_sanity.py) + manual 修图, dryrun 10 min
+
+**影响文件**:
+
+- **新建** `references/scripts/fig_sanity.py` (8.5 KB, 4 段)
+- **新建** `references/代理审计prompt.md` (8.9 KB, 5 节)
+- 改 `references/scripts/dryrun.py` (+95 行: check_fig_content_sanity + CHECKS 1 行)
+- 改 `references/plot/绘图规范与避坑.md` (+15 行: §〇 第 0 条 P1-2)
+- 改 `references/audit/auto-check-list.md` (+10 行: §L26 段)
+- 改 `references/audit/post-solution-audit-list.md` (+1 行: L26)
+- 改 SKILL.md (+0 行, 嵌入新内容)
+- 改 CHANGELOG.md (主文件更新标题 + v1.5.9 entry)
+
+**dryrun**: 32/55 → 32/56 green + 23→24 yellow + 0 red (待 commit 后跑实数) → **目标 33/56 green + 23 yellow + 0 red**.
+
+**v1.5.9 后续方向** (Sep 28 改进意见 25 项, P1 8 项已开 2 项):
+
+- v1.5.9.1 P1-1 评阅要点对齐 (新建 `references/评阅要点对齐.md` + paper-spec 增映射矩阵)
+- v1.5.9.2 P1-5 参考文献可执行核真流程 (合规清单 §5 增流程)
+- v1.5.9.3 P1-6 移动边界方程退化反证 (题意红线第 6 条)
+- v1.5.9.4 P1-7 计算效率叙事与耗时落盘 (code-template 强制 meta.json)
+- v1.5.9.5 P1-8 题面表格格式合规 (组表头两行 + check_struct 增比对)
+- v1.6.0 P2 9 项
+- Changelog 历史漏洞: v1.5.7.40-43 (4 条 hotfix 漏写, 留位)
+
+---
+
+
 
 ## v1.5.8.7 — 含反斜杠内容批量改写 + 验收清单 I 段 (2026A 复盘 v1.1 §P0-8 防御)
 

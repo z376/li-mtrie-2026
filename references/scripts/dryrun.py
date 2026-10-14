@@ -2953,6 +2953,105 @@ def check_appendix_consistency():
             f"把下列路径改为包内真实存在的文件 (或补到 支撑材料/): {miss_str}")
 
 
+# ===== v1.5.9 新增 1 项: 图形内容自检 L26 (auto, P1-3 防御) =====
+
+def check_fig_content_sanity():
+    r"""checkable 59: 图形程序化内容自检 (auto, v1.5.9 新增, P1-3 防御).
+
+    背景: 2026A 复盘 v1.1 §P1-3 — Q1 干燥前沿因阈值写成 `2.5*C0` 曲线恒为 0
+    (np.ptp(y)==0), 靠肉眼发现; 另有 C₀ 字形□乱码 (U+2080 下标). 用 PIL
+    对 22 张图做"顶部中央暗像素占比"检测 (标题带 >0.06 判红), 全部
+    ≤0.045 → 确认无残留图内标题.
+
+    防御: 调 `references/scripts/fig_sanity.py` 扫 `paper_dir/figures/` 全部图:
+    - np.ptp(y)==0 曲线恒为常数 (阈值写错) → red
+    - 全 NaN → red
+    - 超物理范围 (T>200℃, C<0 等) → red
+    - 顶部暗像素占比 > 0.06 (残留 set_title, 双标题) → red
+    - .py 源含 U+2080 下标 (C₀ □乱码) → yellow 警告
+
+    与 check_figure.py (格式 / DPI / 字体) 互补: 内容错走 fig_sanity, 格式错
+    走 check_figure. 两者协同: 内容自检 = 内容层, 格式自检 = 格式层.
+
+    阈值: 全部 green / 任何 issue red / 全 warnings yellow.
+    """
+    paper_dir = get_paper_dir()
+    if not paper_dir.exists():
+        return ("yellow",
+                f"论文目录不存在 ({paper_dir}), 跳过 L26 fig_sanity",
+                "用 --paper-dir 指定")
+    is_template = "templates" in str(paper_dir) or "example" in str(paper_dir)
+
+    figures_dir = paper_dir / "figures"
+    if not figures_dir.exists():
+        return ("yellow",
+                f"figures/ 不存在 ({figures_dir}), 跳过 L26 (无图场景)",
+                "跑题后必须生成图")
+
+    # 1. 调 fig_sanity.audit_content
+    try:
+        sys.path.insert(0, str(SCRIPTS_DIR))
+        from fig_sanity import audit_content
+    except ImportError as e:
+        return ("yellow",
+                f"fig_sanity.py 导入失败: {e}",
+                "检查 references/scripts/fig_sanity.py 完整性")
+
+    # 2. 扫所有图
+    n_total = 0
+    n_red = 0
+    n_yellow = 0
+    n_green = 0
+    red_files = []
+    yellow_files = []
+    for ext in ('*.png', '*.jpg', '*.jpeg', '*.pdf', '*.svg'):
+        for f in figures_dir.rglob(ext):
+            if not f.is_file():
+                continue
+            n_total += 1
+            try:
+                result = audit_content(str(f), title_threshold=0.06)
+            except Exception as e:
+                yellow_files.append((f.relative_to(figures_dir), f"audit_content 异常: {e}"))
+                n_yellow += 1
+                continue
+            if result["issues"]:
+                n_red += 1
+                red_files.append((f.relative_to(figures_dir), result["issues"]))
+            elif result["warnings"]:
+                n_yellow += 1
+                yellow_files.append((f.relative_to(figures_dir), result["warnings"]))
+            else:
+                n_green += 1
+
+    if n_total == 0:
+        return ("yellow",
+                f"figures/ 无图像文件 ({figures_dir}), 跳过 L26",
+                "跑题后必须生成图")
+
+    # 3. 判定
+    if n_red > 0 and n_green == 0 and n_yellow == 0:
+        # 全部 red (内容级 P0 翻车)
+        sample = [f"{f}: {iss[0]}" for f, iss in red_files[:3]]
+        return ("red",
+                f"P1-3 图形内容错: {n_red}/{n_total} 图有问题 (2026A 复盘 §P1-3)",
+                f"修: 删 set_title (改用 caption) / 修 np.ptp=0 阈值 / 改 U+2080 下标. 命中: {sample}")
+
+    if n_red > 0:
+        return ("yellow",
+                f"L26 fig_sanity: {n_red} 红 + {n_green} 绿 + {n_yellow} 黄 ({n_total} 总, 需人工核对)",
+                f"红处: {[(str(f), iss[0]) for f, iss in red_files[:3]]}")
+
+    if n_yellow > 0:
+        return ("yellow",
+                f"L26 fig_sanity: {n_yellow} 黄 + {n_green} 绿 (无 red, 警告可保留)",
+                f"警告: {[(str(f), w[0]) for f, w in yellow_files[:3]]}")
+
+    return ("green",
+            f"L26 fig_sanity: {n_green}/{n_total} 图内容全过 (P1-3 防御, 顶像素 < 0.06 + 无 np.ptp=0 + 无 U+2080)",
+            None)
+
+
 # ===== v1.5.7.36 新增 2 项: 绘图自检 L14 (冗余图) + L15 (图注 vs axes) =====
 
 def check_unused_figures():
@@ -3126,6 +3225,7 @@ CHECKS = [
     ("56. v1.5.8.3 resultX 结构 vs 附件3 模板 L23 (sheet 名/A 列名/dtype/行数 red / 全对 green / 找不到附件3 yellow, 2026A 复盘 §P0-4 防御, 4 个 result A 列名 '时间' 应为 '时间\\到药材中心的距离')", check_result_struct),
     ("57. v1.5.8.4 支撑材料超限预案 L24 (>10MB 单文件 + 总 >20MB red / 大文件已配套 csv.gz yellow / 全部 <10MB green / 支撑材料/ 不存在 yellow, 2026A 复盘 §P0-5 防御, result2 36MB 翻车)", check_support_overlimit),
     ("58. v1.5.8.5 附录 ↔ 支撑材料包内容一致性 L25 (\\texttt{{路径}} 包外文件 red / 全在包内 green / 附录无路径 yellow / 支撑材料 不存在 yellow, 2026A 复盘 §P0-6 防御, 附录 J 引 _frag/gen_tables.py 不在包内 + 附录 A 列 result2.xlsx 已剔除)", check_appendix_consistency),
+    ("59. v1.5.9 图形内容自检 L26 (np.ptp=0 曲线恒为常数 red / U+2080 下标 C₀ 乱码 yellow / 顶部暗像素 > 0.06 残留 set_title red, 2026A 复盘 §P1-3 防御, 与 check_figure.py 格式自检互补)", check_fig_content_sanity),
 ]
 
 
