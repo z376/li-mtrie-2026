@@ -410,7 +410,7 @@ python -m pip download -d ./pkgs pandas numpy scipy matplotlib openpyxl PyMuPDF 
 
 **📌 含反斜杠内容批量改写 (v1.5.8.7 新增, P0-8 防御, 工具规范)** — 含 `\subsection` / `\alpha` / `\\section` 等反斜杠内容的批量改写, 两次翻车: (1) `df.apply(lambda x: x.strip())` 对每行执行, 把 4 个绘图脚本**全部缩进抹平**文件全毁, 靠 支撑材料.zip 里的原件才恢复; (2) shell 双引号里 Python 正则 `\\\\subsection` 被 bash 逐层吃掉反斜杠, `sub()` 静默不匹配 ("没报错"≠"改成功"), 导致 §引用改了、标题没改, 出现半改状态. 3 条铁律: (1) 批量改写前**先备份**或确保有 zip/版本可回滚; 改写脚本**只触碰匹配到的行**, 绝不对未匹配行做 strip/重排. (2) 改写脚本**必须回读验证** (改后 grep 目标串消失/出现, 数量对得上), "没报错"≠"改成功". (3) 含反斜杠的 Python/正则/LaTeX 一律 **Write 工具落盘再执行**, **禁止 heredoc**, **禁止在 bash 双引号里写正则** (P2-3 实战同因). 详细 + 实战反例 → `references/audit/验收清单.md §I`.
 
-**📌 Step 4.6 代理交叉审计 (v1.5.9 新增, P1-4 防御, 必做)** — `python references/scripts/dryrun.py --mode agent` 输出 brief, 复制到 mavis 主对话 → spawn worker sub-session 跑 `references/代理审计prompt.md` (8.9 KB, 5 节 A/B/C/D/E/F/G 板块). 关键强化: A 板块**必须含**"边界/初值离散式逐项对拍题面 + 能量守恒校验 + 自写求解器独立重算" (不是只复现, 是要复算, 第二轮审计抓出 2 个模型级错误就是这一步); G 板块 (跨文档一致性) v1.5.9 新增: 附录 verbatim / AI 详情 / 手写表 / 过程日志头注 / 引用编号 .aux / csv.gz 重生 (6 项). 跑题后必做, 30 min 内出报告 ≤ 30 KB. 详细 → `references/代理审计prompt.md` + `references/audit/post-solution-audit-list.md §Step 4.6`.
+**📌 Step 4.6 代理审计 (v1.5.9) + 评阅要点对齐 (v1.5.9.1)** — 详见 `references/代理审计prompt.md` (P1-4) + `references/评阅要点对齐.md` (P1-1, 4 列映射矩阵 + 4 大通用 + 物理机理类 5 大专属). 关注点 3"高效" P1-7 联动.
 
 
 
