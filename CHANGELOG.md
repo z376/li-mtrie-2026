@@ -1,4 +1,81 @@
-# CHANGELOG (v1.5.8 — FVM 表面 Robin 边界离散式 L20 (P0-1 防御))
+# CHANGELOG (v1.5.8.1 — 趋势数据 IQR 误用 L21 (P0-2 防御) + 数据清洗规范)
+
+## v1.5.8.1 — 趋势数据 IQR 误用 check 54 + §红线 6 + 数据清洗规范 (2026A 复盘 v1.1 §0 P0-2 防御)
+
+**核心**: 2026A 实跑复盘 v1.1 §0 P0-2 — 首版清洗用 `IQR(k=3) = Q3 + 3×IQR / Q1 - 3×IQR` 把附件 1 升温段 (27 行) + 附件 2 收缩段 (23 行) 全部判异常, **边界条件被腰斩**. 趋势数据的四分位距天然覆盖不了分布尾部的"过程段", IQR 不适用于过程段检测. v1.5.8.1 加 1 项 auto check + §红线 6 + 新建数据清洗规范文件.
+
+**改 `references/scripts/dryrun.py`** (+110 行, 1 个新 check 函数):
+
+- **check 54 (IQR/boxplot + 紧邻 drop L21, auto)**: 启发式扫 `求解/问题N/*.py`, 找 5 个常见 IQR/boxplot/quantile 命名/调用:
+  - 紧邻 `drop/dropna/删除/剔除/outlier` (10 行窗口) → **red** (P0-2 反例, 趋势段被全删)
+  - 纯描述统计 (describe / quantile 用于报告) → **green**
+  - 找不到 IQR/boxplot → **yellow** (非数据清洗题, 跳过)
+- 跳过 `__init__` / 共享 utils / 绘图脚本 (含 `plot/绘图/figure` 路径, boxplot 用于画图不剔除)
+
+**新建 `references/data-usage/数据清洗规范.md`** (6.4 KB, 7 节, P0-2 权威源):
+
+- **§1 总纲**: 趋势数据禁用全局 IQR/箱线判据. 二阶差分"速率阶段变化"是物理现象, 不是测量错误
+- **§2 4 类允许检测方法**:
+  1. **物理越界**: `T ∈ [T_min, T_max]`, `C > 0`, `R ∈ (0, R₀]`, `X ∈ [0, 1]`
+  2. **一阶差分突变**: z-score > 5 (远比 IQR 的 1.5 严格)
+  3. **物理单调性 (带容差 ε=1e-6)**: 收缩曲线 R 不增, 升温曲线 T 不降
+  4. **时间间隔一致性 + 重复值**: Δt 偏差 > 5% 提示时间戳错乱
+- **§3 边界/驱动类数据默认保留全量**: 附件 M 的 R(t) / 预报曲线 / 滚动预测是**驱动**数据, 删 1 行 = 改 1 个边界时刻
+- **§4 二阶差分"速率阶段变化"是物理现象**: 升温曲线常分阶段 (表面水 → 自由水 → 结合水), d²T/dt² 突变是阶段切换
+- **§5 与 v1.5.8 §红线 5 协同**: 输入侧 P0-2 (清洗错) + 输出侧 P0-1 (离散式错) = 机理题"数据-模型"双防
+- **§6 dryrun check 54 (L21) 协同**: 启发式扫源码 IQR + drop
+- **§7 引用**: 跨 4 文件协同
+
+**改 `references/read-checklist/题意红线.md`** (+50 行, §红线 6):
+
+- **§红线 6 (数据清洗维度通用)**: 趋势数据禁用全局 IQR/箱线判据
+  - 4 类允许检测方法 (物理越界 / 一阶差分 z>5 / 单调性含容差 / 时间间隔+重复)
+  - 边界/驱动类数据默认保留全量
+  - 二阶差分"速率阶段变化"是物理现象
+  - 与 v1.5.8 §红线 5 协同: 输入侧 (P0-2) + 输出侧 (P0-1) = 双防
+
+**改 `references/by-category/数据分析类典型反模式.md`** (+2 行, §1 反模式表 #11):
+
+- **#11 趋势数据 IQR 误删**: 单调趋势段被全删, 改 4 类允许检测. 2026A P0-2 反例: 升温 27 行 + 收缩 23 行被 IQR(k=3) 全删. dryrun check 54 (L21)
+
+**改 `references/by-category/物理机理类典型反模式.md`** (+2 行, §1 反模式表 #11):
+
+- **#11 升温/收缩曲线 IQR 误删 (输入侧 P0)**: 跟 #9 (输出侧 P0-1) 协同: 输入+输出双防
+
+**改 `references/audit/auto-check-list.md`** (+13 行, §数据清洗 IQR 误用节):
+
+- **§L21 段**: check 54 描述 + 4 类允许检测列表 + 阈值
+
+**改 `references/audit/post-solution-audit-list.md`** (16 层表 +1 行 L21):
+
+- **L21**: 趋势数据 IQR 误用, auto (check 54), dryrun 5 min
+
+**改 SKILL.md** (1474 → 1476, +2 行):
+
+- §Step 0 数据节 +1 段 (引用数据清洗规范.md + §红线 6 + check 54)
+- §5 道防线速查表段补"数据清洗 v1.5.8.1 加 check 54 (L21)"
+
+**影响文件**:
+
+- 改 `references/scripts/dryrun.py` (+110 行: check_iqr_outlier + CHECKS 1 行)
+- **新建** `references/data-usage/数据清洗规范.md` (6.4 KB, 7 节权威源)
+- 改 `references/read-checklist/题意红线.md` (+50 行: §红线 6)
+- 改 `references/by-category/数据分析类典型反模式.md` (+2 行: 反模式 #11)
+- 改 `references/by-category/物理机理类典型反模式.md` (+2 行: 反模式 #11)
+- 改 `references/audit/auto-check-list.md` (+13 行: §L21 段)
+- 改 `references/audit/post-solution-audit-list.md` (+1 行: L21)
+- 改 SKILL.md (+2 行)
+- 改 CHANGELOG.md (主文件更新标题 + v1.5.8.1 entry)
+
+**dryrun**: 32/50 → 32/51 green + 18→19 yellow + 0 red (待 v1.5.8.1 commit 后跑实数) → **目标 33/51 green + 18 yellow + 0 red**.
+
+**v1.5.8.1 后续方向** (Sep 28 改进意见 25 项, 留位):
+
+- **v1.5.8 剩余 P0** (P0-3 数字三来源 / P0-4 check_struct / P0-5 支撑材料超限 / P0-6 附录一致性 / P0-7 重跑影响面 / P0-8 反斜杠批量改写) 等用户确认
+- **v1.5.9 P1 8 项** (评阅对齐 / 绘图双标题 / fig_sanity / 文献流程 / 移动边界反证 / 耗时落盘 / 表格组表头 / 跨文档一致) 等用户确认
+- **v1.6.0 P2 9 项** (Python 探测 / GBK reconfigure / heredoc 反斜杠 / 波浪号中文 / 模板 4 问化 / pack 忽略 / Read 尺寸校验 / Overfull 案例 / rename 列名) 等用户确认
+
+---
 
 ## v1.5.8 — FVM Robin 边界离散式 check 53 + §红线 5 (2026A 复盘 v1.1 §2.1 P0-1 防御)
 

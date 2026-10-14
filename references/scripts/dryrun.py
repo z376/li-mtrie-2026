@@ -2413,6 +2413,119 @@ def check_bc_robin_template():
             f"分别核对 2026A 复盘 v1.1 §2.1 真模板")
 
 
+# ===== v1.5.8.1 新增 1 项: 趋势数据禁用全局 IQR L21 (auto, P0-2 防御) =====
+
+def check_iqr_outlier():
+    r"""checkable 54: 趋势数据 IQR/箱线判据误用 (auto, v1.5.8.1 新增, P0-2 防御).
+
+    背景: 2026A 复盘 v1.1 §0 (Sep 28 改进意见 P0-2) — 首版清洗用
+    `IQR(k=3) = Q3 + 3×IQR / Q1 - 3×IQR` 把附件 1 升温段 (27 行) +
+    附件 2 收缩段 (23 行) 全部判异常, **边界条件被腰斩**. 趋势数据的
+    四分位距天然覆盖不了分布尾部的"过程段", IQR 不适用于过程段检测.
+
+    防御: 扫 `求解/问题N/*.py`, 启发式找 iqr/IQR/boxplot/quantile(0.25)
+    等关键词 + 紧邻 drop/删除/剔除/outlier 等清洗操作, 判断:
+    - 紧邻 drop/删除/剔除/outlier → **red** (P0-2 反例, 趋势数据被全删)
+    - 纯描述统计 (describe() / quantile() 用于报告) → **green**
+    - 找不到 IQR/boxplot → **yellow** (非数据分析题, 跳过)
+
+    阈值: yellow 跳过 (无 IQR 用法) / green (纯描述) /
+          red (IQR + 紧邻 drop = P0-2 反例).
+
+    防御反例: 2026A v15 P0-2 (升温/收缩曲线 IQR 误删) + 反模式 #1 数据预处理
+              不报告 (数据分析类) / 物理机理类升温/收缩曲线 IQR 误删.
+    """
+    paper_dir = get_paper_dir()
+    if not paper_dir.exists():
+        return ("yellow",
+                f"论文目录不存在 ({paper_dir}), 跳过 L21 IQR",
+                "用 --paper-dir 指定")
+    is_template = "templates" in str(paper_dir) or "example" in str(paper_dir)
+
+    solve_dir = paper_dir.parent / "求解"
+    if not solve_dir.is_dir():
+        return ("yellow",
+                f"求解/ 不存在 ({solve_dir}), 跳过 L21 IQR (非数据清洗题)",
+                "本题若有数据清洗, 应有 求解/问题N/ 子目录")
+
+    # 启发式: IQR / boxplot / quantile(0.25) 等 5 个常见命名/调用
+    iqr_fn_pattern = re.compile(
+        r'\b(?:iqr|IQR)\b|'           # 单词 iqr / IQR
+        r'\bplt\.boxplot\b|'          # matplotlib 箱线
+        r'\bsns\.boxplot\b|'          # seaborn 箱线
+        r'\.quantile\(\s*0\.25\b'     # pd.Series.quantile(0.25) Q1
+    )
+    # 紧邻 drop/删除/剔除 等清洗操作 (5 个关键词, 10 行内)
+    drop_pattern = re.compile(
+        r'\b(?:drop|dropna|删除|剔除|outlier)\b'
+    )
+
+    bad_rows = []    # 错用法 (P0-2 反例)
+    good_rows = []   # 纯描述统计
+    skipped = []     # 不含 IQR (非数据清洗题, 静默跳过)
+
+    for py_file in solve_dir.rglob("*.py"):
+        rel = str(py_file.relative_to(solve_dir))
+        if py_file.name.startswith("_"):
+            continue
+        if "共享" in rel or "shared" in rel.lower() or "utils" in rel.lower() or "data_utils" in rel.lower():
+            continue
+        # 跳过纯绘图脚本 (boxplot 用于画图, 不剔除) — 通过路径关键词
+        if "plot" in rel.lower() or "绘图" in rel or "figure" in rel.lower():
+            continue
+        try:
+            content = py_file.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            continue
+
+        if not iqr_fn_pattern.search(content):
+            continue
+
+        # 检测 IQR 紧邻 drop/删除/剔除 (10 行窗口)
+        lines = content.split('\n')
+        iqr_line_idx = None
+        drop_line_idx = None
+        for i, line in enumerate(lines):
+            if iqr_fn_pattern.search(line):
+                iqr_line_idx = i
+                # 在后续 10 行内找 drop
+                for j in range(i, min(i + 11, len(lines))):
+                    if drop_pattern.search(lines[j]):
+                        drop_line_idx = j
+                        break
+                if drop_line_idx is not None:
+                    break
+
+        if iqr_line_idx is not None and drop_line_idx is not None:
+            bad_rows.append(f"{rel}:L{drop_line_idx + 1} (IQR 在 L{iqr_line_idx + 1})")
+        else:
+            good_rows.append(rel)
+
+    # 判定逻辑
+    if not (bad_rows or good_rows):
+        return ("yellow",
+                f"求解/ 中未找到 IQR/boxplot/quantile(0.25) 调用, 跳过 L21 (非数据清洗题)",
+                "本题若有清洗需求, 应在 solve_*.py 用 4 类允许检测 (物理越界/一阶差分/单调性/时间间隔)")
+
+    if bad_rows and not good_rows:
+        return ("red",
+                f"P0-2 趋势数据 IQR 误用 (2026A 复盘 v1.1 §0): 升温/收缩段被全删, 边界条件腰斩",
+                f"改用 4 类允许检测: 物理越界 / 一阶差分 z>5 / 单调性 (含容差) / 时间间隔+重复. "
+                f"完整规范 + 代码模板: references/data-usage/数据清洗规范.md §2. 命中: {bad_rows[:3]}")
+
+    if good_rows and not bad_rows:
+        return ("green",
+                f"L21 IQR 用法正确 (纯描述统计, P0-2 防御): {len(good_rows)} 处 quantile/boxplot",
+                None)
+
+    # 混合: 部分清洗 + 部分描述 (黄, 人工核对)
+    return ("yellow",
+            f"L21 IQR 用法: {len(good_rows)} 描述统计 + {len(bad_rows)} 紧邻 drop (需人工核对)",
+            f"紧邻 drop 命中: {bad_rows[:3]}; 纯描述: {good_rows[:3]}. "
+            f"若清洗只针对非趋势段 (e.g. 平稳流量), 改用 4 类允许检测; "
+            f"若纯描述报告, 当前 OK")
+
+
 # ===== v1.5.7.36 新增 2 项: 绘图自检 L14 (冗余图) + L15 (图注 vs axes) =====
 
 def check_unused_figures():
@@ -2581,6 +2694,7 @@ CHECKS = [
     ("51. v1.5.7.44 AIGC 2-gram TTR L18 (跳过注释 + 跳过数学环境, > 0.45 green / 0.35-0.45 yellow / < 0.35 red, Sep 13 AIGC 报告 0.457 阈值)", check_ngram_ttr),
     ("52. v1.5.7.44 AIGC 3-gram 重复率 L19 (1 - 唯一/总, < 60% green / 60-70% yellow / > 70% red, Sep 13 AIGC 报告 60.3% 阈值)", check_ngram_repetition),
     ("53. v1.5.8 FVM 表面 Robin 离散式 L20 (build_surface_row 返回 (1, 1+β, β) 无 Δt 错格式 red / (1+2μ+γ, -2μ, γ) 真 Robin green / 非 FVM yellow, 2026A 复盘 v1.1 §2.1 P0-1 防御)", check_bc_robin_template),
+    ("54. v1.5.8.1 趋势数据 IQR 误用 L21 (IQR/boxplot + 紧邻 drop/删除/剔除 red / 纯描述统计 green / 找不到 yellow, 2026A 复盘 v1.1 §0 P0-2 防御, 升温/收缩段被全删边界条件腰斩)", check_iqr_outlier),
 ]
 
 

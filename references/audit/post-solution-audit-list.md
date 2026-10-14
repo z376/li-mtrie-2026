@@ -22,6 +22,7 @@
 | L18 | AIGC 2-gram TTR | auto | check 51 (v1.5.7.44 新增) | dryrun |
 | L19 | AIGC 3-gram 重复率 | auto | check 52 (v1.5.7.44 新增) | dryrun |
 | L20 | FVM Robin 边界离散式 | auto + manual 两道校验 | check 53 (v1.5.8 新增) | dryrun (10 min) |
+| L21 | 趋势数据 IQR 误用 | auto | check 54 (v1.5.8.1 新增) | dryrun (5 min) |
 | L14 | 幻觉文献 | manual (L4 步骤 2-7 覆盖) | — | (L4 内) |
 | L15 | 双向题 vs 4h 窗口 | manual | — | 5 min |
 | L16 | Q1 表1/表2 格式 | manual | — | 10 min |

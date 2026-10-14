@@ -360,6 +360,8 @@ python -m pip download -d ./pkgs pandas numpy scipy matplotlib openpyxl PyMuPDF 
 
 - **用 `references/scripts/profile_data.py` 跑 EDA**（借鉴自 scipilot，自动检测列类型/分布/相关性/初步图型）
 
+- **数据清洗规范 (v1.5.8.1 新增, P0-2 防御)** — 趋势段 (升温/收缩/衰减曲线) **禁用全局 IQR/箱线判据**, 改用 4 类允许: 物理越界 / 一阶差分 z>5 / 单调性 (含容差 ε) / 时间间隔+重复. **边界/驱动数据默认保留全量**. 完整 4 类代码模板 → `references/data-usage/数据清洗规范.md` (6.4 KB 权威源, 7 节) + `references/read-checklist/题意红线.md §红线 6`. dryrun check 54 (L21) 启发式扫 iqr/boxplot + 紧邻 drop. **2026A 复盘 P0-2 反例**: 附件 1 升温曲线 27 行 + 附件 2 收缩曲线 23 行被 IQR(k=3) 全删, 边界条件腰斩
+
 
 
 **checkable 绿**: 题面文字 ≥ 200 字 + `求解/求解计划.md` 顶部 4 项 (题组/题号/问题数/数据概况) 已填。profile_data.py 跑出报告 = 加分项, 但不是绿门。
@@ -402,7 +404,7 @@ python -m pip download -d ./pkgs pandas numpy scipy matplotlib openpyxl PyMuPDF 
 
 - **交通运筹类** (v1.5.7.15 新增) → `references/by-category/交通运筹类典型反模式.md` (网络结构/容量时空/算法适用/Pareto)
 
-**详细反模式对照表 + 跑题前/后自检 checklist** → `references/design-intent/5道防线自检清单.md` (v1.5.7.11 新增, 6.5 KB, 一处调取). dryrun **check 24** 验证该文件存在 + 4 章节齐全, **check 27** 验证 7 类目 references 全在. **物理机理类 v1.5.8 加 check 53 (L20)** 自动扫 `求解/问题N/solve_*.py` bc_row 函数, 抓 Robin 边界离散式 P0 (温度场/水分场/动边界).
+**详细反模式对照表 + 跑题前/后自检 checklist** → `references/design-intent/5道防线自检清单.md` (v1.5.7.11 新增, 6.5 KB, 一处调取). dryrun **check 24** 验证该文件存在 + 4 章节齐全, **check 27** 验证 7 类目 references 全在. **物理机理类 v1.5.8 加 check 53 (L20)** 自动扫 `求解/问题N/solve_*.py` bc_row 函数, 抓 Robin 边界离散式 P0 (温度场/水分场/动边界). **数据清洗 v1.5.8.1 加 check 54 (L21)** 自动扫 IQR/boxplot + 紧邻 drop, 抓 P0-2 (升温/收缩段被 IQR 全删边界条件腰斩).
 
 
 
