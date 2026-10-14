@@ -408,6 +408,8 @@ python -m pip download -d ./pkgs pandas numpy scipy matplotlib openpyxl PyMuPDF 
 
 **📌 重跑影响面清单 (v1.5.8.6 新增, P0-7 防御, Step 4 必做)** — 修边界/重跑后手写内容**必然过期** (`tab:conv 37.6379→33.5279`, `tab:integrity 行数 3190→3433`, `result4 2956→3031`, 附录 E verbatim 旧 `191330s`, AI 详情手写编号叠加成"4.1 3.1", 审计报告留旧"Dirichlet"结论未标注). 6 项: (1) 重跑 gen_tables (2) 手写数值表重填 (3) 附录 verbatim 与源码逐字一致 (4) AI 详情对账 (5) 过程日志加"历史版本·已被取代"头注 (6) 引用/编号编译后查 .aux `\newlabel`. 详细 + PowerShell → `references/audit/验收清单.md §H`.
 
+**📌 含反斜杠内容批量改写 (v1.5.8.7 新增, P0-8 防御, 工具规范)** — 含 `\subsection` / `\alpha` / `\\section` 等反斜杠内容的批量改写, 两次翻车: (1) `df.apply(lambda x: x.strip())` 对每行执行, 把 4 个绘图脚本**全部缩进抹平**文件全毁, 靠 支撑材料.zip 里的原件才恢复; (2) shell 双引号里 Python 正则 `\\\\subsection` 被 bash 逐层吃掉反斜杠, `sub()` 静默不匹配 ("没报错"≠"改成功"), 导致 §引用改了、标题没改, 出现半改状态. 3 条铁律: (1) 批量改写前**先备份**或确保有 zip/版本可回滚; 改写脚本**只触碰匹配到的行**, 绝不对未匹配行做 strip/重排. (2) 改写脚本**必须回读验证** (改后 grep 目标串消失/出现, 数量对得上), "没报错"≠"改成功". (3) 含反斜杠的 Python/正则/LaTeX 一律 **Write 工具落盘再执行**, **禁止 heredoc**, **禁止在 bash 双引号里写正则** (P2-3 实战同因). 详细 + 实战反例 → `references/audit/验收清单.md §I`.
+
 
 
 **📌 AI 跑题前必读 3 文件 (v1.5.7.7 强化, 不读可能踩 v1.5.7.6/1.5.7.7 反模式)**:
