@@ -3132,6 +3132,82 @@ def check_meta_3pcs():
             f"跑 code-template 自动落盘, 必填 elapsed_sec / steps / grid / dt / dr / complexity / version. 命中: {sample}")
 
 
+# ===== v1.5.9.5 新增 1 项: 论文表格两行表头 L28 (auto, P1-8 防御) =====
+
+def check_paper_two_row_header():
+    r"""checkable 61: 论文 .tex 表格含两行表头 (\\multicolumn + \\multirow) (auto, P1-8 防御).
+
+    背景: 2026A 复盘 v1.1 §P1-8 — 题面表 1-6 模板带 `到药材中心的距离/cm` 跨列组表头
+    (两行表头), 我们的表只有裸距离值、缺该组标签 (审计判 WARN). 题面明确
+    "按表 X 的格式给出", 格式偏差会被对照. 改进: 论文 .tex 表格必含
+    `\\multicolumn{n}{c}{组标签}` (第一行) + `\\multirow{n}{*}{命名列}` (分组)
+    + 第二行行表头.
+
+    防御: 扫论文 5.X.2 章节 longtable 段, 检测 `\\multicolumn` + `\\multirow`
+    配对. 至少 1 处配对 → green, 0 处 → red (题面格式不匹配).
+
+    阈值: 论文表含两行表头 green / 全无 red / 论文目录无 longtable yellow
+          (本题无表格章节, 跳过).
+    """
+    paper_dir = get_paper_dir()
+    if not paper_dir.exists():
+        return ("yellow",
+                f"论文目录不存在 ({paper_dir}), 跳过 L28 表头",
+                "用 --paper-dir 指定")
+    is_template = "templates" in str(paper_dir) or "example" in str(paper_dir)
+
+    # 扫论文 5.X 章节 longtable / tabular
+    target_files = ["5.1.1.分析与准备.tex", "5.1.2.建模与求解.tex",
+                    "5.2.建模与求解.tex", "5.3.建模与求解.tex", "5.4.建模与求解.tex",
+                    "6.模型检验.tex"]
+    multicolumn_count = 0
+    multirow_count = 0
+    longtable_count = 0
+    tex_with_both = []
+    for fname in target_files:
+        tex_file = paper_dir / fname
+        if not tex_file.exists():
+            continue
+        try:
+            text = tex_file.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            continue
+        # 跳过注释
+        non_comment = "\n".join(
+            line for line in text.splitlines()
+            if not line.lstrip().startswith("%")
+        )
+        if "\\multicolumn" in non_comment:
+            multicolumn_count += non_comment.count("\\multicolumn")
+        if "\\multirow" in non_comment:
+            multirow_count += non_comment.count("\\multirow")
+        if "\\begin{longtable}" in non_comment or "\\begin{tabular}" in non_comment:
+            longtable_count += non_comment.count("\\begin{longtable}") + non_comment.count("\\begin{tabular}")
+        # 配对 (同段 ±10 行)
+        if "\\multicolumn" in non_comment and "\\multirow" in non_comment:
+            tex_with_both.append(fname)
+
+    # 判定
+    if longtable_count == 0:
+        return ("yellow",
+                f"论文 5.X 章节无 longtable/tabular (本题可能无表格章节, 跳过 L28)",
+                "若题面要求表格, 在 5.X.2 用 \\begin{longtable} 写两行表头")
+
+    if tex_with_both and multirow_count >= 1 and multicolumn_count >= 1:
+        return ("green",
+                f"L28 论文表格两行表头: {len(tex_with_both)} 章节含 \\multicolumn + \\multirow 配对 (P1-8 防御, 题面 '到药材中心的距离/cm' 跨列组标签 ✓)",
+                None)
+
+    if multicolumn_count > 0 and multirow_count == 0:
+        return ("yellow",
+                f"L28 论文表格检测: \\multicolumn {multicolumn_count} 处, 缺 \\multirow (组表头不完整)",
+                f"加 \\multirow{{n}}{{*}}{{命名列}} 与 \\multicolumn 配对 (题面表 1-6 模板 '到药材中心的距离/cm' 跨列)")
+
+    return ("red",
+            f"P1-8 论文表格缺两行表头: 0 章节配对 \\multicolumn + \\multirow (2026A 复盘 §P1-8 格式偏差 WARN)",
+            f"在 5.X.2 表前用 \\multicolumn{{n}}{{c}}{{到药材中心的距离/cm}} + \\multirow{{n}}{{*}}{{命名列}} 写两行表头 (题面表 1-6 模板格式)")
+
+
 # ===== v1.5.7.36 新增 2 项: 绘图自检 L14 (冗余图) + L15 (图注 vs axes) =====
 
 def check_unused_figures():
@@ -3307,6 +3383,7 @@ CHECKS = [
     ("58. v1.5.8.5 附录 ↔ 支撑材料包内容一致性 L25 (\\texttt{{路径}} 包外文件 red / 全在包内 green / 附录无路径 yellow / 支撑材料 不存在 yellow, 2026A 复盘 §P0-6 防御, 附录 J 引 _frag/gen_tables.py 不在包内 + 附录 A 列 result2.xlsx 已剔除)", check_appendix_consistency),
     ("59. v1.5.9 图形内容自检 L26 (np.ptp=0 曲线恒为常数 red / U+2080 下标 C₀ 乱码 yellow / 顶部暗像素 > 0.06 残留 set_title red, 2026A 复盘 §P1-3 防御, 与 check_figure.py 格式自检互补)", check_fig_content_sanity),
     ("60. v1.5.9.4 meta.json 3 件套 L27 (code-template 必落 7 字段 / 缺字段 red / 全填 green / meta.json 不存在 red, 2026A 复盘 §P1-7 防御, 评阅关注点 2 强调'高效' 必填实测耗时+O(复杂度)+步长依据)", check_meta_3pcs),
+    ("61. v1.5.9.5 论文表格两行表头 L28 (\\multicolumn + \\multirow 配对 green / 缺 \\multirow yellow / 全无配对 red / 无 longtable yellow, 2026A 复盘 §P1-8 防御, 题面表 '到药材中心的距离/cm' 跨列组表头格式)", check_paper_two_row_header),
 ]
 
 

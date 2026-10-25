@@ -1,4 +1,47 @@
-# CHANGELOG (v1.5.9.4 — meta.json 3 件套 L27 (P1-7 防御, code-template 强制 + check_meta.py)
+# CHANGELOG (v1.5.9.5 — 论文表格两行表头 L28 (P1-8 防御))
+
+## v1.5.9.5 — 论文表格两行表头 check 61 (2026A 复盘 v1.1 §P1-8 防御)
+
+**核心**: 2026A 实跑复盘 v1.1 §P1-8 — 题面表 1-6 模板带 `到药材中心的距离/cm` **跨列组表头** (两行表头), 我们的表只有裸距离值、缺该组标签 (审计判 WARN). 题面明确"按表 X 的格式给出", 格式偏差会被对照. v1.5.9.5 加 1 项 auto check.
+
+**改 `references/scripts/dryrun.py`** (+55 行, 1 个新 check 函数):
+
+- **check 61 (论文表格两行表头 L28, auto)**: 扫论文 5.X 章节 (5.1.1/5.1.2/5.2-5.4/6) 的 longtable/tabular, 检测 `\multicolumn` + `\multirow` 配对:
+  - 配对存在 → **green** (题面跨列组表头 ✓)
+  - 有 `\multicolumn` 缺 `\multirow` → **yellow** (组表头不完整)
+  - 0 配对 → **red** (P1-8 格式偏差)
+  - 论文无 longtable → **yellow** (本题无表格章节, 跳过)
+- 跳过注释行
+
+**改 `references/audit/auto-check-list.md`** (+16 行, §论文表格两行表头节):
+
+- **§L28 段**: check 61 + 正确两行表头 LaTeX 代码模板 (`\multicolumn{n}{c}{到药材中心的距离/cm}` + `\multirow{n}{*}{药材表面}` + `\cmidrule(lr){1-3}`)
+- **跨 check 56 协同**: check 56 比对 resultX **列名** vs 附件3 模板; check 61 比对论文 .tex **表头** vs 题面模板格式. 两个都要
+
+**改 `references/audit/post-solution-audit-list.md`** (16 层表 +1 行 L28):
+
+- **L28**: 论文表格两行表头 (题面格式), auto, dryrun 3 min
+
+**影响文件**:
+
+- 改 `references/scripts/dryrun.py` (+55 行: check_paper_two_row_header + CHECKS 1 行)
+- 改 `references/audit/auto-check-list.md` (+16 行: §L28 段)
+- 改 `references/audit/post-solution-audit-list.md` (+1 行: L28)
+- 改 CHANGELOG.md (主文件更新标题 + v1.5.9.5 entry)
+
+**dryrun**: 32/57 → 32/58 green + 25→26 yellow + 0 red → **目标 33/58 green + 25 yellow + 0 red**.
+
+**v1.5.9 全系列完成 (P1 8 项全 P1 防御)**:
+- v1.5.9 P1-2 绘图规范 §〇 第 0 条 (删 set_title) + P1-3 fig_sanity (check 59 L26) + P1-4 代理审计 prompt 模板
+- v1.5.9.1 P1-1 评阅要点对齐 (4 大通用 + 物理机理类 5 大专属)
+- v1.5.9.2 P1-5 参考文献可执行核真流程 §5.X
+- v1.5.9.3 P1-6 移动/变形坐标方程退化反证 §红线 6
+- v1.5.9.4 P1-7 meta.json 3 件套 (check 60 L27 + code-template 强制 + check_meta.py)
+- v1.5.9.5 P1-8 论文表格两行表头 (check 61 L28)
+
+**后续方向**: v1.6.0 P2 9 项 (Python 探测 / GBK reconfigure / heredoc 反斜杠 / 波浪号中文 / 模板 4 问化 / pack 忽略 / Read 尺寸校验 / Overfull 案例 / rename 列名)
+
+---
 
 ## v1.5.9.4 — meta.json 3 件套 check 60 + code-template 强制 (2026A 复盘 v1.1 §P1-7 防御)
 

@@ -180,7 +180,36 @@ A1 物理定律引用 / A2 守恒律验证 (v1.5.8 §红线 5) / A3 网格收敛
 - `references/code-template.py` (改, 末尾加 meta 段)
 - `references/scripts/check_meta.py` (新建, 3.6 KB, audit_meta + CLI)
 
-**跑题后必跑 dryrun** (L11/L14/L15/L16/L17/L18/L19/L20/L21/L22/L23/L24/L25/L26/L27 全覆盖).
+**跑题后必跑 dryrun** (L11/L14/L15/L16/L17/L18/L19/L20/L21/L22/L23/L24/L25/L26/L27/L28 全覆盖).
+
+## 论文表格两行表头 (v1.5.9.5, check 61 auto, L28 题面格式合规必做)
+
+| check | 防御反例 |
+|---|---|
+| **61** 论文 .tex 表格两行表头 L28 | 2026A 复盘 §P1-8 (题面表 1-6 模板带 `到药材中心的距离/cm` **跨列组表头**, 我们的表只有裸距离值缺该组标签, 审计判 WARN. 题面明确"按表 X 的格式给出", 格式偏差会被对照). 阈值: `\multicolumn` + `\multirow` 配对 green / 缺 `\multirow` yellow / 全无配对 red / 无 longtable yellow |
+
+**正确两行表头写法** (题面表 1-6 模板格式):
+```latex
+\begin{longtable}{cccc}
+  \caption{问题4 干燥前沿随时间变化} \\
+  \toprule
+  \multicolumn{3}{c}{到药材中心的距离/cm} & \multirow{2}{*}{药材表面} \\
+  \cmidrule(lr){1-3}
+  0 & 0.5 & 1.0 & 含水率/\% \\
+  \midrule
+  ... % from df.to_latex()
+  \bottomrule
+\end{longtable}
+```
+
+**关键**:
+- 第 1 行: `\multicolumn{n}{c}{组标签}` (跨列组, e.g. `到药材中心的距离/cm`) + `\multirow{n}{*}{命名列}` (命名列如"药材表面"**不纳入组头**、单独列)
+- 第 2 行: 行表头 + 各列值
+- 需 `\usepackage{multirow}` (booktabs + multirow)
+
+**跨 v1.5.8.3 check 56 协同**: check 56 比对 resultX **列名** vs 附件3 模板; check 61 比对论文 .tex **表头** vs 题面模板格式. 两个都要, 缺一个都判格式偏差.
+
+**跑题后必跑 dryrun** (L11/L14/L15/L16/L17/L18/L19/L20/L21/L22/L23/L24/L25/L26/L27/L28 全覆盖).
 
 ## 引用
 
