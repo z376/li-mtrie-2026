@@ -22,6 +22,7 @@ LICENSE / pack exclude / fitz compat / 全文件存在性), 凑齐 14 项覆盖 
 import json
 import sys
 import os
+import atexit
 import subprocess
 import shutil
 import re
@@ -31,6 +32,27 @@ from pathlib import Path
 # v1.6.8: 自检不得在 skill 仓库里留 __pycache__
 # (check 60/64/65 会 import check_meta / bc_check / number_ledger, import 即写 .pyc)
 sys.dont_write_bytecode = True
+
+# v1.6.8: 自检用的临时目录 (pack 输出 + 日志) 必须**用完即删**
+# v1.6.6 把 pack.py 的 zip 改写到临时目录避���污染 skill 安装目录, 但没删临时目录
+# → 每跑一次 dryrun 就在 TEMP 留 29 MB (实测 9 次 = 265 MB). 用 atexit 兜底清干净.
+_TMP_DIRS = []
+
+
+def _make_tmpdir(prefix):
+    """建临时目录并登记 (退出时自动删除)."""
+    import tempfile
+    d = Path(tempfile.mkdtemp(prefix=prefix))
+    _TMP_DIRS.append(d)
+    return d
+
+
+@atexit.register
+def _cleanup_tmpdirs():
+    for d in _TMP_DIRS:
+        shutil.rmtree(d, ignore_errors=True)
+    _TMP_DIRS.clear()
+
 
 # 路径 (相对 skill 根)
 SKILL_ROOT = Path(__file__).parent.parent.parent  # references/scripts/dryrun.py → skill root
@@ -173,8 +195,7 @@ def check_pack():
         log_dir = SKILL_ROOT / ".github" / "dryrun-logs"
         log_dir.mkdir(parents=True, exist_ok=True)
     else:
-        import tempfile
-        log_dir = Path(tempfile.mkdtemp(prefix="li_mtrie_dryrun_logs_"))
+        log_dir = _make_tmpdir("li_mtrie_dryrun_logs_")
     stdout_log = log_dir / "pack_stdout.log"
     stderr_log = log_dir / "pack_stderr.log"
     with open(stdout_log, "wb") as sout, open(stderr_log, "wb") as serr:
@@ -185,9 +206,9 @@ def check_pack():
         env["PYTHONUTF8"] = "1"
         # v1.6.6 副作用修复 (P2-6): pack.py 默认把 zip 写到 skill **同级目录**,
         # 自检时不该在用户环境里留 2 个 25MB 文件 → 改写到临时目录
-        import tempfile
-        pack_out = tempfile.mkdtemp(prefix="li_mtrie_pack_")
-        env["PACK_OUT_DIR"] = pack_out
+        # v1.6.8: 临时目录用完即删 (atexit), 否则每次 dryrun 留 29 MB 在 TEMP
+        pack_out = _make_tmpdir("li_mtrie_pack_")
+        env["PACK_OUT_DIR"] = str(pack_out)
         try:
             r = subprocess.run([sys.executable, "-u", str(pack_py)],
                                stdout=sout, stderr=serr, timeout=120,
