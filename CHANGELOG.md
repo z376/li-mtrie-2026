@@ -1,4 +1,73 @@
-# CHANGELOG (v1.6.3 — 验收标准复核: check_bc 表面行能量守恒)
+# CHANGELOG (v1.6.4 — 验收标准复核: 台账覆盖 check 65 + 表号一致性 check 66)
+
+## v1.6.4 — 验收标准复核: 台账覆盖 + 表号一致性 (2026A 复盘 v1.1 §验收标准 第 1/3 条)
+
+**核心**: v1.6.3 补齐了验收标准第 1/2 条 (check_bc), 但第 1 条的**表号**部分与第 3 条的
+**数字全可溯源**仍是两个洞. 本次补齐, 同时**修掉 v1.6.2 引入的模板重复 label 回归**.
+
+**🐛 修 v1.6.2 回归: example-paper 4 问复制时漏改 label (12 处重复)**
+
+- v1.6.2 用"`.aux` 里 `eq:model` 出现 4 次"当编译验证证据 —— 实际上那正是 bug 本身
+- 重复 label: `eq:model` ×4 / `eq:constraints` ×4 / `fig:q1_results` ×4
+- 后果: LaTeX `multiply defined` 警告 ×4 + **3 个问题的 `\ref` 全部指错**
+- 修: 5.2.2 → `eq:model_q2`/`eq:constraints_q2`/`fig:q2_results` (label + ref 同步),
+  5.3.2 → `_q3`, 5.4.2 → `_q4`; 5.1.2 保持原名
+- **编译验证** (xelatex ×2, MiKTeX): `! Error = 0` / `multiply defined = 0` / `undefined refs = 0`,
+  12 个 label 在 `.aux` 中各出现 1 次
+- ⚠️ 顺手发现并清理: 模板目录遗留 v1.6.2 的**陈旧 `.aux`** 会被 LaTeX 读入,
+  伪造出 4 条 multiply defined + 7 条 undefined ref —— **编译验证必须先清陈旧产物**,
+  否则会把"环境脏"误判成"代码错". 已把陈旧产物与占位图全部移出模板目录
+
+**新增 dryrun check 65 (L31) 论文数字台账覆盖**:
+
+- **反向**检查 (check 40 是正向: result 里的数是否出现在论文; 缺的是"论文里的数有没有出处")
+- 论文正文候选数字 vs `求解/数值台账.csv` → 覆盖率 = 命中唯一数字 / 候选唯一数字
+- 判据: 台账不存在 yellow / 台账 <3 条 yellow / 覆盖率 <40% red / 40-70% yellow / ≥70% green
+- red = 多数数字无可溯源来源 = P0-3 "目测数字"风险复发
+- 候选口径: 排除年份 1900-2100 + 0-9 整数计数 + 注释 + 数学环境 + `\label`/`\ref` 内部
+
+**新增 dryrun check 66 (L32) 表/图编号一致性 (兑现 check 58 的留位)**:
+
+check 58 的 docstring 明确写着"表号错位留给 P1 fig_sanity 处理" —— 本次兑现, 4 条规则:
+
+| 规则 | 判据 | 对应翻车 |
+|---|---|---|
+| R1 重复 label | 同名 label 定义 ≥2 处 → red | v1.6.2 模板回归 / LaTeX multiply defined |
+| R2 悬空 `\ref` | 指向不存在的 label → red | 编译出 `??` |
+| R3 越界表/图号 | 字面"表 N"/"图 N" 的 N > 实际总数 → red | 引用了不存在的编号 |
+| R4 附录表号矛盾 | 同一 `resultM` 被声明成不同表号 → red | **2026A P0-6 原型** (附录 J 写"表1↔result1"但实为表3-表8) |
+
+**改 `references/scripts/number_ledger.py`** (重构, 修一个"形同虚设"的检查):
+
+- **旧版 bug**: `check_ledger` 用硬编码 `target_files` (含与模板实际不符的文件名
+  "5.2.建模与求解.tex" / "5.3.建模与求解.tex" / "5.4.建模与求解.tex") → 扫不到文件 →
+  `unique_paper` 为空 → 匹配率**虚高 100%** → 台账检查从来没真正生效过
+- 新版: `_iter_paper_tex()` 自动枚举正文 .tex (排除 参考文献/AI声明/附录/主入口) +
+  `collect_paper_numbers()` + `load_ledger_values()` + `compute_coverage()` 公共函数, 供 check 65 复用
+- 台账来源列新增 **4 = 题面给定** (题面常数也能登记, 避免"常数没台账 → 误报未溯源")
+- **LaTeX 语义坑写进规范**: 裸 `%` 是注释符 → `71.8%` 会吞掉该行后半段; 论文必须写 `71.8\%`
+
+**双向验证** (绿不算数):
+
+| 场景 | 期望 | 实测 |
+|---|---|---|
+| check 66 造 4 类错 (重复 label + 悬空 ref + 越界表图号 + 附录表号矛盾) | RED 且 4 类全报 | ✓ 4/4 全命中 |
+| check 65 台账 6/6 命中 | GREEN 100% | ✓ |
+| check 65 台账 <3 条 | YELLOW | ✓ |
+| 模板编译 (清陈旧产物后 xelatex ×2) | 0 Error / 0 multiply defined / 0 undefined ref | ✓ |
+
+**dryrun**: **36/64 green + 28 yellow + 0 red** (sign-off 绿, +2 check 65/66)
+
+**影响文件**:
+
+- 改 10: `references/scripts/dryrun.py` (+2 check) / `references/scripts/number_ledger.py` (重构 + source 4) /
+  `references/templates/example-paper/5.2.2,5.3.2,5.4.2.建模与求解.tex` (label 去重, 3 文件) /
+  `references/audit/验收标准.md` (§0/§1/§3.2/§8 更新) / `references/audit/数值台账规范.md` (source 4 + check 65 段) /
+  `references/audit/验收清单.md` (§J J-1 更新) / `references/audit/auto-check-list.md` (check 64/65/66 段) /
+  `references/audit/post-solution-audit-list.md` (L30/L31/L32 行 + L5 留位改写) /
+  `SKILL.md` (指针行扩写) / `CHANGELOG.md`
+
+---
 
 ## v1.6.3 — 验收标准复核: check_bc 表面行能量守恒 (2026A 复盘 v1.1 §验收标准 第 1/2 条)
 

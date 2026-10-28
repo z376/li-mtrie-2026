@@ -25,7 +25,7 @@
 \textbf{（2）核心数学表达} \quad 根据【题目条件 + 问题类型】, 建立如下【模型类型】:
 \begin{equation}
   y = f(x; \theta) + \varepsilon
-  \label{eq:model}
+  \label{eq:model_q2}
 \end{equation}
 
 其中, $f(\cdot)$ 为【模型函数, 如 多元线性回归的线性组合 / 随机森林的非线性映射】, $\theta = (\beta_0, \beta_1, \ldots, \beta_p)$ 为待估参数向量, $\varepsilon$ 为随机扰动项。
@@ -34,7 +34,7 @@
 \begin{align}
   \min_{\theta} \quad & L(\theta) = \sum_{i=1}^{n} (y_i - f(x_i; \theta))^2 \\
   \text{s.t.} \quad & g_j(\theta) \leq 0, \quad j=1,\ldots,m \\
-  & h_k(\theta) = 0, \quad k=1,\ldots,p \label{eq:constraints}
+  & h_k(\theta) = 0, \quad k=1,\ldots,p \label{eq:constraints_q2}
 \end{align}
 
 其中, $L(\theta)$ 为损失函数 (如平方损失/对数损失/铰链损失), $g_j$ 为不等式约束 (如非负、容量、阈值), $h_k$ 为等式约束 (如归一化、平衡条件)。
@@ -77,13 +77,13 @@
 
 \textbf{（3）结果与现实一致性} \quad 本文得到的【主要结论, 如: 孕周每增加 1 周, Y 染色体浓度平均增加 0.0074】与临床观察一致。BMI 的负向影响 (系数 -0.0015) 符合【领域知识, 如: 母体 BMI 越高, 胎儿游离 DNA 浓度越低】的预期。
 
-\textbf{（4）可视化} \quad 图 \ref{fig:q1_results} 展示了【主要可视化内容, 如: Y 染色体浓度 vs 孕周散点图 + 回归拟合曲线 / 特征重要性柱状图 / 残差分布直方图】。
+\textbf{（4）可视化} \quad 图 \ref{fig:q2_results} 展示了【主要可视化内容, 如: Y 染色体浓度 vs 孕周散点图 + 回归拟合曲线 / 特征重要性柱状图 / 残差分布直方图】。
 
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.9\textwidth]{figures/q1_特征重要性.png}
   \caption{问题 2 特征重要性排序}
-  \label{fig:q1_results}
+  \label{fig:q2_results}
 \end{figure}
 
 % 跑题后必须删下面这一行 (check 15 占位符自检)

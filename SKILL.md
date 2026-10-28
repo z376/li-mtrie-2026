@@ -1408,7 +1408,7 @@ if ($sizeMB -gt 20) { Write-Error "超过 20MB 限制！" }
 - **5 类 manual 兜底清单 (L8/L9/L10/L15/L16)** → `references/audit/manual-checklist.md` (v1.5.7.42 新增, 详细步骤 + PowerShell 命令 + 实战反例)
 - **跑题后自动检查 (check 45/47/48/49/50/51/52)** → `references/audit/auto-check-list.md` (绘图自检 + AIGC 扫描 + 2-gram TTR + 3-gram 重复率, Sep 13 AIGC 报告阈值映射)
 - **跑题后 mavis 代理审计 (v1.5.7.38-39, 默认 agent)** → `references/audit/agent-audit-brief.md` (self vs 代理分层, brief 4 段结构, 14 类 P0 反例)
-- **验收标准 6 条打钩 (v1.6.3 新增)** → `references/audit/验收标准.md` (权威源, 每条→check 号/判据/兜底) + `references/audit/验收清单.md` §J (打钩区 + 4 条命令); 表面行守恒用 `references/scripts/bc_check.py` (dryrun check 64)
+- **验收标准 6 条打钩 (v1.6.3 新增)** → `references/audit/验收标准.md` (权威源, 每条→check 号/判据/兜底) + `references/audit/验收清单.md` §J (打钩区 + 4 条命令); dryrun check **64** (表面行守恒, `references/scripts/bc_check.py`) / **65** (数字台账覆盖) / **66** (表号与重复 label)
 
 
 

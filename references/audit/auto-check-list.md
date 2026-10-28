@@ -218,6 +218,19 @@ A1 物理定律引用 / A2 守恒律验证 (v1.5.8 §红线 5) / A3 网格收敛
 
 **配套文档**: `references/workflow/Python环境.md` (6.1 KB, 8 节权威源: 探测式 + 3 步绿验证 + GBK 兼容 + venv + 装包/预下载 + 踩坑库 7 项)
 
+## 验收标准复核 (v1.6.3-4, check 64 L30 + check 65 L31 + check 66 L32)
+
+2026A 复盘 §验收标准 6 条 → 可执行锚点 (权威源: `references/audit/验收标准.md`)
+
+| check | 防御反例 | 阈值 |
+|---|---|---|
+| **64** 表面行能量守恒 L30 | 2026A P0-1 (温度场 `build_surface_row` 返回 `(1, 1+β, β)`, β=h·Δr/α 无 Δt = h→∞ 极限). 决定性证据 = `dE/dt ÷ [h(T∞−Ts)·A]`: 错 **223** vs 对 **0.995**. 工具 `references/scripts/bc_check.py` (ConservationRecorder 2 行接入 + CLI 3 模式). check 64 = A 段防御资产自检 (bc_check.py 自测须能区分 对组 1 / 错组 223) + B 段项目 `求解/问题N/**/守恒记录*.csv` 实测 | 资产缺失 red / 数据偏离 red / 区间不足 yellow / 其余 green |
+| **65** 论文数字台账覆盖 L31 | 2026A P0-3 (5.2.2 ρ/cp/k 目测错 976.4→667.3 + 5.4.1 "前10h→1.424cm、占78%" 目测错 + Bi_m 心算 32 实 3.24). **反向**检查 (check 40 是正向). 候选数字口径: 排除年份 1900-2100 + 0-9 整数计数 + 注释 + 数学环境 + `\label`/`\ref` | 台账不存在 yellow / 台账 <3 条 yellow / 覆盖率 <40% red / 40-70% yellow / ≥70% green |
+| **66** 表/图编号一致性 L32 | 兑现 check 58 的留位 ("表号错位留给 P1 fig_sanity"): **2026A P0-6** 附录 J 写"表1↔result1"但符号说明+边界数据占了表1/表2, 题面结果表实为表3-表8. 4 条规则: R1 重复 label / R2 悬空 `\ref` / R3 越界"表 N 图 N" / R4 附录 `resultM↔表N` 自相矛盾. **v1.6.2 模板曾中招** (`eq:model`/`eq:constraints`/`fig:q1_results` 各 ×4) | 任一规则命中 red / 全过 green |
+
+**配套文档**: `references/audit/验收标准.md` (9.5 KB, 6 条逐条 → check 号/判据/兜底) +
+`references/audit/验收清单.md` §J (打钩区 + 4 条自查命令)
+
 ## 读图串档 + Overfull 案例 + 统一列名 (v1.6.1, 文档 + 工具增强)
 
 | 项 | 类型 | 落点 | 防御反例 |

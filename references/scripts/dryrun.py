@@ -3572,6 +3572,200 @@ def check_bc_energy_conservation():
             None)
 
 
+# ===== v1.6.4 新增 2 项: 论文数字台账覆盖 L31 + 表/图编号一致性 L32 =====
+
+def check_number_ledger_coverage():
+    r"""checkable 65: 论文正文数字全部可溯源 (台账覆盖率) (auto, v1.6.4 新增).
+
+    背景 (2026A 复盘 v1.1 §验收标准 L226):
+        "论文正文 grep 不到'目测数字' (全部可溯源台账); 关键判据 (Bi/Fo) 有二次复算记录".
+        check 40 是**正向** (result 文件里的数是否出现在论文), 覆盖不到
+        "论文里凭图读数 / 心算写出来的数" —— 那正是 P0-3 的翻车形态:
+        5.2.2 ρ/cp/k 起止值目测错 (实 976.4→667.3) + 5.4.1 "前 10h→1.424cm、占 78%" 目测错 (实 5h、71.8%).
+
+    检测:
+      - 台账 求解/数值台账.csv (4 列: 符号/值/来源/生成脚本; 来源 1=print 2=resultX 3=公式 4=题面)
+      - 扫论文正文 .tex 提候选数字 (排除年份 1900-2100 + 0-9 整数计数 + 注释 + 数学环境 + label/ref)
+      - 覆盖率 = 台账命中的唯一数字 / 论文候选唯一数字
+
+    阈值: 台账不存在 yellow / 台账有效数字 < 5 yellow (基本没建) /
+          覆盖率 >= 70% green / 40-70% yellow / < 40% red.
+    """
+    paper_dir = get_paper_dir()
+    if not paper_dir.exists():
+        return ("yellow",
+                f"论文目录不存在 ({paper_dir}), 跳过 L31 台账覆盖",
+                "用 --paper-dir 指定")
+    project_root = paper_dir.parent
+    ledger_path = project_root / "求解" / "数值台账.csv"
+    if not ledger_path.exists():
+        return ("yellow",
+                f"数值台账不存在 ({ledger_path}), 跳过 L31 (跑前 skip)",
+                "跑 `py -3 references/scripts/number_ledger.py init --root .` 建台账")
+
+    try:
+        sys.path.insert(0, str(SCRIPTS_DIR))
+        import importlib
+        import number_ledger as _nl
+        importlib.reload(_nl)
+    except Exception as e:
+        return ("red",
+                f"number_ledger.py 导入失败: {e}",
+                "检查 references/scripts/number_ledger.py 完整性")
+    try:
+        cov = _nl.compute_coverage(paper_dir, project_root)
+    except Exception as e:
+        return ("yellow",
+                f"台账覆盖率计算失败: {e}",
+                "检查论文 .tex 编码 / 台账 CSV 格式")
+
+    n_paper, n_ledger = cov["n_paper"], cov["n_ledger"]
+    if n_ledger < 3:
+        return ("yellow",
+                f"数值台账只有 {n_ledger} 个有效数字 (<3), 台账基本没建, 跳过 L31 判定",
+                "跑 number_ledger.py init + add, 把论文里的关键数字登记进台账")
+    if n_paper == 0:
+        return ("yellow", "论文正文未提取到候选数字, 跳过 L31", "检查论文 .tex 是否为空")
+
+    rate = cov["rate"]
+    unmatched = cov["unmatched"]
+    if rate >= 0.7:
+        return ("green",
+                f"L31 论文数字台账覆盖 {rate:.0%} ({cov['matched']}/{n_paper} 个唯一数字有出处, 验收标准第 3 条)",
+                None)
+
+    sample = ", ".join(f"{k}@{v[0]}" for k, v in list(unmatched.items())[:5])
+    if rate >= 0.4:
+        return ("yellow",
+                f"论文数字台账覆盖 {rate:.0%} ({cov['matched']}/{n_paper}), "
+                f"有 {len(unmatched)} 个数字查不到出处",
+                f"补台账: number_ledger.py add --sym <符号> --val <值> --source <1|2|3|4> --script <脚本:行>. 未匹配: {sample}")
+    return ("red",
+            f"论文数字台账覆盖仅 {rate:.0%} ({cov['matched']}/{n_paper}): "
+            f"多数数字无可溯源来源 (P0-3 目测数字风险, 验收标准第 3 条)",
+            f"补台账或改写论文数字. 未匹配示例: {sample}")
+
+
+def check_label_numbering():
+    r"""checkable 66: 表/图编号一致性 + 重复 label + 悬空引用 (auto, v1.6.4 新增).
+
+    背景:
+      - 2026A 复盘 §P0-6: "附录 J 表号错位 (写'表1↔result1' 但符号说明+边界数据占了表1/表2,
+        题面结果表实为表3-表8)" —— v1.5.8.5 的 check 58 明确写"留给 P1 fig_sanity 处理".
+      - 2026A 复盘附录 A B 板块第 6 条: "悬空引用 / 重复 label / 图文不符".
+      - v1.6.2 实跑发现: example-paper 模板 4 问复制时漏改 label, eq:model / eq:constraints /
+        fig:q1_results 各重复 4 次 → LaTeX "multiply defined" + \ref 指错图 (v1.6.4 已修).
+
+    检测 (4 条规则, 全静态, 不编译):
+      R1 重复 label    : 同一 label 名在 >=2 处定义 → red (编译警告 + 引用指错)
+      R2 悬空 \ref     : \ref/\eqref/\cref 指向不存在的 label → red (编译出 ??)
+      R3 越界表/图号  : 字面 "表 N"/"图 N" 的 N > 实际表/图总数 → red (引用了不存在的编号)
+      R4 附录表号矛盾 : 附录里同一 resultM 被声明成不同表号 → red (P0-6 表号错位)
+
+    阈值: 全过 green / R1-R4 任一命中 red / 论文目录不存在 yellow.
+    """
+    paper_dir = get_paper_dir()
+    if not paper_dir.exists():
+        return ("yellow",
+                f"论文目录不存在 ({paper_dir}), 跳过 L32 编号一致性",
+                "用 --paper-dir 指定")
+
+    tex_files = sorted(paper_dir.rglob("*.tex"))
+    cls_files = sorted(paper_dir.rglob("*.cls")) + sorted(paper_dir.rglob("*.sty"))
+    if not tex_files:
+        return ("yellow",
+                f"论文目录无 .tex ({paper_dir}), 跳过 L32",
+                "先写论文再跑终审")
+
+    label_defs = {}   # label 名 -> [(file, line)]
+    refs = []         # (ref 名, file, line)
+    n_table = 0
+    n_figure = 0
+    text_lines = []   # (file, line_no, code)
+
+    def _scan(path, count_floats):
+        nonlocal n_table, n_figure
+        try:
+            content = path.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            return
+        for line_no, line in enumerate(content.splitlines(), 1):
+            if line.lstrip().startswith("%"):
+                continue
+            code = line.split("%")[0]
+            if not code.strip():
+                continue
+            for m in re.finditer(r"\\label\{([^}]+)\}", code):
+                label_defs.setdefault(m.group(1), []).append((path.name, line_no))
+            for m in re.finditer(r"\\(?:eq|page|cite|C)?ref\{([^}]+)\}", code):
+                refs.append((m.group(1), path.name, line_no))
+            if count_floats:
+                n_table += len(re.findall(r"\\begin\{table\*?\}", code))
+                n_figure += len(re.findall(r"\\begin\{figure\*?\}", code))
+            text_lines.append((path.name, line_no, code))
+
+    for tf in tex_files:
+        _scan(tf, True)
+    for cf in cls_files:      # format.cls / style 里的 label 也算数 (避免误报悬空)
+        _scan(cf, False)
+
+    # R1 重复 label
+    dup = {k: v for k, v in label_defs.items() if len(v) > 1}
+    # R2 悬空 ref
+    dangling = [(r, f, l) for r, f, l in refs if r not in label_defs]
+    # R3 越界表/图号
+    bad_tab, bad_fig = [], []
+    for fname, line_no, code in text_lines:
+        clean = re.sub(r"\\(?:eq|page|cite|C)?ref\{[^}]*\}", "", code)
+        clean = re.sub(r"\\label\{[^}]*\}", "", clean)
+        for m in re.finditer(r"(?<!图)表\s*(\d+)\s*[-–]\s*\d+", clean):
+            pass    # "表 3-1" = 章节式编号, 跳过
+        clean = re.sub(r"(?<!图)表\s*\d+\s*[-–]\s*\d+", "", clean)
+        clean = re.sub(r"图\s*\d+\s*[-–]\s*\d+", "", clean)
+        for m in re.finditer(r"(?<!图)表\s*(\d+)", clean):
+            if int(m.group(1)) > n_table:
+                bad_tab.append(f"{fname}:L{line_no} 表 {m.group(1)} (全文仅 {n_table} 张表)")
+        for m in re.finditer(r"图\s*(\d+)", clean):
+            if int(m.group(1)) > n_figure:
+                bad_fig.append(f"{fname}:L{line_no} 图 {m.group(1)} (全文仅 {n_figure} 张图)")
+    # R4 附录 result↔表号 声明矛盾
+    claims = {}
+    for fname, line_no, code in text_lines:
+        if not fname.startswith("10."):
+            continue
+        for m in re.finditer(r"表\s*(\d+)[^。；\n]{0,20}?result\s*(\d+)", code, re.I):
+            claims.setdefault(int(m.group(2)), set()).add(int(m.group(1)))
+        for m in re.finditer(r"result\s*(\d+)[^。；\n]{0,20}?表\s*(\d+)", code, re.I):
+            claims.setdefault(int(m.group(1)), set()).add(int(m.group(2)))
+    conflict = {k: sorted(v) for k, v in claims.items() if len(v) > 1}
+
+    problems = []
+    if dup:
+        items = [f"{k} ({len(v)} 处: {', '.join(f'{f}:L{ln}' for f, ln in v[:3])})"
+                 for k, v in list(dup.items())[:4]]
+        problems.append(("重复 label", f"{len(dup)} 个 label 被定义多次: {items}"))
+    if dangling:
+        items = [f"{r} @{f}:L{l}" for r, f, l in dangling[:4]]
+        problems.append(("悬空引用", f"{len(dangling)} 处 \\ref 指向不存在的 label: {items}"))
+    if bad_tab:
+        problems.append(("越界表号", f"{len(bad_tab)} 处: {bad_tab[:3]}"))
+    if bad_fig:
+        problems.append(("越界图号", f"{len(bad_fig)} 处: {bad_fig[:3]}"))
+    if conflict:
+        problems.append(("附录表号矛盾", f"同一 result 被声明成多个表号: {conflict}"))
+
+    if problems:
+        detail = "; ".join(f"[{t}] {d}" for t, d in problems)
+        return ("red",
+                f"论文编号/引用一致性不过 (P0-6 表号错位 + 悬空/重复 label): {detail}",
+                "重复 label 改唯一名 (如 fig:q1_results → fig:q2_results); 悬空 ref 补 label; "
+                "越界表/图号改成实际编号; 附录 result↔表号统一")
+    return ("green",
+            f"L32 表/图编号一致: {len(label_defs)} 个 label 全唯一, {len(refs)} 处引用全有落点, "
+            f"{n_table} 张表 / {n_figure} 张图, 无越界编号 (P0-6 防御)",
+            None)
+
+
 CHECKS = [
     ("0. Python 解释器探测 (v1.6.0 P2-1, py -3 → python → python3, 商店占位符 exit 49)", check_python_probe),
     ("1. 装包 (核心包)", check_pkg),
@@ -3635,6 +3829,8 @@ CHECKS = [
     ("62. v1.6.0 Python 解释器探测 (第 0 项, py -3 → python → python3 依次试, exit 49 = 商店占位符跳过, 全不可用 red, 2026A 复盘 §P2-1 防御)", check_python_probe),
     ("63. v1.6.0 LaTeX 波浪号后接中文 L29 (\\textasciitilde/~ 后接中文 red, 波浪号后仅接数字空格, 接中文用'至', 2026A 复盘 §P2-4 防御, 编译报错 ×2)", check_tilde_chinese),
     ("64. v1.6.3 表面行能量守恒校验 L30 (bc_check.py 自测 对组 ratio=1 / 错组 ratio=223 + 模板接入 + 项目 守恒记录*.csv 判 |ratio-1|<=0.05, 2026A 复盘 §验收标准 第 1/2 条, P0-1 决定性证据)", check_bc_energy_conservation),
+    ("65. v1.6.4 论文数字台账覆盖 L31 (论文正文候选数字 vs 求解/数值台账.csv, >=70% green / 40-70% yellow / <40% red, 验收标准第 3 条, P0-3 目测数字防御)", check_number_ledger_coverage),
+    ("66. v1.6.4 表/图编号一致性 L32 (重复 label red / 悬空 ref red / 越界表图号 red / 附录 result↔表号矛盾 red, 验收标准第 1 条 check_pkg 的表号部分, P0-6 表号错位防御)", check_label_numbering),
 ]
 
 
