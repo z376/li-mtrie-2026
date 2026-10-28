@@ -1,4 +1,79 @@
-# CHANGELOG (v1.6.4 — 验收标准复核: 台账覆盖 check 65 + 表号一致性 check 66)
+# CHANGELOG (v1.6.5 — 代理审计修复: longtable 计数 / 图名错配 / 版本比对)
+
+## v1.6.5 — 代理审计修复 (2026-10-28, fresh worker 独立审计 → 3 P0 + 8 P1)
+
+**触发**: 用 skill 自带的**代理审计机制** spawn 一个 **fresh verifier worker**（独立 context,
+不复用主对话历史）审计 skill 包本身. 产出 3 P0 / 8 P1 / 9 P2，**全部逐条复核后**落地.
+
+**为什么自查抓不到**: 2026A P0-1 的教训——"自己的'自洽'可能是错的".
+本轮 3 个 P0 **全部是自洽的错**（写法没错、逻辑自洽、但与世界不符）:
+check 66 只数 `\begin{table}`（与 skill 自己的"全用 longtable"硬规则冲突）、
+模板 4 章共用问题一的图、加载的 skill ≠ 开发的 skill. 这类问题只能靠 fresh 代理审计.
+
+### 🔴 P0-1: check 66 表计数漏 `longtable` → 按规范写出的论文恒假红
+
+- **位置**: `references/scripts/dryrun.py` (`check_label_numbering` 的 `n_table` 计数)
+- **问题**: skill 硬规则 C2.3 = "所有表格用 `longtable` 不用 `tabular`"（`验收清单.md` C2.3、
+  `paper-spec.md` §符号说明、SKILL.md §Step 3 模板全是 `longtable`），
+  而 check 66 的 `n_table` 只数 `\begin{table}` → 正文表数被系统性少算 →
+  任何字面"表 N"都判"越界表号" red。而 `验收标准.md` §1 写明"任一 red → 不许进 Step 4 终态"
+  → **学生按规范写完反而过不了终审**（恒假红）
+- **修**: 表计数改为 `count(table) + count(table*) + count(longtable)`
+  （`longtable` 的 `\caption` 同样递增 `table` 计数器，表号与 `\begin{table}` 共用编号）
+- **回归用例**: 2 个 `longtable` + 正文"详见表 1 与表 2" → GREEN（修前 RED）
+- **注意**: `check 61`（两行表头）本来就同时数 `longtable` + `tabular` —— 是 check 66 漏了
+
+### 🔴 P0-2: 模板 4 问共用问题一的那张图（v1.6.2 复制时漏改）
+
+- **位置**: `references/templates/example-paper/5.2.2 / 5.3.2 / 5.4.2.建模与求解.tex`
+- **问题**: 三处 `includegraphics` 全写 `figures/q1_特征重要性.png`（文件名带 `q1_`）。
+  学生生成自己的 `q2_*.png` / `q3_*.png` / `q4_*.png` 后，**问题二/三/四的章节仍显示问题一的图**
+  = 静默内容错误（图文不符 → 数据不可信），且 64 项 check **无一条能发现**
+  （check 17 只查文件存在，check 48 只看单图 caption vs axes）
+- **修**（3 处）: 图名改成 `q2_` / `q3_` / `q4_`；新增 **check 67**（章节图名 vs 问题号）防复发；
+  `figures/README.md` 重写（原文列的 `_example.png` **根本不存在**，是 v1.5.7 遗留的过期清单）
+- **顺带**: `preamble.tex` 加 `\imgmissing` + 各图引用改成 `\IfFileExists{...}{真图}{占位框}`
+  → **模板开箱 0 Error 编译**（以前缺图会 `! Unable to load picture` + exit 1，把新手第一步就挡住）；
+  占位框里的路径必须用 `\detokenize`（`_` 在文本模式会炸 "Missing $ inserted"，v1.6.5 踩过）
+
+### 🔴 P0-3: 实际被加载的 skill ≠ 被开发的 skill（部署链断裂）
+
+- **位置**: `C:\Users\admin\.minimax\skills\li-mtrie`(9/10 旧版 691 行) vs
+  `C:\Users\admin\.minimax\skills\li-mtrie（2026）`(当前 1430 行)
+- **问题**: 两个目录的 frontmatter `name` **都是 `li-mtrie`** → 目录名冲突，
+  旧版占住注册名，**v1.5.8→v1.6.4 的全部资产（check 64-67 / bc_check / 验收标准）对加载方不可见**
+- **处置**: 需用户拍板（改 frontmatter 名 / 移走旧副本 / 覆盖旧副本），
+  详见本轮对话 —— **不是仓库内能单方面决定的**
+
+### 🟠 P1 修复（4 项，仓库内）
+
+| # | 问题 | 修法 |
+|---|---|---|
+| P1-1 | check 66 R2 的正则 `\\(?:eq\|page\|cite\|C)?ref\{` **匹配不到小写 `\cref`**（只匹配 `\Cref`），而 docstring 声称覆盖 `\cref` | 正则改为 `\\(?:eq\|page\|C\|c)?ref\{`；回归: `\cref` + `\Cref` 双双被报出 |
+| P1-2 | `验收标准.md` 用 `check_struct` / `check_pkg` / `check_bigfile` / `check_bc` 作锚点，但**这些函数名在 dryrun.py 里不存在**；`check_pkg` 实为 check 1「装包」 | 锚点列改**真实函数名**（`check_result_struct` / `check_appendix_consistency` / `check_support_overlimit` / `check_bc_energy_conservation`），复盘原文叫法单列一栏 |
+| P1-4 | `get_paper_dir()` 实际**先读 `PAPER_DIR` 环境变量再读 `--paper-dir`**，与 docstring 声明的优先级相反 → 设了环境变量时 `--paper-dir` 被静默忽略 | 调换顺序：命令行参数优先（用户当次显式指定 > 环境默认值） |
+| P1-8 | `SKILL.md` frontmatter 版本停在 `1.5.7.44`（仓库已 v1.6.4），check 7 只校验字段**存在**→ 陈旧版本恒绿 | frontmatter 改 `1.6.5` + `last_update` 更新；check 7 升级为**版本比对**（frontmatter vs CHANGELOG 首条 = 必须一致，否则 red；git tag 落后只 yellow，因为"先 commit 后打 tag"是正常中间态）；顺带删掉泄漏作者本机路径的 `source_workspace` 字段 |
+
+### 🟠 P1/P2 文档批量修（v1.6.6 承接）
+
+`number_ledger.py` 文档命令缺 `--root`（argparse 必填 → exit 2）、子命令数 3/4/5 三处口径不一、
+`角色Prompt.md` 引 4 个不存在的文件（`chapter-structure.md` / `writing-rules.md` /
+`eval-checklist.md` / `auto_verify.ps1`）、17 处裸 `python`（本机 exit 9009，应 `py -3`）、
+README 12 处失效指针 + 版本徽章 v1.5.7 + 层数 16→32 + 包大小声明过期。
+
+### 双向验证（绿不算数）
+
+| 场景 | 期望 | 实测 |
+|---|---|---|
+| 2 个 `longtable` + "详见表 1 与表 2" | GREEN | ✓ "2 张表"（修前 RED 越界） |
+| `5.3.2` 引用 `q1_*.png` | RED（check 67） | ✓ 2 条规则全命中 |
+| 悬空 `\cref` + `\Cref` | RED（check 66） | ✓ 2 处全报出（修前漏 `\cref`） |
+| **模板无占位图** xelatex ×2 | 0 Error | ✓ ! Error=0 / multiply defined=0 / undefined refs=0 / 12 label 各 1 次 |
+| HEAD 版模板对照编译 | Overfull 12 | ✓ 与新版**同为 12** → 我的改动没引入 overfull（v1.6.2 CHANGELOG 写的"4"本身不实） |
+
+**dryrun**: 64 → **65 项** (新增 check 67)，sign-off 绿 (0 red)
+
+---
 
 ## v1.6.4 — 验收标准复核: 台账覆盖 + 表号一致性 (2026A 复盘 v1.1 §验收标准 第 1/3 条)
 

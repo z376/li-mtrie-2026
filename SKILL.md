@@ -11,17 +11,15 @@ description: |
 
 metadata:
 
-  version: "1.5.7.44"
+  version: "1.6.5"
 
   category: competition-workflow
 
   scope: user
 
-  source_workspace: D:/MiniMax code/1/数建Skill模板
-
   spec_compliance: "全国大学生数学建模竞赛论文格式规范（2026年修订稿，2026-09-01起试行）+ 全国大学生数学建模竞赛人工智能工具使用规定（2026年试行）"
 
-  last_update: 2026-09-18
+  last_update: 2026-10-28
 
   changelog: CHANGELOG.md
 

@@ -46,6 +46,20 @@
 }
 %% === v1.4.4 借鉴结束 ===
 
+%% === v1.6.5 图缺失兜底 (P0-2 防御) ===
+%% 模板开箱即编译: 图还没生成时显示"待生成图片"框, 学生生成图后自动改用真图.
+%% 用法 (章节 .tex 里):
+%%   \IfFileExists{figures/q1_xxx.png}%
+%%     {\includegraphics[width=0.9\textwidth]{figures/q1_xxx.png}}%
+%%     {\imgmissing{figures/q1_xxx.png}}%
+%% 为什么不直接 \includegraphics: 图缺失时 xelatex 会报 "! Unable to load picture" 并 exit 1,
+%% 新手第一步就被编译报错挡住, 看不到后面的排版问题.
+\newcommand{\imgmissing}[1]{%
+  \fbox{\parbox[c][3.0cm][c]{0.80\textwidth}{\centering\small 待生成图片\\
+  \texttt{\detokenize{#1}}}}%
+}
+%% ⚠️ 必须用 \detokenize: 图名里的下划线 (q1_xxx.png) 在文本模式会被当数学下标 → "Missing $ inserted"
+
 %% === v1.5.7.3 公共包 + 列定义 + tikz (从原 3 文件 preamble 抽出) ===
 \usepackage{etoolbox}
 \usepackage{ctex}

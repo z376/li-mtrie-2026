@@ -81,7 +81,9 @@
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.9\textwidth]{figures/q1_特征重要性.png}
+  \IfFileExists{figures/q3_特征重要性.png}%
+    {\includegraphics[width=0.9\textwidth]{figures/q3_特征重要性.png}}%
+    {\imgmissing{figures/q3_特征重要性.png}}%
   \caption{问题 3 特征重要性排序}
   \label{fig:q3_results}
 \end{figure}

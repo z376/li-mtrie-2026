@@ -239,7 +239,17 @@ def check_aigc():
 
 
 def check_skill_md_frontmatter():
-    """checkable 7: SKILL.md frontmatter 有效 (含 name + version)."""
+    r"""checkable 7: SKILL.md frontmatter 有效 (含 name + version) + 版本三方一致 (v1.6.5 增强).
+
+    v1.6.5 增强 (代理审计 P1-8): 原来只校验 version 字段**存在**, 不与任何东西比对 →
+    frontmatter 长期停在 "1.5.7.44" 而仓库已到 v1.6.4, 陈旧版本静默通过.
+    现在做三方比对: frontmatter version == CHANGELOG.md 首条版本 == git tag (最新).
+
+    判据:
+    - 三者一致 → green
+    - 不一致 → red (版本元数据与实际发布不符, 加载方拿到的版本信息是错的)
+    - 取不到 git tag (zip 分发/无 git) → yellow (跳过比对, 不误报)
+    """
     skill_md = SKILL_ROOT / "SKILL.md"
     if not skill_md.exists():
         return ("red", "SKILL.md 不存在", "重 git clone")
@@ -251,7 +261,49 @@ def check_skill_md_frontmatter():
     ver_match = re.search(r'version:\s*"(\d+\.\d+\.\d+(?:\.\d+)?)"', content)
     if not ver_match:
         return ("red", "SKILL.md frontmatter 缺 version 字段", "修 SKILL.md")
-    return ("green", f"SKILL.md frontmatter 有效 (version={ver_match.group(1)})", None)
+    fm_ver = ver_match.group(1)
+
+    # 三方比对: CHANGELOG 首条 + git 最新 tag
+    changelog_ver = None
+    cl = SKILL_ROOT / "CHANGELOG.md"
+    if cl.exists():
+        head = cl.read_text(encoding="utf-8", errors="replace")[:3000]
+        m = re.search(r"^#\s*CHANGELOG\s*\(v?(\d+\.\d+\.\d+(?:\.\d+)?)", head, re.M)
+        if m:
+            changelog_ver = m.group(1)
+    tag_ver = None
+    try:
+        r = subprocess.run(["git", "describe", "--tags", "--abbrev=0"],
+                           cwd=str(SKILL_ROOT), capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", timeout=15)
+        if r.returncode == 0 and r.stdout.strip():
+            tag_ver = r.stdout.strip().lstrip("v")
+    except Exception:
+        tag_ver = None
+
+    known = [("CHANGELOG.md 首条", changelog_ver)]
+    mismatches = [(name, v) for name, v in known if v and v != fm_ver]
+    if mismatches:
+        detail = ", ".join(f"{n}={v}" for n, v in mismatches)
+        return ("red",
+                f"SKILL.md 版本与 CHANGELOG 首条不一致: frontmatter={fm_ver} vs {detail} "
+                f"(加载方读到的版本元数据是错的)",
+                f"把 SKILL.md frontmatter version 改成 CHANGELOG 首条版本 "
+                f"({changelog_ver}), 并同步 last_update")
+    if tag_ver and tag_ver != fm_ver:
+        # tag 落后是正常中间态 (先 commit 后打 tag), 只警告不判红
+        return ("yellow",
+                f"SKILL.md frontmatter={fm_ver} 与 CHANGELOG 首条一致; "
+                f"但 git 最新 tag 是 {tag_ver} (未同步)",
+                f"发完版打 tag: git tag -a v{fm_ver} -m '...' && git push origin v{fm_ver}")
+    if not changelog_ver and not tag_ver:
+        return ("yellow",
+                f"SKILL.md frontmatter 有效 (version={fm_ver}); 取不到 CHANGELOG/tag 无法比对",
+                "在 git 仓库里跑才有版本比对")
+    return ("green",
+            f"SKILL.md frontmatter 有效 (version={fm_ver}, 与 CHANGELOG 首条一致"
+            + (f"; git tag {tag_ver} 一致" if tag_ver == fm_ver else "") + ")",
+            None)
 
 
 def check_llm_tools():
@@ -391,15 +443,18 @@ def get_paper_dir():
         # skill 自检 (cwd = skill 根, 无 论文/), 用 references/templates/example-paper/
         # 让 check 15/16/17/18 跑 template 自检 (预期 RED, 模板留占位符)
     """
-    env_dir = os.environ.get("PAPER_DIR")
-    if env_dir:
-        return Path(env_dir)
+    # v1.6.5 修 (代理审计 P1-4): 原实现先读环境变量再读命令行, 与 docstring 声明的
+    # "--paper-dir 参数 > PAPER_DIR 环境变量" 相反 —— 设了 PAPER_DIR 时 --paper-dir 会被静默忽略.
+    # 命令行参数优先级更高 (用户当次显式指定 > 环境里的默认值).
     if "--paper-dir" in sys.argv:
         idx = sys.argv.index("--paper-dir")
         if idx + 1 < len(sys.argv):
             return Path(sys.argv[idx + 1])
         else:
             print(f"[WARN] --paper-dir 不带值, 静默 fallback 到自动检测 (请给: --paper-dir 跑题目录/论文)", file=sys.stderr)
+    env_dir = os.environ.get("PAPER_DIR")
+    if env_dir:
+        return Path(env_dir)
     cwd = Path(os.getcwd())
     # 1. 跑题用户在跑题目录 (有 论文/ 子目录) 跑
     if (cwd / "论文").is_dir() and any((cwd / "论文").glob("*.tex")):
@@ -3658,8 +3713,11 @@ def check_label_numbering():
 
     检测 (4 条规则, 全静态, 不编译):
       R1 重复 label    : 同一 label 名在 >=2 处定义 → red (编译警告 + 引用指错)
-      R2 悬空 \ref     : \ref/\eqref/\cref 指向不存在的 label → red (编译出 ??)
+      R2 悬空 \ref     : \ref/\eqref/\cref/\Cref/\pageref 指向不存在的 label → red (编译出 ??)
       R3 越界表/图号  : 字面 "表 N"/"图 N" 的 N > 实际表/图总数 → red (引用了不存在的编号)
+                         ⚠️ v1.6.5 修: 表计数**含 longtable** (skill 硬规则 C2.3 = 所有表格用
+                         longtable; longtable 的 \caption 同样递增 table 计数器, 表号共用编号).
+                         只数 \begin{table} 会让"按规范写出的论文"恒假红.
       R4 附录表号矛盾 : 附录里同一 resultM 被声明成不同表号 → red (P0-6 表号错位)
 
     阈值: 全过 green / R1-R4 任一命中 red / 论文目录不存在 yellow.
@@ -3697,10 +3755,15 @@ def check_label_numbering():
                 continue
             for m in re.finditer(r"\\label\{([^}]+)\}", code):
                 label_defs.setdefault(m.group(1), []).append((path.name, line_no))
-            for m in re.finditer(r"\\(?:eq|page|cite|C)?ref\{([^}]+)\}", code):
+            for m in re.finditer(r"\\(?:eq|page|C|c)?ref\{([^}]+)\}", code):
                 refs.append((m.group(1), path.name, line_no))
             if count_floats:
+                # 表计数**必须含 longtable** (v1.6.5 修 P0-1):
+                #   skill 硬规则 C2.3 = "所有表格用 longtable 不用 tabular" (验收清单.md C2.3),
+                #   且 longtable 的 \caption 同样递增 table 计数器 —— 表号与 \begin{table} 共用编号.
+                #   只数 \begin{table} 会让"按规范写出的论文"被判"越界表号" (恒假红).
                 n_table += len(re.findall(r"\\begin\{table\*?\}", code))
+                n_table += len(re.findall(r"\\begin\{longtable\}", code))
                 n_figure += len(re.findall(r"\\begin\{figure\*?\}", code))
             text_lines.append((path.name, line_no, code))
 
@@ -3716,7 +3779,7 @@ def check_label_numbering():
     # R3 越界表/图号
     bad_tab, bad_fig = [], []
     for fname, line_no, code in text_lines:
-        clean = re.sub(r"\\(?:eq|page|cite|C)?ref\{[^}]*\}", "", code)
+        clean = re.sub(r"\\(?:eq|page|C|c)?ref\{[^}]*\}", "", code)
         clean = re.sub(r"\\label\{[^}]*\}", "", clean)
         for m in re.finditer(r"(?<!图)表\s*(\d+)\s*[-–]\s*\d+", clean):
             pass    # "表 3-1" = 章节式编号, 跳过
@@ -3763,6 +3826,82 @@ def check_label_numbering():
     return ("green",
             f"L32 表/图编号一致: {len(label_defs)} 个 label 全唯一, {len(refs)} 处引用全有落点, "
             f"{n_table} 张表 / {n_figure} 张图, 无越界编号 (P0-6 防御)",
+            None)
+
+
+# ===== v1.6.5 新增 1 项: 章节图名 vs 问题号 L33 (auto, P0-2 防御) =====
+
+def check_figure_name_matches_question():
+    r"""checkable 67: 章节引用的图名必须与本章问题号一致 (auto, v1.6.5 新增).
+
+    背景 (代理审计 P0-2, v1.6.5):
+        v1.6.2 模板 4 问化时, 5.2.2 / 5.3.2 / 5.4.2 复制了 5.1.2 的图引用,
+        三处仍写 `figures/q1_特征重要性.png` —— **问题二/三/四章节配问题一的图**.
+        学生按 skill 流程生成自己的 q2_*.png / q3_*.png / q4_*.png 后,
+        模板仍指向 q1_*, 于是问题三的章节里出现问题一的图 = **静默内容错误**
+        (评委看到图文不符 = 数据不可信), 而全套 check **无一条能发现**
+        (check 17 只查文件存在, check 48 只看单图 caption vs axes).
+
+    检测 (2 条规则, 全静态):
+      R1 图名问题号不符 : `5.N.*.tex` 引用 `q<M>_*.png` 且 M != N → red
+      R2 一图多问共用   : 同一图路径被 >=2 个不同问题章节引用 → red
+
+    判据: 任一命中 red / 全过 green / 无问题章节文件 yellow.
+    """
+    paper_dir = get_paper_dir()
+    if not paper_dir.exists():
+        return ("yellow",
+                f"论文目录不存在 ({paper_dir}), 跳过 L33 图名一致性",
+                "用 --paper-dir 指定")
+
+    img_re = re.compile(r"\\includegraphics(?:\[[^\]]*\])?\{([^}]+)\}")
+    qnum_re = re.compile(r"^5\.(\d+)\.")
+    prefix_re = re.compile(r"(?:^|[/\\])q(\d+)_")
+
+    mismatched = []   # (文件, 图名, 本章号, 图名里的号)
+    shared = {}       # 图名 -> {章节号}
+    n_scanned = 0
+
+    for tex_file in sorted(paper_dir.rglob("*.tex")):
+        m = qnum_re.match(tex_file.name)
+        if not m:
+            continue
+        qn = int(m.group(1))
+        try:
+            content = tex_file.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            continue
+        n_scanned += 1
+        for im in img_re.finditer(content):
+            path = im.group(1).strip()
+            pm = prefix_re.search(path)
+            if not pm:
+                continue      # 无 q<N>_ 前缀的图 (如 sensitivity_关键参数.png) 不参与判定
+            img_q = int(pm.group(1))
+            shared.setdefault(path, set()).add(qn)
+            if img_q != qn:
+                mismatched.append(f"{tex_file.name} → {path} (本章 q{qn}, 图名 q{img_q})")
+
+    if n_scanned == 0:
+        return ("yellow",
+                "论文目录无 5.N.*.tex 问题章节文件, 跳过 L33",
+                "跑题后必有 求解/问题N 对应的 5.N.2.建模与求解.tex")
+
+    multi = {p: sorted(qs) for p, qs in shared.items() if len(qs) > 1}
+
+    if mismatched or multi:
+        detail = []
+        if mismatched:
+            detail.append(f"{len(mismatched)} 处图名问题号不符: {mismatched[:3]}")
+        if multi:
+            detail.append(f"{len(multi)} 张图被多问共用: {list(multi.items())[:3]}")
+        return ("red",
+                f"章节图名与问题号不一致 (P0-2 型: 问题 N 的章节配了问题 M 的图): {'; '.join(detail)}",
+                "把 5.N.*.tex 里的图名改成 q<N>_ 开头的本章图 (如 5.3.2 用 figures/q3_*.png); "
+                "同一张图被多问引用时, 复制成各问各自的副本")
+    return ("green",
+            f"L33 章节图名与问题号一致: 扫 {n_scanned} 个问题章节, "
+            f"{len(shared)} 张带 q<N>_ 前缀的图全部对应 (P0-2 防御)",
             None)
 
 
@@ -3831,6 +3970,7 @@ CHECKS = [
     ("64. v1.6.3 表面行能量守恒校验 L30 (bc_check.py 自测 对组 ratio=1 / 错组 ratio=223 + 模板接入 + 项目 守恒记录*.csv 判 |ratio-1|<=0.05, 2026A 复盘 §验收标准 第 1/2 条, P0-1 决定性证据)", check_bc_energy_conservation),
     ("65. v1.6.4 论文数字台账覆盖 L31 (论文正文候选数字 vs 求解/数值台账.csv, >=70% green / 40-70% yellow / <40% red, 验收标准第 3 条, P0-3 目测数字防御)", check_number_ledger_coverage),
     ("66. v1.6.4 表/图编号一致性 L32 (重复 label red / 悬空 ref red / 越界表图号 red / 附录 result↔表号矛盾 red, 验收标准第 1 条 check_pkg 的表号部分, P0-6 表号错位防御)", check_label_numbering),
+    ("67. v1.6.5 章节图名 vs 问题号 L33 (5.N.*.tex 引用 q<M>_*.png 且 M≠N red / 同一图被多问共用 red, P0-2 防御: v1.6.2 模板 4 章共用 q1 图)", check_figure_name_matches_question),
 ]
 
 

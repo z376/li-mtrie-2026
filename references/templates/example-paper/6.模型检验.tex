@@ -62,7 +62,9 @@
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.9\textwidth]{figures/sensitivity_关键参数.png}
+  \IfFileExists{figures/sensitivity_关键参数.png}%
+    {\includegraphics[width=0.9\textwidth]{figures/sensitivity_关键参数.png}}%
+    {\imgmissing{figures/sensitivity_关键参数.png}}%
   \caption{关键参数灵敏度分析 (基准值 ± 20\%)}
   \label{fig:sensitivity}
 \end{figure}
