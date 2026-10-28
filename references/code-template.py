@@ -93,6 +93,25 @@ if sys.platform == 'win32':
             pass
 
 
+# ==================== 表面行守恒校验 (v1.6.3 新增, 验收标准第 1/2 条) ====================
+# ⚠️ **纯数据/优化题一般用不到**; 但只要题里出现传热/传质/扩散/蒸发等物理过程,
+#    就必须验守恒 (2026A P0-1: 表面离散式写成 h→∞ 极限, 求解收敛但结果全错,
+#    dE/dt ÷ [h(T∞−Ts)·A] = 223 而非 1).
+#
+# 机理题 (A 题为主) 请用 references/mechanism-template.py, 那里有 § 4.1 完整接入片段.
+#
+# 接入 2 行:
+#     _SKILL_SCRIPTS = r"<SKILL_ROOT>/references/scripts"   # 改成你的 skill 路径
+#     if _SKILL_SCRIPTS not in sys.path: sys.path.insert(0, _SKILL_SCRIPTS)
+#     from bc_check import ConservationRecorder
+#     rec = ConservationRecorder(tol=0.05)
+#     ...  # 求解循环内每步: rec.record(t, E_total, flux_boundary)
+#     rec.save('结果/守恒记录.csv')
+#
+# 跑完: py <SKILL_ROOT>/references/scripts/bc_check.py --csv 求解/问题X/结果/守恒记录.csv
+# dryrun check 64 自动扫 求解/问题N/结果/守恒记录*.csv 判定.
+
+
 # ==================== 数据目录自动扫描 ====================
 def scan_data_dir(data_dir='数据'):
     """扫描 数据/ 目录，自动发现数据文件并返回路径字典。

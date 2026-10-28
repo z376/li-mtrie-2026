@@ -13,7 +13,7 @@ LICENSE / pack exclude / fitz compat / 全文件存在性), 凑齐 14 项覆盖 
 
 用法:
     python references/scripts/dryrun.py            # v1.5.7.39 默认: agent-audit (输出 brief, 调 mavis 代理)
-    python references/scripts/dryrun.py --mode self   # self-audit 47 项 hardcode check
+    python references/scripts/dryrun.py --mode self   # self-audit 62 项 hardcode check
     python references/scripts/dryrun.py --mode both  # 两种都跑 (self check + agent brief)
     python references/scripts/dryrun.py --json       # 输出 JSON 报告 (可管道)
     python references/scripts/dryrun.py --ci         # CI 模式, 输出 GitHub Actions 友好格式
@@ -3453,6 +3453,125 @@ def check_caption_axes_consistency():
             f"命中: {msgs_w[:3]}")
 
 
+# ===== v1.6.3 新增 1 项: 表面行能量守恒校验 L30 (auto, 2026A 复盘 §验收标准 第 1/2 条) =====
+
+def check_bc_energy_conservation():
+    r"""checkable 64: 表面边界行过能量守恒校验 (auto, v1.6.3 新增, 验收标准第 1/2 条).
+
+    背景 (2026A 复盘 v1.1 §验收标准 L224-225):
+        验收标准点名 dryrun 必须有 `check_bc (表面行过能量守恒校验)`, 且
+        "任一新跑题: 表面边界行能通过 dE/dt ÷ 边界通量 ≈ 1 校验, 且有独立换实现的复算记录".
+
+        2026A v15 P0-1 的决定性证据就是这个比值:
+            错格式 build_surface_row -> (1.0, 1+beta, beta), beta = h·dr/alpha (无 dt)
+                = h→∞ 极限, 表面被钉死在 T_amb            =>  ratio = 223
+            真 Robin (1 + 2mu + gamma), gamma = 2·h·dt/dr  =>  ratio = 0.995
+        |ratio − 1| 必须 < 0.05; 偏离一个数量级 = 离散式必错, 不是数值误差.
+
+    检测方法 (两级, 不真跑求解):
+      A. 防御资产自检 (skill 内, 缺一即 red):
+         - references/scripts/bc_check.py 存在且可导入
+         - 工具自测通过 (内置 对组 ratio=1 / 错组 ratio=223, 必须能区分)
+         - mechanism-template.py + code-template.py 已接入 recorder 提示
+         - 代理审计 prompt.md A 板块含守恒校验要求
+      B. 项目实测 (仅当 求解/ 存在):
+         - 扫 求解/问题N/**/守恒记录*.csv
+         - 用 bc_check.verify_rows 判定 |worst ratio − 1| <= 0.05
+         - 任一文件偏离 > tol → red (P0-1 型离散式错误)
+
+    阈值: A 全过 + 项目无记录 green / A 全过 + 项目全过 green /
+          A 缺 red / 项目数据偏离 red / 有数据但有效区间不足 yellow.
+    """
+    # ---- A. 防御资产自检 ----
+    script = SCRIPTS_DIR / "bc_check.py"
+    if not script.exists():
+        return ("red",
+                "验收标准第 1/2 条防御资产缺失: references/scripts/bc_check.py 不存在",
+                "从 skill 恢复 bc_check.py (表面行守恒校验器), 否则 P0-1 型离散式错误无人拦")
+    try:
+        sys.path.insert(0, str(SCRIPTS_DIR))
+        import importlib
+        import bc_check as _bc
+        importlib.reload(_bc)
+    except Exception as e:
+        return ("red",
+                f"bc_check.py 导入失败: {e}",
+                "检查 references/scripts/bc_check.py 完整性 (它是验收标准第 1/2 条的落地载体)")
+
+    # A2. 工具自测 (必须能区分 对组 ratio=1 / 错组 ratio=223)
+    try:
+        demo = _bc.run_demo(verbose=False)
+    except Exception as e:
+        return ("red", f"bc_check.py 自测调用失败: {e}", "检查 bc_check.py 的 run_demo() 实现")
+    if not demo.get("pass"):
+        return ("red",
+                "bc_check.py 自测未过 (无法区分 对组 ratio=1 / 错组 ratio=223)",
+                "守恒校验器自身失效, 先修 bc_check.py 再信它的判定")
+
+    # A3. 模板接入 (机理题模板必接, 数据题模板给指针)
+    tmpl_issues = []
+    for fn in ("mechanism-template.py", "code-template.py"):
+        p = REFS_DIR / fn
+        if not p.exists():
+            tmpl_issues.append(f"{fn} 不存在")
+            continue
+        if "ConservationRecorder" not in p.read_text(encoding="utf-8", errors="replace"):
+            tmpl_issues.append(f"{fn} 未接入 ConservationRecorder")
+    if tmpl_issues:
+        return ("red",
+                f"验收标准第 1/2 条防御未接入模板: {tmpl_issues}",
+                "模板加 § 4.1 接入片段 (rec.record(t, E, flux) + rec.save('结果/守恒记录.csv'))")
+
+    # A4. 代理审计 prompt A 板块含守恒校验要求
+    prompt = REFS_DIR / "代理审计prompt.md"
+    if not prompt.exists():
+        return ("red", "references/代理审计prompt.md 不存在", "恢复代理审计 prompt 模板")
+    if "守恒" not in prompt.read_text(encoding="utf-8", errors="replace"):
+        return ("red",
+                "代理审计 prompt A 板块缺守恒校验要求",
+                "A1/A2 板块写明 dE/dt ÷ [h(T∞−Ts)·A] ≈ 1 (2026A P0-1 决定性证据)")
+
+    # ---- B. 项目实测 ----
+    paper_dir = get_paper_dir()
+    project_root = paper_dir.parent if paper_dir.exists() else Path.cwd()
+    solve_dir = project_root / "求解"
+    rec_files = _bc.find_record_files(solve_dir) if solve_dir.is_dir() else []
+
+    if not rec_files:
+        return ("green",
+                f"L30 表面行守恒防御就绪: bc_check.py 自测过 (对组 ratio=1 / 错组 ratio=223), "
+                f"模板已接入; 项目内暂无 守恒记录*.csv (求解后跑本 check 自动判)",
+                None)
+
+    bad = []
+    weak = []
+    for f in rec_files:
+        rows = _bc.read_record_csv(f)
+        if not rows:
+            weak.append(f"{f.name}(无数据行)")
+            continue
+        rep = _bc.verify_rows(rows, tol=0.05, name=f.stem)
+        if rep["n_valid"] < 3:
+            weak.append(f"{f.name}(有效区间 {rep['n_valid']}<3)")
+        elif not rep["ok"]:
+            bad.append(f"{f.name}: {rep['reason']}")
+
+    if bad:
+        return ("red",
+                f"表面行守恒被破坏 ({len(bad)}/{len(rec_files)} 个记录文件 ratio 偏离 1 > 0.05): "
+                f"P0-1 型离散式错误 (h→∞ 极限), 结果全错",
+                f"命中: {bad[:3]}. 改边界行后重跑: py bc_check.py --csv <记录文件>")
+    if weak:
+        return ("yellow",
+                f"表面行守恒: {len(rec_files) - len(weak)}/{len(rec_files)} 个记录文件通过, "
+                f"但 {weak[:2]} 有效区间不足 (至少记 4 个时刻)",
+                f"补记更多时刻后重跑; 命中: {weak[:3]}")
+    return ("green",
+            f"L30 表面行能量守恒全过: {len(rec_files)}/{len(rec_files)} 个记录文件 "
+            f"|worst ratio − 1| <= 0.05 (验收标准第 1/2 条)",
+            None)
+
+
 CHECKS = [
     ("0. Python 解释器探测 (v1.6.0 P2-1, py -3 → python → python3, 商店占位符 exit 49)", check_python_probe),
     ("1. 装包 (核心包)", check_pkg),
@@ -3515,6 +3634,7 @@ CHECKS = [
     ("61. v1.5.9.5 论文表格两行表头 L28 (\\multicolumn + \\multirow 配对 green / 缺 \\multirow yellow / 全无配对 red / 无 longtable yellow, 2026A 复盘 §P1-8 防御, 题面表 '到药材中心的距离/cm' 跨列组表头格式)", check_paper_two_row_header),
     ("62. v1.6.0 Python 解释器探测 (第 0 项, py -3 → python → python3 依次试, exit 49 = 商店占位符跳过, 全不可用 red, 2026A 复盘 §P2-1 防御)", check_python_probe),
     ("63. v1.6.0 LaTeX 波浪号后接中文 L29 (\\textasciitilde/~ 后接中文 red, 波浪号后仅接数字空格, 接中文用'至', 2026A 复盘 §P2-4 防御, 编译报错 ×2)", check_tilde_chinese),
+    ("64. v1.6.3 表面行能量守恒校验 L30 (bc_check.py 自测 对组 ratio=1 / 错组 ratio=223 + 模板接入 + 项目 守恒记录*.csv 判 |ratio-1|<=0.05, 2026A 复盘 §验收标准 第 1/2 条, P0-1 决定性证据)", check_bc_energy_conservation),
 ]
 
 

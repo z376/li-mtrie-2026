@@ -175,18 +175,58 @@
 li-mtrie-2026/
 ├── SKILL.md                  # 入口（被 skill 系统加载）
 ├── README.md                 # 本文件（项目说明 + 目录结构权威源）
-├── 测试报告.md                # 4 轮端到端测试记录
+├── CHANGELOG.md              # 版本变更（单主文件，倒序）
+├── CHANGELOG-archive.md      # 历史变更归档
+├── CONTRIBUTING.md           # 贡献指南
+├── LICENSE                   # MIT
+├── tags.txt                  # git tag 清单
 ├── references/                # 复用层（按需查阅）
-│   ├── workflow.md           # 详细工作流 + 论文硬性规则
-│   ├── paper-spec.md         # 论文 10 章详细规范 + 8 项一致性自检
-│   ├── 合规检查清单.md       # 4 类硬规则 + 一键验证命令 + 提交物清单
-│   ├── code-template.py      # 数据驱动题模板（含 save_fig_with_qa）
-│   ├── mechanism-template.py # 机理题模板（含 gen_handle_names）
-│   ├── 绘图规范.md           # matplotlib/seaborn/plotly 字号/线宽/DPI 规范
-│   ├── 赛前学习清单.md       # 备赛算法清单 + 题型映射 + 跑题红线
-│   ├── 导入规范.md           # 共享模块导入规则 + 跨问题常量规范
-│   ├── 题意翻译.md           # ⚡ v1.5.3 题意翻译 5 步流程 (借鉴 bzd-problem-translator)
-│   ├── 学校国奖画像.md       # ⚡ v1.5.3 学校画像 4 步自查 (借鉴 bzd-cumcm-school-awards 核心理念)
+│   ├── code-template.py      # 数据驱动题模板（含 save_fig_with_qa + 守恒校验指针）
+│   ├── mechanism-template.py # 机理题模板（含 gen_handle_names + §4.1 守恒校验接入）
+│   ├── 代理审计prompt.md      # ⚡ v1.5.9 P1-4 代理交叉审计 prompt（A-H 板块）
+│   ├── 评阅要点对齐.md        # ⚡ v1.5.9.1 P1-1 评阅要点 → 论文段映射矩阵
+│   ├── workflow/              # 工作流层
+│   │   ├── workflow.md        #   详细工作流 + 论文硬性规则
+│   │   ├── Python环境.md      #   ⚡ v1.6.0 P2-1 解释器探测 + GBK + 装包
+│   │   ├── 导入规范.md        #   共享模块导入规则 + 跨问题常量规范
+│   │   ├── 整题建模模式.md    #   整题建模流程
+│   │   ├── 模型决策树.md      #   6 大题型 × 3 层模型决策
+│   │   └── 模型字典使用指南.md
+│   ├── paper/                 # 论文规范层
+│   │   ├── paper-spec.md      #   论文 10 章详细规范 + 一致性自检 + §4.1 Overfull 案例
+│   │   ├── 写作与附录检查.md
+│   │   ├── 国奖级硬性指标.md
+│   │   ├── 格式自查清单.md
+│   │   └── 百分制评审方法.md
+│   ├── read-checklist/        # 读题层
+│   │   ├── 读题清单.md        #   15 项空表模板（跑题前必填）
+│   │   ├── 题意红线.md        #   ⚡ §红线 1-7（含 P0-1 边界离散式）
+│   │   ├── 红线与失败模式.md
+│   │   └── 题意翻译.md        #   ⚡ v1.5.3 题意翻译 5 步流程
+│   ├── audit/                 # 审计层
+│   │   ├── 验收清单.md        #   A-I 段 + §J 验收标准打钩区
+│   │   ├── 验收标准.md        #   ⚡ v1.6.3 验收标准 6 条 → check 号 / 判据 / 兜底
+│   │   ├── auto-check-list.md #   跑题后自动检查各 check 段
+│   │   ├── post-solution-audit-list.md  # 16 层审计清单 L1-L16
+│   │   ├── post-solution-audit.md       # 4 必做 + 1 可选 + 状态机
+│   │   ├── manual-checklist.md          # 5 类 manual 兜底清单
+│   │   ├── agent-audit-brief.md         # 代理审计 brief 4 段
+│   │   ├── 数值台账规范.md     #   ⚡ v1.5.8.2 P0-3 论文数字三来源
+│   │   └── 参考文献审计清单.md #   文献逐条核验
+│   ├── plot/                  # 绘图层
+│   │   ├── 绘图规范与避坑.md   #   ⚡ §〇 第 0 条：图内禁 set_title
+│   │   └── 图型选择决策.md
+│   ├── data-usage/            # 数据层
+│   │   ├── 数据清洗规范.md     #   ⚡ v1.5.8.1 P0-2 趋势数据禁 IQR
+│   │   ├── 信息边界原则.md
+│   │   └── 合规检查清单.md
+│   ├── by-category/           # ⚡ 6 分类专属反模式（物理/优化/数据/交通/生物/经济）
+│   ├── design-intent/         # ⚡ 题目设计意图分析 + 5 道防线自检清单
+│   ├── aigc/                  # ⚡ AIGC 降重策略 + 去 AIGC 指南
+│   ├── preparation/           # ⚡ 赛前学习清单 + 角色 Prompt + 学校国奖画像
+│   ├── 技能总结/              # 经验汇总
+│   ├── templates/             # 论文模板
+│   │   └── example-paper/     #   ⚡ v1.6.2 4 问 8 文件模板（figures/ fonts/ .tex）
 │   ├── 获奖论文/              # 5 篇参考论文分析
 │   │   └── 板凳龙-南科大-2024国一.md  # 极坐标+运动学+碰撞, 国一第5篇
 │   ├── 2026官方答疑/          # 官方 Q&A（2026 试行规范问答）
@@ -194,14 +234,12 @@ li-mtrie-2026/
 │   ├── examples/              # 机理题示例（螺线轨迹）
 │   │   └── 机理题示例-螺线轨迹.py
 │   ├── llm-prompts/           # ⚡ v1.5.0 LLM 工具集成（学生自用, copy-paste）
-│   │   ├── README.md         #   4 工具总览 + 96 小时使用流程
+│   │   ├── README.md         #   5 工具总览 + 96 小时使用流程
 │   │   ├── 01-选题推荐.md     #   题面+数据 → 候选模型 Top-3 (JSON)
 │   │   ├── 02-代码修复.md     #   traceback → 根因 + 最小修复 + 验证
 │   │   ├── 03-自动审稿.md     #   5 维评分 + 改进建议 + AI 痕迹词
 │   │   ├── 04-百分制评审.md   # ⚡ v1.5.1 3 模式 (M1字典预查/M2格式自查/M3百分制)
 │   │   └── 05-读题提取.md     # ⚡ v1.5.7 LLM 自动从 PDF 提取 15 项读题清单
-│   ├── 读题清单.md            # ⚡ v1.5.7 15 项空表模板 (跑题前必填, 防 2025C 3 P0 错位)
-│   ├── 模型决策树.md          # ⚡ v1.5.7 6 大题型 × 3 层模型决策 (修复外审 P0-3 断裂引用)
 │   ├── 数模资料/              # ⚡ v1.5.1 BZD 数模社配套资源 (免费公开, 非商业自用)
 │   │   ├── README.md         #   12 文件索引 + 与 li-mtrie 其他文档协同地图
 │   │   ├── 5年16题训练-官方评阅细则评分要点.zip  # 5年国赛真题 + 评阅细则 + 评分要点
@@ -219,14 +257,19 @@ li-mtrie-2026/
 │   │   ├── 07-模型求解自查.md #  §5 建模求解 + §6 检验 5 段
 │   │   ├── 08-参考文献附录自查.md # §9 文献 + §10 附录 P0-P3
 │   │   └── 09-AIGC审计.md    #   全文 9+6=15 维 (≥ 80 绿)
-│   └── scripts/              # 程序化自检工具 (7 个)
+│   └── scripts/              # 程序化自检工具 (12 个)
+│       ├── dryrun.py         #   ⚡ 赛前 1 天必做 62 项 checkable sign-off（0 red 才放行）
+│       ├── bc_check.py       #   ⚡ v1.6.3 表面行守恒校验器（dE/dt ÷ 边界通量 ≈ 1，P0-1 签名 223）
+│       ├── fig_sanity.py     #   ⚡ v1.5.9 P1-3 图形内容自检（恒定曲线/全NaN/残留 set_title）
+│       ├── check_meta.py     #   ⚡ v1.5.9.4 P1-7 meta.json 3 件套校验
+│       ├── number_ledger.py  #   ⚡ v1.5.8.2 P0-3 数值台账生成/核对
+│       ├── agent_audit.py    #   ⚡ v1.5.7.38 代理审计 brief 生成
 │       ├── profile_data.py   #   画图前 EDA
 │       ├── check_figure.py    #   提交前格式合规 (DPI ≥ 200)
 │       ├── visual_qa.py       #   出图后版面自检
 │       ├── verify_pdf_metrics.py  # 终审前 PDF 6 项体检 (借鉴 cumcm-live-workflow, GBK fix)
 │       ├── aigc_scan.py      #   AIGC 9 维度自动扫描 (借鉴 aigc-reduce, GBK fix)
-│       ├── data_utils.py     #   ⚡ v1.5.0 3 跨题 utility (GBK 兼容 / utf-8-sig CSV / 字符串)
-│       └── dryrun.py         #   ⚡ v1.5.2 赛前 1 天必做 6 项 checkable sign-off
+│       └── data_utils.py     #   ⚡ v1.5.0 3 跨题 utility (GBK 兼容 / utf-8-sig CSV / 字符串)
 ├── tools/
 │   └── pack.py               # skill 自身打包工具
 ├── 题目/                      # 用户填：赛题 PDF/DOCX

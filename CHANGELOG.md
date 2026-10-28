@@ -1,4 +1,80 @@
-# CHANGELOG (v1.6.2 — 模板 4 问化 (P2-5 防御))
+# CHANGELOG (v1.6.3 — 验收标准复核: check_bc 表面行能量守恒)
+
+## v1.6.3 — 验收标准复核: check_bc 表面行能量守恒 (2026A 复盘 v1.1 §验收标准 第 1/2 条)
+
+**核心**: 2026A 复盘 §验收标准 (L224) 点名 dryrun 必须有 `check_bc (表面行过能量守恒校验)`,
+但 v1.5.8 的 check 53 只查**模板静态写法** (找 `(1, 1+β, β)` 错格式), **没有任何工具能真把守恒比值算出来**.
+后果: P0-1 的"决定性证据" (ratio 223 vs 0.995) 只能靠代理审计人工手推, 求解期完全没拦.
+改进: 把守恒校验从"人工手推"变成"**求解时埋点 + 一条命令出报告**", 并补齐验收标准第 1 条缺的 check_bc.
+
+**新建 `references/scripts/bc_check.py`** (11.4 KB, 表面行守恒校验器):
+
+- `ConservationRecorder` 类 — 求解循环内 2 行接入 (`rec.record(t, E_total, flux_boundary)` + `rec.save()`)
+- `verify_rows()` — 算 `dE/dt ÷ 边界净通量`, 判 `|worst ratio − 1| <= 0.05`; 通量取区间中值避免相位偏差
+- CLI 3 模式: `--demo` (内置自测) / `--csv` (读记录) / `--project` (扫 `求解/` 全目录)
+- **内置 P0-1 签名**: 错组复现 ratio = **223** (表面被钉死成 h→∞ 极限), 对组 = 1.0000
+- 退出码 0/1/2 (通过 / 守恒被破坏 / 用法错), 强制 UTF-8 输出 (GBK 终端兼容)
+
+**新建 `references/audit/验收标准.md`** (9.5 KB, 验收标准 6 条 → 可执行锚点):
+
+- §0 六条一览对照表 (每条 → check 号 / 文档段)
+- §1-§6 逐条: 判据 + 落地锚点 + 兜底 (第 2 条含 P0-1 的 223 vs 0.995 对照表 + 3 步用法)
+- §7 收口自查 (1 条命令)
+- 顺带记录**第 1 条的两个缺口**: check_pkg 要求"附录↔包**+表号**", 而 check 58 只覆盖文件路径 →
+  表号错位留位给 v1.6.4 (check 66); 第 3 条"数字全部可溯源"缺反向检查 → 留位给 v1.6.4 (check 65)
+
+**改 `references/scripts/dryrun.py`** (+122 行): 新增 **check 64 (L30) 表面行能量守恒校验**
+
+- **A 段 (防御资产自检, 缺一即 red)**: bc_check.py 存在可导入 / 工具自测过 (对组 1 vs 错组 223 必须能区分) /
+  两个模板已接入 `ConservationRecorder` / 代理审计 prompt 含守恒要求
+- **B 段 (项目实测)**: 扫 `求解/问题N/**/守恒记录*.csv`, 逐文件判 `|worst ratio − 1| <= 0.05`
+- 阈值: A 全过 + 无数据 green / A 全过 + 数据全过 green / A 缺 red / 数据偏离 red / 区间不足 yellow
+- 同步修正文档头 "47 项 hardcode check" → 62 项 (陈旧数字顺手修)
+
+**改模板 (2 处接入段)**:
+
+- `references/mechanism-template.py` **§ 4.1 新增 26 行** — 完整接入片段 (PDE/传热/传质题必做)
+- `references/code-template.py` **+19 行** — 数据题给指针 (纯数据题用不到, 但涉物理过程就必做)
+
+**改 `references/audit/验收清单.md`** (+52 行): 新增 **§J 验收标准打钩区** — 6 条打钩表 + 4 条自查命令 +
+J.3 接入说明 + ratio 现象对照表 (1 / 223 / 偏离但非整数倍 三种处置)
+
+**改 `references/代理审计prompt.md`** (+5 行): A1 板块要求**用 bc_check.py 跑** (别手推),
+无守恒记录直接判 FAIL; A2 板块要求**复算过程必须落盘** (验收标准第 2 条"有独立换实现的复算记录")
+
+**改 `SKILL.md`** (+1 行): 跑题后审计清单段加"验收标准 6 条打钩"指针 (1429 → 1430 行, 远未触 1500 硬护栏)
+
+**顺手修 `README.md` 目录树 (陈旧 2 年, README 自称"单一权威源"但已失真)**:
+
+- scripts/ 写"7 个" → 实际 **12 个** (补 bc_check / fig_sanity / check_meta / number_ledger / agent_audit)
+- references/ 根级列的 `workflow.md` / `paper-spec.md` / `合规检查清单.md` / `绘图规范.md` /
+  `赛前学习清单.md` / `导入规范.md` / `题意翻译.md` / `学校国奖画像.md` / `读题清单.md` / `模型决策树.md`
+  **早已移入子目录** → 按真实结构重排为 workflow / paper / read-checklist / audit / plot /
+  data-usage / by-category / design-intent / aigc / preparation / 技能总结 / templates 12 个子目录
+- 删已不存在的 `测试报告.md`; 补 CHANGELOG.md / CHANGELOG-archive.md / CONTRIBUTING.md / LICENSE / tags.txt
+- llm-prompts "4 工具" → "5 工具"
+- **程序化校验: 树里 101 条路径逐条 Test-Path, 101/101 存在 (0 missing)** — 不靠眼睛
+
+**双向验证** (绿不算数, 必须验反向):
+
+| 场景 | 期望 | 实测 |
+|---|---|---|
+| bc_check.py `--demo` 对组 | ratio 1.0000 PASS | ✓ |
+| bc_check.py `--demo` 错组 | ratio 223 FAIL (复现 P0-1 签名) | ✓ |
+| 项目放坏记录 (ratio 223) | check 64 **RED** | ✓ |
+| 项目放好记录 (ratio 1.0000) | check 64 **GREEN** | ✓ |
+| CSV 落盘 → `--csv` 读回 → `--project` 扫到 | 三条路径一致 | ✓ |
+
+**dryrun**: **36/62 green + 26 yellow + 0 red** (sign-off 绿, +1 check 64)
+
+**影响文件**:
+
+- **新建** 2: `references/scripts/bc_check.py` (11.4 KB) + `references/audit/验收标准.md` (9.5 KB)
+- 改 8: `references/scripts/dryrun.py` (+122) / `references/audit/验收清单.md` (+52) /
+  `references/mechanism-template.py` (+25) / `references/code-template.py` (+19) /
+  `references/代理审计prompt.md` (+5) / `SKILL.md` (+1) / `README.md` (目录树重排) / `CHANGELOG.md`
+
+---
 
 ## v1.6.2 — example-paper 模板 4 问化 (2026A 复盘 v1.1 §P2-5 防御)
 

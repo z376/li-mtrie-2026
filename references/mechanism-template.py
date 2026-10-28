@@ -291,6 +291,31 @@ PHYSICAL_PARAMS = {
 # print(f'耗时: {time.time() - t0:.2f}s')
 
 
+# ==================== § 4.1  表面行守恒校验 (v1.6.3 新增, 验收标准第 1/2 条) ====================
+# ⚠️ **PDE / 传热 / 传质机理题必做**: 表面边界离散式写错时, 求解照样收敛, 曲线照样好看,
+#    但结果全错. 决定性证据 = dE/dt ÷ [h(T∞−Ts)·A] ≈ 1
+#    (2026A v15 P0-1 实测: 错格式 (1, 1+β, β) ratio = 223, 真 Robin (1+2μ+γ) ratio = 0.995)
+#
+# 接入 2 行 (求解循环内每步记一次):
+#     _SKILL_SCRIPTS = r"<SKILL_ROOT>/references/scripts"   # 改成你的 skill 路径
+#     if _SKILL_SCRIPTS not in sys.path: sys.path.insert(0, _SKILL_SCRIPTS)
+#     from bc_check import ConservationRecorder
+#     rec = ConservationRecorder(tol=0.05)
+#     for ...:
+#         ...                                  # 推进一个时间步
+#         rec.record(t, E_total, flux_boundary) # ← 加这一行
+#     rec.save('结果/守恒记录.csv')
+#
+# 跑完出报告 (ratio 偏离 1 > 0.05 = 离散式几乎必错, 别当数值误差放过):
+#     py <SKILL_ROOT>/references/scripts/bc_check.py --csv 求解/问题X/结果/守恒记录.csv
+#
+# dryrun check 64 会自动扫 求解/问题N/结果/守恒记录*.csv 判定 (2026A 复盘 §验收标准).
+#
+# 物理量对应 (按题面改):
+#   E_total       = Σ ρ·c·V·T          (系统总内能, J)
+#   flux_boundary = h·A·(T_amb − T_s)   (边界净流入, W, **流入为正**, 与 dE/dt 同号)
+
+
 # ==================== § 5  输出 result.xlsx ====================
 # ⚠️ **国赛附件名是固定的（result1.xlsx / result2.xlsx / result4.xlsx）**——必须保留原名
 # 但**保存路径**要明确放在对应问题目录下，避免与原附件混淆
