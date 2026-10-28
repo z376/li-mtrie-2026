@@ -28,6 +28,10 @@ import re
 import zipfile
 from pathlib import Path
 
+# v1.6.8: 自检不得在 skill 仓库里留 __pycache__
+# (check 60/64/65 会 import check_meta / bc_check / number_ledger, import 即写 .pyc)
+sys.dont_write_bytecode = True
+
 # 路径 (相对 skill 根)
 SKILL_ROOT = Path(__file__).parent.parent.parent  # references/scripts/dryrun.py → skill root
 TEX_DIR = SKILL_ROOT / "论文"
@@ -161,9 +165,16 @@ def check_pack():
     pack_py = SKILL_ROOT / "tools" / "pack.py"
     if not pack_py.exists():
         return ("red", "tools/pack.py 不存在", "重 git clone")
-    # 落盘到 .github/dryrun-logs/ 方便 CI 排查 (artifact 上传)
-    log_dir = SKILL_ROOT / ".github" / "dryrun-logs"
-    log_dir.mkdir(parents=True, exist_ok=True)
+    # v1.6.8 副作用修复: 日志落盘位置
+    #   - CI (GITHUB_ACTIONS=true): 落 .github/dryrun-logs/ 供 artifact 上传排查
+    #   - 本地: 落临时目录 —— 否则每跑一次 dryrun 就在 skill 仓库里留下 2 个日志文件,
+    #     "工作区干净" 会被反复破坏
+    if os.environ.get("GITHUB_ACTIONS") == "true":
+        log_dir = SKILL_ROOT / ".github" / "dryrun-logs"
+        log_dir.mkdir(parents=True, exist_ok=True)
+    else:
+        import tempfile
+        log_dir = Path(tempfile.mkdtemp(prefix="li_mtrie_dryrun_logs_"))
     stdout_log = log_dir / "pack_stdout.log"
     stderr_log = log_dir / "pack_stderr.log"
     with open(stdout_log, "wb") as sout, open(stderr_log, "wb") as serr:

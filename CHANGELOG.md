@@ -1,4 +1,23 @@
-# CHANGELOG (v1.6.7 — 代理审计收口: P0-3 部署链修复)
+# CHANGELOG (v1.6.8 — 工作区零残留: 自检不再写 __pycache__ / dryrun-logs)
+
+## v1.6.8 — 工作区零残留 (2026-10-29)
+
+**核心**: 清理工作区时发现: **每跑一次 dryrun, skill 仓库里就会重新长出残留物** ——
+`references/scripts/__pycache__/` (import 即写 .pyc) + `.github/dryrun-logs/` (check 5 落日志).
+上一轮把两者都清掉后, 下一次 dryrun 又长回来 = "工作区干净" 反复被破坏. 本轮从源头修掉.
+
+| 残留源 | 修法 |
+|---|---|
+| `references/scripts/__pycache__/` (check 60/64/65 import check_meta / bc_check / number_ledger 时写 .pyc) | `dryrun.py` 顶部加 `sys.dont_write_bytecode = True` (import 也不再写 .pyc) |
+| `.github/dryrun-logs/` (check 5 把 pack.py stdout/stderr 落盘供 CI artifact 上传) | **只在 CI** (`GITHUB_ACTIONS=true`) 落 `.github/dryrun-logs/`; 本地落临时目录 |
+| `references/scripts/__pycache__` (check 2 的 py_compile) | v1.6.6 已改为内存编译 `compile()`, 不落文件 |
+| skills 安装目录 2 个 25MB zip (check 5 调 pack.py) | v1.6.6 已加 `PACK_OUT_DIR` 改写到临时目录 |
+
+**验证**: 清理 → 跑 dryrun → **仓库残留 0** (`__pycache__` 0 个 / `dryrun-logs` 0 个), git status 只剩本次改动.
+
+**dryrun**: 36/64 green + 28 yellow + 0 red (sign-off 绿)
+
+---
 
 ## v1.6.7 — 代理审计收口: P0-3 部署链断裂 (2026-10-29)
 
