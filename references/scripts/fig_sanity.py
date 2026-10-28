@@ -143,6 +143,46 @@ def check_fig_csv_data(path: str) -> dict:
     return {"has_csv": True, "issues": issues}
 
 
+def check_fig_dimensions(path: str) -> tuple:
+    """PIL 尺寸校验 (P2-7). 返回 (width, height) 或 (None, None).
+
+    用途: Read 工具读图时**同尺寸图会串档** (读 A 图返回 B 图内容). 防御:
+    1. 先读文件头拿尺寸, 确认与预期一致
+    2. 同目录多张图尺寸完全相同 + 像素完全相同 → 串档嫌疑
+    """
+    try:
+        from PIL import Image
+    except ImportError:
+        return None, None
+    try:
+        with Image.open(path) as img:
+            return img.size[0], img.size[1]
+    except Exception:
+        return None, None
+
+
+def check_fig_duplicate(path: str, siblings: list) -> list:
+    """P2-7 串档检测: 同目录中像素完全相同的图 (用 md5 粗判 + 尺寸)."""
+    import hashlib
+    try:
+        with open(path, 'rb') as f:
+            h = hashlib.md5(f.read()).hexdigest()
+    except OSError:
+        return []
+    dups = []
+    for s in siblings:
+        if str(s) == str(path):
+            continue
+        try:
+            with open(s, 'rb') as f:
+                h2 = hashlib.md5(f.read()).hexdigest()
+        except OSError:
+            continue
+        if h == h2:
+            dups.append(str(s))
+    return dups
+
+
 def audit_content(path: str, title_threshold: float = 0.06) -> dict:
     """主入口: 1 张图的内容自检, 返回 {issues: [], warnings: [], ok: bool}."""
     p = Path(path)
@@ -166,7 +206,22 @@ def audit_content(path: str, title_threshold: float = 0.06) -> dict:
     if check_fig_unicode_subscript(str(p)):
         warnings.append(".py 源文件含 U+2080 下标 (C₀ □乱码反例, 改用 'C_0' 或 'C0')")
 
-    # 3. csv 数据自检
+    # 3. P2-7 尺寸校验 + 串档检测
+    w, h = check_fig_dimensions(str(p))
+    if w and h:
+        if w < 200 or h < 200:
+            warnings.append(f"图像尺寸 {w}×{h} 偏小 (论文图建议 ≥ 400×300, DPI ≥ 200)")
+        # 同目录像素完全相同 → 串档嫌疑
+        try:
+            siblings = [q for q in p.parent.rglob(f"*{p.suffix}") if q.is_file()]
+        except Exception:
+            siblings = []
+        if len(siblings) > 1:
+            dups = check_fig_duplicate(str(p), siblings[:20])
+            if dups:
+                warnings.append(f"与 {len(dups)} 张图像素完全相同 (Read 读图串档嫌疑, P2-7): {dups[0]}")
+
+    # 4. csv 数据自检
     csv_check = check_fig_csv_data(str(p))
     if csv_check.get("has_csv"):
         if csv_check.get("load_error"):

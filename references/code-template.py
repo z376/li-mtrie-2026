@@ -318,6 +318,43 @@ print("=" * 60)
 # df = pd.read_excel('../../数据/xxx.xlsx')
 # print(f"数据规模：{df.shape}")
 
+# ==================== v1.6.1 P2-9 统一列名处理 (强制) ====================
+# 2026A 复盘 §P2-9: 绘图脚本读 result 时按旧列名 `时间` 过滤 (模板列名已改
+# `时间\到药材中心的距离`) → KeyError; result4 已删 `半径/cm` 列但脚本仍读.
+# 改进: 统一 `df.rename(columns={df.columns[0]: '时间'})`; 列集合从"排除首列"
+# 推导, **不硬编码列名**.
+#
+# ⚠️ 关键: 首列名可能随时面/模板变 (时间 / 时间\到药材中心的距离 / t).
+#    一律用 df.columns[0] 取, 不要写死字符串.
+
+def normalize_result_df(df):
+    """统一 result 列名: 首列 → '时间'; 其余列按位置推导, 不硬编码列名.
+
+    用法:
+        df = normalize_result_df(pd.read_excel('结果/result4.xlsx'))
+
+    返回: 拷贝后的 df (首列名 = '时间'), 其余列名保持不变.
+    """
+    if df is None or len(df.columns) == 0:
+        return df
+    df = df.copy()
+    df = df.rename(columns={df.columns[0]: '时间'})
+    # 其余列不硬编码: 用列位置索引取, e.g. df.columns[1] = 距离列
+    return df
+
+
+def numeric_columns_except_first(df):
+    """取除首列外的所有列名 (不硬编码列名, 避免删列后 KeyError)."""
+    if df is None or len(df.columns) <= 1:
+        return []
+    return list(df.columns[1:])
+
+
+# 典型用法 (取消注释后改路径):
+# df = normalize_result_df(pd.read_excel('结果/result4.xlsx'))
+# dist_cols = numeric_columns_except_first(df)          # 距离/水分等数值列
+# df_time = df[df['时间'] <= 5 * 3600]                   # 按时间过滤 (首列已归一为 '时间')
+
 # TODO: 数据预处理
 # ...
 

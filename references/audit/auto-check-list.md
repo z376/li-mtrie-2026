@@ -218,6 +218,14 @@ A1 物理定律引用 / A2 守恒律验证 (v1.5.8 §红线 5) / A3 网格收敛
 
 **配套文档**: `references/workflow/Python环境.md` (6.1 KB, 8 节权威源: 探测式 + 3 步绿验证 + GBK 兼容 + venv + 装包/预下载 + 踩坑库 7 项)
 
+## 读图串档 + Overfull 案例 + 统一列名 (v1.6.1, 文档 + 工具增强)
+
+| 项 | 类型 | 落点 | 防御反例 |
+|----|------|------|---------|
+| **P2-7** 读图串档 | 代理审计 H 板块 (H1-H3) | `references/代理审计prompt.md` + `fig_sanity.py` 尺寸校验 | 2026A 复盘: Read 工具读图同尺寸串档. 防御: PIL 尺寸校验 + montage 拼图 + 文件名水印 + 单张读取. fig_sanity.py 加 `check_fig_dimensions` + `check_fig_duplicate` (md5 比对) |
+| **P2-8** Overfull 3 案例 | 文档 | `references/paper/paper-spec.md §4.1` | 2026A: Overfull 修复套路重复劳动 (本轮 6→0). 加 3 案例表 (列宽超 / 缺列声明 / 长文本溢出) + **粗体字体回退警告标注"无害"** (不影响编译, 不用修) + 快速定位命令 |
+| **P2-9** 统一列名 | 模板 | `references/code-template.py` | 2026A: 绘图脚本按旧列名 `时间` 过滤 (模板列名已改 `时间\到药材中心的距离`) → KeyError; result4 已删 `半径/cm` 列但脚本仍读. 防御: `normalize_result_df()` (首列 → '时间') + `numeric_columns_except_first()` (列集合按位置推导, 不硬编码) |
+
 **跑题后必跑 dryrun** (L11/L14-L29 全覆盖).
 
 ## 引用

@@ -1,4 +1,59 @@
-# CHANGELOG (v1.6.0 — Python 探测第 0 项 + 波浪号中文 L29 (P2-1/P2-2/P2-4 防御))
+# CHANGELOG (v1.6.1 — 读图串档防御 + Overfull 3 案例 + 统一列名 (P2-7/P2-8/P2-9 防御))
+
+## v1.6.1 — 读图串档 H 板块 + Overfull 3 案例 + 统一列名模板 (2026A 复盘 v1.1 §P2-7/8/9 防御)
+
+**核心**: 2026A 实跑复盘 v1.1 §P2-7/8/9 — (P2-7) Read 工具读图同尺寸串档; (P2-8) Overfull 修复套路重复劳动; (P2-9) 绘图脚本读 result 时按旧列名 `时间` 过滤 (模板列名已改 `时间\到药材中心的距离`) → KeyError, 且 result4 已删 `半径/cm` 列但脚本仍读.
+
+**改 `references/scripts/fig_sanity.py`** (+45 行, 2 个新函数):
+
+- **`check_fig_dimensions(path)`**: PIL 尺寸校验, 返回 (width, height)
+- **`check_fig_duplicate(path, siblings)`**: md5 比对检测同目录像素完全相同的图 → **Read 读图串档嫌疑**
+- `audit_content` 集成: 尺寸 < 200×200 → yellow 警告; 像素完全相同 → yellow 警告 (标 P2-7)
+
+**改 `references/代理审计prompt.md`** (+22 行, §H 板块, P2-7):
+
+- **H1 读图前必做 PIL 尺寸校验** (硬性前置, 完整代码)
+- **H2 同尺寸图串档检测**: 3 选 1 处理 — **montage 拼图** (推荐) / **文件名水印** (最可靠) / **单张读取** (读完立刻核对)
+- **H3 图内容 ↔ caption 对应核对** (串档最典型表现: 图 3 caption 说 Q2, 图里画 Q1 曲线)
+
+**改 `references/paper/paper-spec.md`** (+28 行, §4.1, P2-8):
+
+- **Overfull 修复 3 案例表**:
+  1. **列宽超** → `p{}` 比例总和 > 1 → 比例 = 1.04 − 0.04×N
+  2. **缺列声明** → `longtable` 列格式数 < 表头 `&` 个数 → 补齐 `p{}`
+  3. **长文本溢出** → 单元格内无换行点 → `\newline` / `\allowbreak` / 改 `p{}` / `\footnotesize`
+- **⚠️ 粗体字体回退警告 = 无害**: `Font shape ... undefined` → LaTeX 找不到粗体自动回退正体, **不影响编译也不影响内容**. 只这一类不用修. 真 red 是 `! Error` + `Overfull \hbox` ≥ 5
+- **快速定位命令** (Select-String 带行号直接跳 .tex)
+
+**改 `references/code-template.py`** (+38 行, P2-9):
+
+- **`normalize_result_df(df)`**: 首列统一 → `'时间'` (首列名可能是 `时间` / `时间\到药材中心的距离` / `t`, 一律取 `df.columns[0]`, **不硬编码**)
+- **`numeric_columns_except_first(df)`**: 其余列按位置推导, 不硬编码列名 → result4 删 `半径/cm` 列后不再 KeyError
+- 典型用法注释 (load → normalize → 按时间过滤)
+
+**改 `references/audit/auto-check-list.md`** (+8 行, §读图串档 + Overfull 案例 + 统一列名节):
+
+- **P2-7/P2-8/P2-9** 三项类型 + 落点 + 防御反例对照
+
+**影响文件**:
+
+- 改 `references/scripts/fig_sanity.py` (+45 行: 2 函数 + audit_content 集成)
+- 改 `references/代理审计prompt.md` (+22 行: §H 板块 H1-H3)
+- 改 `references/paper/paper-spec.md` (+28 行: §4.1 Overfull 3 案例 + 无害警告)
+- 改 `references/code-template.py` (+38 行: 2 helper 函数)
+- 改 `references/audit/auto-check-list.md` (+8 行: §新节)
+- 改 CHANGELOG.md (主文件更新标题 + v1.6.1 entry)
+
+**dryrun**: 35/61 → 35/61 green + 26 yellow + 0 red (无新增 check, P2-7/8/9 是工具增强 + 文档).
+
+**v1.6.1 后续方向**:
+
+- v1.6.2 P2-5 模板 4 问化 (templates/example-paper/ 预置 4 问 8 文件 + 完整 input 列表)
+- Changelog 历史漏洞: v1.5.7.40-43 (4 条 hotfix 漏写, 留位)
+
+---
+
+
 
 ## v1.6.0 — Python 探测 check 62 (第 0 项) + 波浪号中文 check 63 (L29) (2026A 复盘 v1.1 §P2-1/2/4 防御)
 

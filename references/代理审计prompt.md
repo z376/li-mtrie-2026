@@ -150,6 +150,32 @@
 - 支撑材料/resultX.csv.gz mtime vs 求解/问题N/results/resultX.xlsx mtime
 - 旧 mtime 红 (本轮忘重生, csv.gz 是旧数据)
 
+### H 板块 (v1.6.1 新增, P2-7): 读图串档防御 (Read 工具)
+
+**H1 读图前必做 PIL 尺寸校验** (不是可选, 是硬性前置):
+```python
+from PIL import Image
+import hashlib
+from pathlib import Path
+
+figs = sorted(Path('论文/figures').glob('*.png'))
+info = {}
+for f in figs:
+    with Image.open(f) as im:
+        info[f.name] = im.size
+    with open(f,'rb') as fp:
+        info[f.name] = (info[f.name], hashlib.md5(fp.read()).hexdigest()[:8])
+for k, v in info.items():
+    print(k, v)
+```
+
+**H2 同尺寸图串档检测**: 上面输出的**尺寸完全相同**的图 → Read 工具读它们时会串档 (读 A 返回 B 内容). 处理 3 选 1:
+- **montage 拼图**: 把多张图拼成 1 张大图再读 (推荐, 一次看清全部)
+- **文件名水印**: 在图上叠文件名文字再读 (最可靠, 杜绝张冠李戴)
+- **单张读取**: 一次只读 1 张, 读完立刻核对内容与文件名是否对应
+
+**H3 图内容 ↔ caption 对应核对**: 每张图读完后, 核对图里的曲线/坐标轴/图例是否与论文 `\caption` 描述一致 (串档最典型的表现: 图 3 的 caption 说的是 Q2, 图里画的是 Q1 的曲线).
+
 ---
 
 ## 3. 报告输出格式

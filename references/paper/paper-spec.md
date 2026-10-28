@@ -248,6 +248,25 @@
 
 **获奖论文特征**：所有 4 篇论文均使用三线表统一列出符号，是评审关注的重要格式点。
 
+**📌 Overfull 修复 3 案例 (v1.6.1 新增, P2-8 防御)** — 2026A 复盘: Overfull 修复套路重复劳动, 本轮 6→0 但耗时长. 3 个高频案例:
+
+| 案例 | 症状 (log) | 根因 | 修法 (按顺序试) |
+|------|-----------|------|----------------|
+| **案例 1** 列宽超 | `Overfull \hbox (X pt too wide) in paragraph at lines N` | `p{}` 比例总和 > 1 | 比例总和 = **1.04 − 0.04×N** (N=列数). 2 列 0.18+0.78; 3 列 0.16+0.16+0.60; 4 列 0.12×3+0.52 |
+| **案例 2** 缺列声明 | 同上但**只有 1-2 列**超 | `longtable` 列格式数比实际 `&` 分段少 (漏写一个 `p{}`) | 数 `\begin{longtable}` 的列格式 vs 表头 `&` 个数, 补齐缺失的 `>{\centering\arraybackslash}p{0.XX\textwidth}` |
+| **案例 3** 长文本溢出 | 同上但**整段文字**跑出 | `p{}` 宽度够但**单元格内无换行点** (长公式/长英文串) | ① 手动加 `\newline` 或 `\allowbreak` ② 该列改 `p{0.XX\textwidth}` 不用 `l`/`c` ③ 改用 `\footnotesize` 局部缩排 |
+
+**⚠️ 粗体字体回退警告 = 无害 (P2-8 明确)**: log 出现
+`Font shape 'OT1/cmss/bx/n' undefined` 或 `Font shape ... in size <10> not available`
+→ LaTeX 找不到**粗体**字体, **自动回退到正体**, **不影响编译成功, 也不影响内容正确性**.
+若只是这一类 warning, **不用修** (修了会引入中文字体问题). 真正的 red 是 `! Error` 和 `Overfull \hbox` ≥ 5.
+
+**快速定位命令**:
+```powershell
+# 列出所有 Overfull (含行号, 直接跳到对应 .tex 行)
+Select-String -Path 论文\论文.log -Pattern 'Overfull \\hbox' -Context 0,1
+```
+
 ```latex
 % ⚠️ 列宽规则: 比例总和 = 1.04 - 0.04*N (N=列数)
 % 2列: 0.18+0.78=0.96, 3列: 0.16+0.16+0.60=0.92, 4列: 0.12*3+0.52=0.88
