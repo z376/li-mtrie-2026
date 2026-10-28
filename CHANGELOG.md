@@ -1,4 +1,45 @@
-# CHANGELOG (v1.6.6 — 代理审计 P1/P2 批量修: 指针/命令/副作用/假绿)
+# CHANGELOG (v1.6.7 — 代理审计收口: P0-3 部署链修复)
+
+## v1.6.7 — 代理审计收口: P0-3 部署链断裂 (2026-10-29)
+
+**核心**: v1.6.5/v1.6.6 修完仓库内的问题后, 剩最后一个 P0 是**仓库外**的部署链:
+**实际被加载的 skill ≠ 被开发的 skill**. 本条记录处置结果 (环境操作, 仓库内仅本 entry + 版本号).
+
+### 🔴 P0-3 处置: 加载方拿到的还是 9/10 旧版
+
+- **现象**: `C:\Users\admin\.minimax\skills\` 下同时存在 `li-mtrie` (9/10 旧版, SKILL.md 691 行, v1.5.9.1)
+  与 `li-mtrie（2026）` (当前版, 1428 行). 两个目录的 frontmatter **`name` 都是 `li-mtrie`** →
+  目录名冲突, **旧版占住注册名**. 实测 `skill({name:"li-mtrie"})` 返回
+  `Location: .claude/skills/li-mtrie/SKILL.md` (v1.5.9.1)
+- **后果**: v1.5.8 → v1.6.6 的全部资产 (check 64-67 / bc_check / 验收标准 6 条 / 台账规范 /
+  图名兜底 / 版本比对) 对**实际加载方完全不可见** —— 审计通过 ≠ 交付可用
+- **处置** (用户拍板):
+  1. `.minimax\skills\li-mtrie` 旧版**移出注册名** → 现存于 `.backup-li-mtrie-legacy-20260910`
+     (`.backup-li-mtrie-20260910` 本就有完整备份; 未做永久删除, 需彻底清理可自行删)
+  2. `.claude\skills\li-mtrie` **同步成 v1.6.6** (旧版备份在 `.claude\skills\.backup-li-mtrie-20260910`),
+     这样**无论加载器解析到哪条路径, 拿到的都是当前版**
+- **验证**: `skill({name:"li-mtrie"})` → `Location: .claude/skills/li-mtrie/SKILL.md`,
+  `version: "1.6.6"`, 正文已含 check 64/65/66 指针与 `references/data-usage/` 等新子目录路径 ✓
+- **副本可独立运行**: `.claude\skills\li-mtrie` 跑 `dryrun --mode self` → **36/64 green + 28 yellow + 0 red**
+  (无 git 时 check 7 正确降级为"与 CHANGELOG 首条一致", 不误报红)
+
+### 代理审计闭环总结 (v1.6.5 → v1.6.7)
+
+| 版本 | 内容 | 产出 |
+|---|---|---|
+| v1.6.5 | P0-1 longtable 计数 / P0-2 模板图名 + 占位兜底 + check 67 / P1-1 \cref / P1-2 锚点名 / P1-4 优先级 / P1-8 版本比对 | 3 P0 中的 2 个 (仓库内) + 4 P1 |
+| v1.6.6 | P1-3 台账命令 / P1-6 角色Prompt 指针 / P1-7 36 处裸 python / P2 ×10 (43 处失效指针 + 自检副作用 + check 2 假覆盖) | 3 P1 + 10 P2 |
+| v1.6.7 | P0-3 部署链 (仓库外) + 审计闭环记录 | 1 P0 |
+
+**3 个 P0 全是"自洽的错"** —— 写法没错、逻辑自洽、但与世界不符:
+① check 只数 `\begin{table}` 与 skill 自己的"全用 longtable"硬规则冲突 (假红)
+② 模板 4 章共用问题一的图 (复制文件时漏改)
+③ 加载的 skill ≠ 开发的 skill (目录名冲突)
+**这类问题 dryrun 自查永远抓不到** —— 只能靠 fresh 代理审计 + 逐条复核.
+
+**dryrun**: 36/64 green + 28 yellow + 0 red (sign-off 绿)
+
+---
 
 ## v1.6.6 — 代理审计 P1/P2 批量修 (2026-10-28, 承接 v1.6.5 的 fresh 审计)
 
