@@ -1,4 +1,66 @@
-# CHANGELOG (v1.5.9.5 — 论文表格两行表头 L28 (P1-8 防御))
+# CHANGELOG (v1.6.0 — Python 探测第 0 项 + 波浪号中文 L29 (P2-1/P2-2/P2-4 防御))
+
+## v1.6.0 — Python 探测 check 62 (第 0 项) + 波浪号中文 check 63 (L29) (2026A 复盘 v1.1 §P2-1/2/4 防御)
+
+**核心**: 2026A 实跑复盘 v1.1 §P2-1 — `python` 为**微软商店占位符** (exit 49), 全程被迫 `py`. 改进: 环境节改**探测式** (`py -3` / `python` / `python3` 依次尝试, 锁定后固化), dryrun **第 0 项** 自动探测. P2-2 GBK 反复 UnicodeEncodeError → 脚本模板头部强制 reconfigure (已在 code-template.py 内置, 本次补权威源文档). P2-4 `\textasciitilde` 直接接中文 → LaTeX 未定义命令 ×2.
+
+**新建 `references/workflow/Python环境.md`** (6.1 KB, 8 节, P2-1+P2-2 权威源):
+
+- **§1 探测式 (P2-1 核心)**: Windows 上 `python` 3 种可能 (商店占位符 / Anaconda / 没装). **exit 49 = 商店占位符判定标志**, 见到直接换下一个. 探测脚本 (PowerShell 循环) + 固化建议
+- **§2 3 步绿验证**: 解释器一致 / pip 同源 / import 验证 (`core ok`)
+- **§3 GBK 控制台兼容 (P2-2 核心)**: 完整 reconfigure 代码 (含 Python < 3.7 降级 TextIOWrapper), 说明"必须在 import 阶段做" (emoji 在 GBK 必炸)
+- **§4 venv 隔离** / **§5 装包 + 封闭赛场预下载** (清华 TUNA 镜像)
+- **§6 dryrun check 62 (第 0 项)**
+- **§7 踩坑案例库 7 项** / **§8 引用**
+
+**改 `references/scripts/dryrun.py`** (+95 行, 2 个新 check 函数):
+
+- **check 62 (Python 解释器探测, 第 0 项)**: 依次探测 `py -3` / `python` / `python3`, 检测 exit 49 (商店占位符):
+  - 探测 OK + pip 同源 → **green** (报告版本 + 路径)
+  - 探测 OK 但 pip 不同源 → **yellow** (提示用 `<解释器> -m pip install`)
+  - 全部不可用 → **red** (赛前必须修, 否则 96h 跑题全废)
+- **check 63 (LaTeX 波浪号后接中文 L29)**: 扫论文 .tex 找 `\textasciitilde` / `~` 后紧跟中文:
+  - 无命中 → **green** / template 状态 → **yellow** / 命中 → **red**
+- CHECKS 列表第 0 项插入 check 62 (探测在装包检查之前, 装包失败时先看解释器)
+
+**改 `SKILL.md`** (1500 → 1407, **-93 行**, 拆段腾 buffer):
+
+- **§Python 环境节压缩**: 89 行 → 18 行, 拆到 `references/workflow/Python环境.md`, SKILL.md 只留 1 行指针 + 探测式命令 + 3 步绿验证 + 踩坑摘要
+- 腾出的 93 行 buffer 供后续 hotfix 用 (v1.5.9 起 SKILL.md 长期满 1500)
+
+**改 `references/paper/格式自查清单.md`** (+1 行, §六 图/表/公式):
+
+- **波浪号后仅接数字/空格 (P2-4, v1.6.0)**: `\textasciitilde` 直接接中文 → 未定义命令, 编译报错. 接中文用"至". dryrun check 63 (L29) 自动扫
+
+**改 `references/audit/auto-check-list.md`** (+10 行, §Python 探测 + 波浪号中文节):
+
+- **§新节**: check 62 + check 63 描述 + 阈值 + Python环境.md 指针
+
+**改 `references/audit/post-solution-audit-list.md`** (16 层表 +1 行 L29):
+
+- **L29**: LaTeX 波浪号后接中文, auto, dryrun 1 min
+
+**影响文件**:
+
+- **新建** `references/workflow/Python环境.md` (6.1 KB, 8 节权威源)
+- 改 `references/scripts/dryrun.py` (+95 行: check_python_probe + check_tilde_chinese + CHECKS 2 行)
+- 改 `SKILL.md` (-93 行: Python 节拆段)
+- 改 `references/paper/格式自查清单.md` (+1 行: 波浪号条目)
+- 改 `references/audit/auto-check-list.md` (+10 行: §新节)
+- 改 `references/audit/post-solution-audit-list.md` (+1 行: L29)
+- 改 CHANGELOG.md (主文件更新标题 + v1.6.0 entry)
+
+**dryrun**: 32/58 → 32/60 green + 26→28 yellow + 0 red (待 commit 后跑实数) → **目标 33/60 green + 27 yellow + 0 red**.
+
+**v1.6.0 后续方向** (P2 剩 6 项):
+
+- v1.6.1 P2-7 Read 尺寸校验 (代理审计 prompt + fig_sanity 尺寸校验) + P2-8 Overfull 3 案例 (paper-spec §4.1) + P2-9 rename 列名 (code-template 绘图段)
+- v1.6.2 P2-5 模板 4 问化 (templates/example-paper/ 预置 4 问 8 文件)
+- Changelog 历史漏洞: v1.5.7.40-43 (4 条 hotfix 漏写, 留位)
+
+---
+
+
 
 ## v1.5.9.5 — 论文表格两行表头 check 61 (2026A 复盘 v1.1 §P1-8 防御)
 

@@ -209,7 +209,16 @@ A1 物理定律引用 / A2 守恒律验证 (v1.5.8 §红线 5) / A3 网格收敛
 
 **跨 v1.5.8.3 check 56 协同**: check 56 比对 resultX **列名** vs 附件3 模板; check 61 比对论文 .tex **表头** vs 题面模板格式. 两个都要, 缺一个都判格式偏差.
 
-**跑题后必跑 dryrun** (L11/L14/L15/L16/L17/L18/L19/L20/L21/L22/L23/L24/L25/L26/L27/L28 全覆盖).
+## Python 探测 + 波浪号中文 (v1.6.0, check 62 第 0 项 + check 63 L29)
+
+| check | 防御反例 |
+|---|---|
+| **62** Python 解释器探测 (第 0 项) | 2026A 复盘 §P2-1 (`python` 为**微软商店占位符** exit 49, 全程被迫 `py`). 探测 `py -3` → `python` → `python3`, exit 49 = 占位符跳过. 阈值: 探测 OK + pip 同源 green / 探测 OK 但 pip 不同源 yellow / 全不可用 red |
+| **63** LaTeX 波浪号后接中文 L29 | 2026A 复盘 §P2-4 (`\textasciitilde` 直接接中文 → **未定义命令** ×2, 编译报错). 波浪号后仅接数字/空格, 接中文用"至". 阈值: 无命中 green / template 状态 yellow / 命中 red |
+
+**配套文档**: `references/workflow/Python环境.md` (6.1 KB, 8 节权威源: 探测式 + 3 步绿验证 + GBK 兼容 + venv + 装包/预下载 + 踩坑库 7 项)
+
+**跑题后必跑 dryrun** (L11/L14-L29 全覆盖).
 
 ## 引用
 

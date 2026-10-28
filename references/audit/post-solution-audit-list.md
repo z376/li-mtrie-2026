@@ -30,6 +30,7 @@
 | L26 | 图形程序化内容自检 | auto (fig_sanity.py) + manual 修图 | check 59 (v1.5.9 新增) | dryrun (10 min) |
 | L27 | meta.json 3 件套 (评阅关注点 2 '高效') | auto (check_meta.py) | check 60 (v1.5.9.4 新增) | dryrun (1 min) |
 | L28 | 论文表格两行表头 (题面格式) | auto | check 61 (v1.5.9.5 新增) | dryrun (3 min) |
+| L29 | LaTeX 波浪号后接中文 | auto | check 63 (v1.6.0 新增) | dryrun (1 min) |
 | L14 | 幻觉文献 | manual (L4 步骤 2-7 覆盖) | — | (L4 内) |
 | L15 | 双向题 vs 4h 窗口 | manual | — | 5 min |
 | L16 | Q1 表1/表2 格式 | manual | — | 10 min |

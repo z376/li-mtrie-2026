@@ -3213,6 +3213,129 @@ def check_paper_two_row_header():
             f"在 5.X.2 表前用 \\multicolumn{{n}}{{c}}{{到药材中心的距离/cm}} + \\multirow{{n}}{{*}}{{命名列}} 写两行表头 (题面表 1-6 模板格式)")
 
 
+# ===== v1.6.0 新增 2 项: Python 探测 (第 0 项) + 波浪号中文 L29 =====
+
+def check_python_probe():
+    r"""checkable 62: Python 解释器探测 (第 0 项, auto, v1.6.0 新增, P2-1 防御).
+
+    背景: 2026A 复盘 v1.1 §P2-1 — `python` 为**微软商店占位符** (exit 49), 全程被迫
+    用 `py`. 改进: 环境节改探测式 (`py -3` / `python` / `python3` 依次尝试, 锁定后
+    固化), dryrun 第 0 项自动探测.
+
+    防御: 依次探测 3 个候选命令, 检测 exit 49 (商店占位符标志). 判断:
+    - 探测到可用解释器 → **green** (报告版本 + 路径)
+    - 全部不可用 → **red** (赛前必须修, 否则 96h 跑题全废)
+    - 探测到但 pip 不同源 → **yellow** (提示用 `<解释器> -m pip install`)
+
+    阈值: green / red / yellow.
+    """
+    candidates = [
+        ("py -3", ["py", "-3"]),
+        ("python", ["python"]),
+        ("python3", ["python3"]),
+    ]
+    probed = []
+    placeholder = []
+    for label, argv in candidates:
+        try:
+            r = subprocess.run(argv + ["-c", "import sys; print(sys.version.split()[0]); print(sys.executable)"],
+                               capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=15)
+        except (FileNotFoundError, OSError):
+            probed.append((label, None, "不可用"))
+            continue
+        except subprocess.TimeoutExpired:
+            probed.append((label, None, "超时"))
+            continue
+        # exit 49 = 微软商店占位符
+        if r.returncode == 49:
+            placeholder.append(label)
+            probed.append((label, None, "商店占位符 (exit 49)"))
+            continue
+        if r.returncode == 0:
+            lines_out = (r.stdout or "").strip().split("\n")
+            ver = lines_out[0].strip() if lines_out else "?"
+            exe = lines_out[1].strip() if len(lines_out) > 1 else "?"
+            # 检查 pip 同源
+            try:
+                pr = subprocess.run(argv + ["-m", "pip", "--version"],
+                                    capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=20)
+                pip_ok = (pr.returncode == 0)
+                pip_msg = (pr.stdout or "").strip()[:80]
+            except Exception:
+                pip_ok = False
+                pip_msg = "pip 探测失败"
+            if not pip_ok:
+                return ("yellow",
+                        f"Python 探测 OK ({label} → {ver}, {exe}), 但 pip 不同源/不可用",
+                        f"用 `{label} -m pip install ...` (别用裸 pip). pip: {pip_msg}")
+            return ("green",
+                    f"Python 探测 OK: {label} → v{ver} ({exe}), pip 同源 ✓",
+                    None)
+        probed.append((label, None, f"exit {r.returncode}"))
+
+    # 全部不可用
+    detail = ", ".join(f"{lbl}: {msg}" for lbl, _, msg in probed)
+    ph = f"; 商店占位符: {placeholder}" if placeholder else ""
+    return ("red",
+            f"P2-1 Python 解释器全部不可用 ({detail}{ph}) — 赛前必须修, 否则 96h 跑题全废",
+            "装 Python 3.10-3.12 或用 `py -3` launcher (py -3 -m pip install pandas numpy scipy matplotlib openpyxl PyMuPDF pulp)")
+
+
+def check_tilde_chinese():
+    r"""checkable 63: LaTeX 波浪号命令后接中文 (auto, v1.6.0 新增, P2-4 防御).
+
+    背景: 2026A 复盘 v1.1 §P2-4 — `\textasciitilde` 直接接中文 → LaTeX 未定义命令
+    ×2 (编译报错). 改进: 波浪号后仅接数字/空格; 接中文用"至".
+
+    防御: 扫论文 .tex, 找 `\textasciitilde` / `~` 后紧跟中文字符, 命中 → red.
+    """
+    paper_dir = get_paper_dir()
+    if not paper_dir.exists():
+        return ("yellow",
+                f"论文目录不存在 ({paper_dir}), 跳过 L29 波浪号",
+                "用 --paper-dir 指定")
+    is_template = "templates" in str(paper_dir) or "example" in str(paper_dir)
+
+    # 波浪号命令后接中文 (中文字符范围)
+    cjk = r'一-鿿㐀-䶿'
+    patterns = [
+        (re.compile(r'\\textasciitilde\s*[' + cjk + r']'), r'\textasciitilde 后接中文'),
+        (re.compile(r'\\textasciitilde\{[^}]*\}[' + cjk + r']'), r'\textasciitilde{} 后接中文'),
+        (re.compile(r'~[' + cjk + r']'), r'裸 ~ 后接中文'),
+    ]
+
+    hits = []
+    n_files = 0
+    for tex_file in sorted(paper_dir.glob("*.tex")):
+        n_files += 1
+        try:
+            text = tex_file.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            continue
+        for line_no, line in enumerate(text.splitlines(), 1):
+            if line.lstrip().startswith("%"):
+                continue
+            for pat, desc in patterns:
+                m = pat.search(line)
+                if m:
+                    snippet = line.strip()[:80]
+                    hits.append((tex_file.name, line_no, desc, snippet))
+
+    if not hits:
+        return ("green",
+                f"L29 波浪号中文: {n_files} 个 .tex 无 \\textasciitilde/~ 后接中文 (P2-4 防御)",
+                None)
+
+    if is_template:
+        return ("yellow",
+                f"example 模板有意保留 {len(hits)} 处波浪号中文 (设计意图, 跑题时改才 GREEN)",
+                f"波浪号后仅接数字/空格; 接中文用 '至'. 命中: {[h[0] + ':L' + str(h[1]) for h in hits[:3]]}")
+
+    return ("red",
+            f"P2-4 波浪号命令后接中文: {len(hits)} 处 LaTeX 未定义命令 (2026A 复盘 §P2-4 编译报错 ×2)",
+            f"波浪号后仅接数字/空格, 接中文改用 '至'. 命中: {[(h[0], 'L' + str(h[1]), h[2]) for h in hits[:3]]}")
+
+
 # ===== v1.5.7.36 新增 2 项: 绘图自检 L14 (冗余图) + L15 (图注 vs axes) =====
 
 def check_unused_figures():
@@ -3331,6 +3454,7 @@ def check_caption_axes_consistency():
 
 
 CHECKS = [
+    ("0. Python 解释器探测 (v1.6.0 P2-1, py -3 → python → python3, 商店占位符 exit 49)", check_python_probe),
     ("1. 装包 (核心包)", check_pkg),
     ("2. 10 Python 脚本", check_python_scripts),
     ("3. LaTeX 编译", check_tex_compile),
@@ -3389,6 +3513,8 @@ CHECKS = [
     ("59. v1.5.9 图形内容自检 L26 (np.ptp=0 曲线恒为常数 red / U+2080 下标 C₀ 乱码 yellow / 顶部暗像素 > 0.06 残留 set_title red, 2026A 复盘 §P1-3 防御, 与 check_figure.py 格式自检互补)", check_fig_content_sanity),
     ("60. v1.5.9.4 meta.json 3 件套 L27 (code-template 必落 7 字段 / 缺字段 red / 全填 green / meta.json 不存在 red, 2026A 复盘 §P1-7 防御, 评阅关注点 2 强调'高效' 必填实测耗时+O(复杂度)+步长依据)", check_meta_3pcs),
     ("61. v1.5.9.5 论文表格两行表头 L28 (\\multicolumn + \\multirow 配对 green / 缺 \\multirow yellow / 全无配对 red / 无 longtable yellow, 2026A 复盘 §P1-8 防御, 题面表 '到药材中心的距离/cm' 跨列组表头格式)", check_paper_two_row_header),
+    ("62. v1.6.0 Python 解释器探测 (第 0 项, py -3 → python → python3 依次试, exit 49 = 商店占位符跳过, 全不可用 red, 2026A 复盘 §P2-1 防御)", check_python_probe),
+    ("63. v1.6.0 LaTeX 波浪号后接中文 L29 (\\textasciitilde/~ 后接中文 red, 波浪号后仅接数字空格, 接中文用'至', 2026A 复盘 §P2-4 防御, 编译报错 ×2)", check_tilde_chinese),
 ]
 
 

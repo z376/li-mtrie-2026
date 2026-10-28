@@ -142,97 +142,26 @@ metadata:
 
 ## Python 环境（开赛第 1 小时必做, 赛前 1 天必验证）
 
+> **完整规范 (探测式 + 3 步绿验证 + GBK 兼容 + venv + 装包 + 预下载 + 踩坑库 7 项)** → `references/workflow/Python环境.md` (v1.6.0 新建, 权威源, 8 节). 本节只留 1 行指针 + 探测式命令.
 
-
-**checkable 红/绿 锚定**: 本节所有步骤完成状态由 1 行命令验证。**绿 = 1 行 `core ok` 输出**, **红 = 任何 import 失败或 pip/python 不一致**。
-
-
-
-**Why 5 分钟排查 = 1 行提前验证**: Windows 上常同时存在多个 Python (微软商店版 / Anaconda / 系统版 / VS Code 选中版), `pip install` 装到 A 解释器, Jupyter 用 B → `import pulp` 仍 `ModuleNotFoundError`. **3 步全过 = 绿**:
-
-
+**📌 探测式 (P2-1 必做, 别假设 `python` 能用)**: Windows 上 `python` 可能是**微软商店占位符** (exit 49, 执行就弹商店). 依次尝试 `py -3` → `python` → `python3`, 锁定后固化 `$PY`:
 
 ```powershell
-
-# Step 1: 解释器一致 (1 行)
-
-python -c "import sys; print(sys.executable)"
-
-
-
-# Step 2: pip/python 同源 (1 行)
-
-python -m pip --version
-
-
-
-# Step 3: import 验证 (1 行 = 绿)
-
-python -c "import pandas, numpy, scipy, matplotlib, openpyxl, fitz, pulp; print('core ok')"
-
+$ErrorActionPreference = 'SilentlyContinue'
+foreach ($cmd in @('py -3', 'python', 'python3')) {
+    $v = Invoke-Expression "$cmd -c `"import sys; print(sys.version_info[:2])`"" 2>$null
+    if ($LASTEXITCODE -eq 0 -and $v) { Write-Host "[OK] $cmd → $v"; break }
+    elseif ($LASTEXITCODE -eq 49) { Write-Host "[占位符] $cmd 是商店版 (exit 49), 换下一个" }
+}
 ```
 
+**3 步绿验证** (绿 = 1 行 `core ok`): `py -3 -c "import sys; print(sys.executable)"` → `py -3 -m pip --version` (同源) → `py -3 -c "import pandas, numpy, scipy, matplotlib, openpyxl, fitz, pulp; print('core ok')"`. **GBK 兼容**: 脚本头部强制 `sys.stdout.reconfigure(encoding='utf-8', errors='replace')` (已在 `references/code-template.py` 内置). **venv 隔离** (每赛题一个) + **封闭赛场预下载** (`pip download -d ./pkgs`) 详见 Python环境.md.
 
+**赛前 1 天 dry-run**: 跑 `py -3 references/scripts/dryrun.py --mode self` 一键验证全部 checkable (含 **check 62 Python 探测** 第 0 项). 全 green = sign-off 绿, 可安心参赛. 跟 CI `smoke-test.yml` 等价.
 
-**推荐 Python**: 3.10 / 3.11 / 3.12 (3.13+ 部分老包兼容性差).
-
-
-
-**venv 隔离** (强烈建议, 每赛题目录一个):
-
-```powershell
-
-python -m venv .venv ; .\.venv\Scripts\Activate.ps1
-
-# 激活后命令行前缀变 (.venv) PS ... = 隔离绿
-
-```
-
-
-
-**装包命令** (核心 + 优化, 缺 pulp → 规划类解不了):
-
-```bash
-
-pip install pandas numpy scipy matplotlib openpyxl PyMuPDF pulp
-
-# 可选: pip install seaborn plotly scikit-learn
-
-```
-
-
-
-**封闭赛场预下载** (赛前 1 天必做, 开赛当晚来不及):
-
-```powershell
-
-python -m pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
-
-python -m pip download -d ./pkgs pandas numpy scipy matplotlib openpyxl PyMuPDF pulp
-
-# 比赛时: python -m pip install --no-index --find-links=./pkgs <pkgs>
-
-```
-
-
-
-**赛前 1 天 dry-run 自动化** (v1.5.2 新增, v1.5.7 升级到 19 项): 跑 `python references/scripts/dryrun.py` 一键验证 19 项 checkable:
-
-装包 / Python 脚本 / LaTeX 编译 / Overfull 数 / pack.py / AIGC 风险 / SKILL.md frontmatter / LLM 工具 / BZD 借鉴 / 拟合兼容 / LICENSE / 5 步状态机 / LaTeX 可执行性 / 占位符 / 附录文件 / 图引用 / Post-Solution Audit / **读题清单 (v1.5.7 新增)**. **19/19 全 green = sign-off 绿, 可安心参赛**. 跟 CI `smoke-test.yml` 等价, 但本地手动跑. 出 red 项时脚本给修复建议.
-
-
-
-**checkable 绿 (赛前 1 天跑一次)**: `python -c "import pandas, numpy, scipy, matplotlib, openpyxl, fitz, pulp; print('core ok')"` → 输出 `core ok` = **绿**, 无输出 / ImportError = **红** (开赛当晚才修 = 灾难).
-
-
-
-**踩坑案例** (2024 调度类测试): 没装 pulp → 重茬约束解不了; 赛场断网 PyMuPDF wheel 拉不下 = 一夜没装上包.
-
-
+**踩坑案例**: 商店占位符 exit 49 / pip 与解释器不同源 / GBK UnicodeEncodeError / emoji 在 GBK 炸 / 赛场断网 / 多 Python 混用 (详见 Python环境.md §7).
 
 ---
-
-
 
 ## Procedure（状态机式流程）
 
