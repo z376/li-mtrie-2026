@@ -1,4 +1,53 @@
-# CHANGELOG (v1.6.1 — 读图串档防御 + Overfull 3 案例 + 统一列名 (P2-7/P2-8/P2-9 防御))
+# CHANGELOG (v1.6.2 — 模板 4 问化 (P2-5 防御))
+
+## v1.6.2 — example-paper 模板 4 问化 (2026A 复盘 v1.1 §P2-5 防御)
+
+**核心**: 2026A 实跑复盘 v1.1 §P2-5 — 模板只有 5.1.1/5.1.2, 4 问需手建 6 文件 + 改主入口 (本轮 ×2 重复劳动). 改进: 模板预置 4 问 8 文件 + 完整 input 列表.
+
+**改 `references/templates/example-paper/`** (+6 新文件, 3 改文件):
+
+- **新建 6 文件** (从 5.1.1/5.1.2 复制 + "问题 X" → "问题 N"):
+  - `5.2.1.分析与准备.tex` / `5.2.2.建模与求解.tex`
+  - `5.3.1.分析与准备.tex` / `5.3.2.建模与求解.tex`
+  - `5.4.1.分析与准备.tex` / `5.4.2.建模与求解.tex`
+- **改 `论文.tex`**: 主入口加 6 行 `\input` (5.1.1/5.1.2 → 5.4.1/5.4.2 完整 8 文件)
+- **改 `电子版.tex`**: 同步加 6 行 `\input`
+- **改 `preamble.tex`**: 加 `\usepackage{multirow}` (P1-8 两行表头需要, 配合 check 61)
+
+**编译验证** (xelatex ×2, MiKTeX 4.16):
+
+- 造 2 张临时占位图 (模板 figures/ 本就无图, 编译 Error 是设计意图) → **! Error = 0**
+- **`.aux` 中 `eq:model` label 数 = 4** → 证明 4 问的 5.N.2 全部被编译 (每个问题有 1 个模型建立公式 label)
+- Overfull = 4 (模板原有, 非本次引入)
+- 验证后已清理占位图 (1×1 白图不能进模板, 否则 check 47 误判 green)
+
+**影响文件**:
+
+- **新建** 6 个 .tex (5.2.1/5.2.2/5.3.1/5.3.2/5.4.1/5.4.2)
+- 改 `references/templates/example-paper/论文.tex` (+6 行 input)
+- 改 `references/templates/example-paper/电子版.tex` (+6 行 input)
+- 改 `references/templates/example-paper/preamble.tex` (+1 行 multirow 包)
+- 改 CHANGELOG.md (主文件更新标题 + v1.6.2 entry)
+
+**dryrun**: 35/61 green + 26 yellow + 0 red (无新增 check, P2-5 是模板资产扩充).
+
+**v1.6 系列 P2 9 项完成情况**:
+
+| P2 | 项 | 状态 | 落点 |
+|----|----|------|------|
+| P2-1 | Python 探测 | ✓ v1.6.0 | check 62 (第 0 项) + Python环境.md |
+| P2-2 | GBK reconfigure | ✓ v1.6.0 | Python环境.md §3 + code-template.py 已内置 |
+| P2-3 | heredoc 反斜杠 | ✓ v1.5.8.7 | P0-8 验收清单 §I (随 P0-8 落地) |
+| P2-4 | 波浪号中文 | ✓ v1.6.0 | check 63 (L29) + 格式自查清单 §六 |
+| P2-5 | 模板 4 问化 | ✓ v1.6.2 | example-paper 8 文件 + 主入口 |
+| P2-6 | pack 忽略 | ✓ v1.5.8.4 | P0-5 验收清单 §G (随 P0-5 落地) |
+| P2-7 | Read 尺寸校验 | ✓ v1.6.1 | 代理审计 §H 板块 + fig_sanity.py |
+| P2-8 | Overfull 案例 | ✓ v1.6.1 | paper-spec §4.1 3 案例 + 无害警告 |
+| P2-9 | rename 列名 | ✓ v1.6.1 | code-template.py 2 helper 函数 |
+
+**后续方向**: Changelog 历史漏洞 v1.5.7.40-43 (4 条 hotfix 漏写, 留位决策) + 验收标准复核 (2026A 复盘 §验收标准 6 条)
+
+---
 
 ## v1.6.1 — 读图串档 H 板块 + Overfull 3 案例 + 统一列名模板 (2026A 复盘 v1.1 §P2-7/8/9 防御)
 
