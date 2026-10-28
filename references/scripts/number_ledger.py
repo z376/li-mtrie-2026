@@ -4,10 +4,14 @@
 依据: 2026A 复盘 v1.1 §0 P0-3 — 5.2.2 ρ/cp/k 起止值目测错 (实 976.4→667.3) +
 5.4.1"前 10h→1.424cm、占 78%" 目测错 (实 5h、71.8%) + Bi_m 一次心算错 (实 32, 真 3.24).
 
-设计: 4 列结构台账 (符号/值/来源/生成脚本), 3 个子命令:
+设计: 4 列结构台账 (符号/值/来源/生成脚本), 4 个子命令:
 - init: 建空台账, 扫描现有 result*.xlsx 提取数字
 - add: 单条添加 (--sym, --val, --source, --script)
 - check: 扫论文 .tex, grep 数字, vs 台账匹配率, 未匹配红
+- show: 打印台账
+
+⚠️ 所有子命令的 `--root` **必填** (指向含 求解/ 论文/ 数据/ 的跑题根目录), 漏了 argparse 报错 exit 2.
+⚠️ 环境用 `py -3` 而非 `python` (Windows 商店占位符 exit 9009/49).
 
 来源 code: 1=脚本 print, 2=resultX.xlsx, 3=公式现场算, 4=题面给定 (v1.6.4 增).
 
@@ -193,12 +197,22 @@ def init_ledger(root: Path) -> Path:
 
 
 def add_entry(root: Path, sym: str, val: str, source: int, script: str) -> None:
-    """单条添加 (幂等)."""
+    """单条添加 (同 符号+值 重复添加时跳过, 避免台账被重复行撑大)."""
     if source not in (1, 2, 3, 4):
         print(f"[ERROR] 来源必须是 1/2/3/4, 当前 {source}"); return
     csv_path = root / "求解" / "数值台账.csv"
     if not csv_path.exists():
         print(f"[INIT] 台账不存在, 先跑 init"); init_ledger(root)
+    # 幂等: 同 (符号, 值) 已存在则跳过 (v1.6.6 修: 原 docstring 说幂等, 实际无条件追加)
+    try:
+        with open(csv_path, "r", encoding="utf-8-sig") as f:
+            for row in csv.DictReader(f):
+                if (row.get("符号") or "").strip() == sym.strip() and \
+                        (row.get("值") or "").strip() == val.strip():
+                    print(f"[SKIP] 已存在: {sym} = {val} (不重复添加)")
+                    return
+    except Exception:
+        pass
     with open(csv_path, "a", encoding="utf-8", newline="") as f:
         writer = csv.writer(f)
         writer.writerow([sym, val, source, script])

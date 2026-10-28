@@ -2,7 +2,7 @@
 
 > **踩坑教训**: 2026A 复盘 v1.1 §P1-4 (Sep 28 改进意见最大增益项) — 三轮只读代理审计共抓出**十余项真问题**, 其中**第二轮抓出 2 个模型级错误** (温度表面离散式、水分 Dirichlet) —— 这两项**自查永远查不出** (自洽的错), 只有"独立换实现重算 + 能量守恒反证"能抓出. 第三轮 (AI 详情) 又抓出 2 处跨文档矛盾 (附录 verbatim 旧值、5.1.1 残留"第一类(水分)").
 >
-> **本模板 = 必做** Step 4.6 prompt, 跨 2 节 (A 板块强化 + G 板块新增). 跑题后必跑 `python references/scripts/dryrun.py --mode agent` 输出 brief, 复制到 mavis 主对话 → mavis spawn worker sub-session 跑此 prompt.
+> **本模板 = 必做** Step 4.6 prompt, 跨 2 节 (A 板块强化 + G 板块新增). 跑题后必跑 `py -3 references/scripts/dryrun.py --mode agent` 输出 brief, 复制到 mavis 主对话 → mavis spawn worker sub-session 跑此 prompt.
 
 ---
 

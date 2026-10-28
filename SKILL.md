@@ -11,7 +11,7 @@ description: |
 
 metadata:
 
-  version: "1.6.5"
+  version: "1.6.6"
 
   category: competition-workflow
 
@@ -155,7 +155,7 @@ foreach ($cmd in @('py -3', 'python', 'python3')) {
 
 **3 步绿验证** (绿 = 1 行 `core ok`): `py -3 -c "import sys; print(sys.executable)"` → `py -3 -m pip --version` (同源) → `py -3 -c "import pandas, numpy, scipy, matplotlib, openpyxl, fitz, pulp; print('core ok')"`. **GBK 兼容**: 脚本头部强制 `sys.stdout.reconfigure(encoding='utf-8', errors='replace')` (已在 `references/code-template.py` 内置). **venv 隔离** (每赛题一个) + **封闭赛场预下载** (`pip download -d ./pkgs`) 详见 Python环境.md.
 
-**赛前 1 天 dry-run**: 跑 `py -3 references/scripts/dryrun.py --mode self` 一键验证全部 checkable (含 **check 62 Python 探测** 第 0 项). 全 green = sign-off 绿, 可安心参赛. 跟 CI `smoke-test.yml` 等价.
+**赛前 1 天 dry-run**: 跑 `py -3 references/scripts/dryrun.py --mode self` 一键验证全部 checkable (含 **check 0 Python 探测** 第 0 项). 全 green = sign-off 绿, 可安心参赛. 跟 CI `smoke-test.yml` 等价.
 
 **踩坑案例**: 商店占位符 exit 49 / pip 与解释器不同源 / GBK UnicodeEncodeError / emoji 在 GBK 炸 / 赛场断网 / 多 Python 混用 (详见 Python环境.md §7).
 
@@ -1081,7 +1081,7 @@ CUMCM 题目是**研究性问题**, 不是"按字面跑 LP". 题目设计有**�
 
 - **图型选择决策三轴**（变量数/论证意图/数据规模）→ `references/plot/图型选择决策.md`（11.6 KB, 8 类数据形态分述）
 
-- **速查表** → `references/绘图规范.md §0`（中文化压缩版，每条 1 行）
+- **速查表** → `references/plot/绘图规范与避坑.md §0`（中文化压缩版，每条 1 行）
 
 
 

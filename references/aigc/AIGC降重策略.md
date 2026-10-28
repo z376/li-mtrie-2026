@@ -1,6 +1,6 @@
 # AIGC 降重策略 (v1.5.7.18 新增, 合并 受保护片段 + 检测平台弱点)
 
-> **本文件 = "什么不能改 + 怎么改有效" 完整 AIGC 防御体系**. 合并自 v1.5.7.5 `references/受保护片段.md` (3.5 KB) + `references/检测平台弱点.md` (5.7 KB). 总 9 KB → 合并后约 8 KB, 去重复 + 加桥接段.
+> **本文件 = "什么不能改 + 怎么改有效" 完整 AIGC 防御体系**. 合并自 v1.5.7.5 `references/aigc/AIGC降重策略.md` (3.5 KB) + `references/aigc/AIGC降重策略.md` (5.7 KB). 总 9 KB → 合并后约 8 KB, 去重复 + 加桥接段.
 >
 > **协同**:
 > - `references/read-checklist/红线与失败模式.md` (2.2 KB) — 跑题失败/代码/合规 — **主题独立, 不合并** (跟 AIGC 无关)
@@ -195,5 +195,5 @@ py references\scripts\verify_pdf_metrics.py 论文\论文.pdf
 
 ## §10. 版本历史
 
-- **v1.5.7.18 (本文件)**: 合并 `references/受保护片段.md` (3.5 KB) + `references/检测平台弱点.md` (5.7 KB) → 8 KB. 总 KB 减少 10%, 强化 §9 协同表.
+- **v1.5.7.18 (本文件)**: 合并 `references/aigc/AIGC降重策略.md` (3.5 KB) + `references/aigc/AIGC降重策略.md` (5.7 KB) → 8 KB. 总 KB 减少 10%, 强化 §9 协同表.
 - **v1.5.7.5 之前**: 两个文档独立, 双向链接.

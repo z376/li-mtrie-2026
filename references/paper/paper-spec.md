@@ -645,7 +645,7 @@ def optimize():
 
 %% ===== 2026 规范 AI 工具使用情况：放在两处 =====
 %% 位置 1：参考文献之前（论文正文）— 模板见 9.参考文献.tex 顶部
-%% 位置 2：支撑材料 /AI工具使用详情.pdf — 模板见 references/AI工具使用详情-template.md
+%% 位置 2：支撑材料 /AI工具使用详情.pdf — 模板见 references/templates/example-paper/AI工具使用详情.tex
 %% **附录不再单独写 AI 段**（2025 旧版从附录删）
 
 ---
@@ -701,7 +701,7 @@ def optimize():
 ### 图片字体规范（重要：避免打印看不清）
 
 ⚠️ **matplotlib 默认 font.size = 10pt**，在 A4 论文（图片占 `0.8\textwidth` ≈ 12cm × 9cm）里
-字号偏小，打印模糊。**必须显式调大**。完整规范见 `references/绘图规范.md`。
+字号偏小，打印模糊。**必须显式调大**。完整规范见 `references/plot/绘图规范与避坑.md`。
 
 **最小字号要求**（每张图都按这个配）：
 

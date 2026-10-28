@@ -16,7 +16,7 @@ self-audit 47 项 hardcode 抓不到内容级问题:
 ## 用法 (v1.5.7.39 默认 agent 模式)
 
 ```bash
-python references\scripts\dryrun.py [--mode agent] --paper-dir <论文目录>
+py -3 references\scripts\dryrun.py [--mode agent] --paper-dir <论文目录>
 # 输出 mavis worker 代理审计 brief (含 14 类 P0 反例 + 文件清单 + 报告输出格式)
 ```
 

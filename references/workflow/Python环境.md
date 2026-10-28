@@ -1,6 +1,6 @@
 # Python 环境规范 (v1.6.0 新建, P2-1 + P2-2 防御)
 
-> **踩坑教训 (2026A 复盘 §P2-1)**: `python` 为**微软商店占位符** (exit 49), 全程被迫用 `py`. 改进: 环境节改**探测式** — `py -3` / `python` / `python3` 依次尝试, 锁定后固化; dryrun 第 0 项 (check 62) 自动探测.
+> **踩坑教训 (2026A 复盘 §P2-1)**: `python` 为**微软商店占位符** (exit 49), 全程被迫用 `py`. 改进: 环境节改**探测式** — `py -3` / `python` / `python3` 依次尝试, 锁定后固化; dryrun 第 0 项 (check 0) 自动探测.
 >
 > **踩坑教训 (2026A 复盘 §P2-2)**: GBK 控制台反复 `UnicodeEncodeError`. 改进: 脚本模板头部强制 `sys.stdout.reconfigure(encoding="utf-8", errors="replace")` (调用方无需关心).
 >
@@ -124,7 +124,7 @@ py -3 -m pip download -d ./pkgs pandas numpy scipy matplotlib openpyxl PyMuPDF p
 
 ---
 
-## 6. dryrun check 62 (第 0 项, P2-1 自动探测)
+## 6. dryrun check 0 (第 0 项, P2-1 自动探测)
 
 `references/scripts/dryrun.py` `check_python_probe` (v1.6.0 新增):
 
@@ -134,7 +134,7 @@ py -3 -m pip download -d ./pkgs pandas numpy scipy matplotlib openpyxl PyMuPDF p
 - 全部不可用 → **red** (赛前必须修)
 - 顺带验证 `pip` 与解释器同源
 
-**用法**: `python references/scripts/dryrun.py --mode self` 输出第 0 项 = Python 探测.
+**用法**: `py -3 references/scripts/dryrun.py --mode self` 输出第 0 项 = Python 探测.
 
 ---
 

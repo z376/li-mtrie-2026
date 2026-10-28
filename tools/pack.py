@@ -1,8 +1,10 @@
 """打包 li-mtrie-2026 skill 为 zip (v4 含示例).
 
 两个版本:
-- 完整包 (含 fonts/):  ~22MB, 开箱即用, 编译无需装字体
-- 轻量包 (不含 fonts/): ~2.5MB, 适合分享/备份, 编译需自装思源宋体
+- 完整包 (含 fonts/):  ~24MB, 开箱即用, 编译无需装字体
+- 轻量包 (不含 fonts/): ~5.4MB, 适合分享/备份, 编译需自装思源宋体
+
+(体积随版本浮动, 以本脚本实际输出为准 —— v1.6.6 起 pack.py 每次运行都会打印真实大小)
 
 包含 (供学生参考, 但题目/数据/求解/ 都是空目录占位):
 - 题目/  **空目录** - 学生自己放赛题 PDF
@@ -28,7 +30,9 @@ from pathlib import Path
 
 # 路径用相对（不依赖绝对路径，方便他人复用）
 ROOT = Path(__file__).parent.parent
-OUT_BASE = Path(__file__).parent.parent.parent
+# 输出目录: 默认 skill 同级目录 (便于用户直接找到 zip);
+# 可用环境变量 PACK_OUT_DIR 改到别处 (v1.6.6: dryrun check 5 用它避免污染 skill 安装目录)
+OUT_BASE = Path(os.environ.get("PACK_OUT_DIR") or (ROOT.parent.parent))
 
 EXCLUDE_DIRS = {
     '.git', '.vscode', '.idea', '__pycache__', 'node_modules',
@@ -50,8 +54,8 @@ EXCLUDE_ROOT_FILES = {
     '测试报告.md',         # 本工作区测试产物 (内部)
     '开发日志.md',         # 开发 session 记录 (内部, 含决策历史/隐私)
     'CHANGELOG.md',        # GitHub release notes (学生用不到, 网页端看)
+    'CHANGELOG-archive.md',  # 历史变更归档 (同上, v1.6.6 补排除: 口径与 CHANGELOG.md 一致)
     'CONTRIBUTING.md',     # 贡献指南 (GitHub 网页端看)
-    'pack_skill.py',       # 打包脚本本身
 }
 
 

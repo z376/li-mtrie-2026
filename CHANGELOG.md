@@ -1,4 +1,56 @@
-# CHANGELOG (v1.6.5 — 代理审计修复: longtable 计数 / 图名错配 / 版本比对)
+# CHANGELOG (v1.6.6 — 代理审计 P1/P2 批量修: 指针/命令/副作用/假绿)
+
+## v1.6.6 — 代理审计 P1/P2 批量修 (2026-10-28, 承接 v1.6.5 的 fresh 审计)
+
+**核心**: v1.6.5 修完 3 个 P0 后, 把审计报告里剩下的 **P1 (4 项) + P2 (10 项)** 落地.
+这批的共同主题: **文档写的 ≠ 代码做的**——自检体系本身会骗人.
+
+### 🟠 P1 修复（4 项）
+
+| # | 问题 | 修法 |
+|---|---|---|
+| P1-3 | `数值台账规范.md` 给的 `number_ledger.py init` / `check` 命令**缺 `--root`** (argparse 必填 → exit 2, 学生照抄必失败); 子命令数 3/4/5 三处口径不一 | 命令补 `--root .` (+说明"指向含 求解/ 论文/ 的那层"); 规范与脚本 docstring 统一为 **4 个子命令** (init/add/check/show); `add` 改为**真幂等** (同 符号+值 跳过, 原来 docstring 说幂等实际无条件追加) |
+| P1-5 | v1.6.4 CHANGELOG 的"模板编译 0 Error"在**交付件上不可复现** (依赖未提交的占位 PNG) | v1.6.5 已让模板**无占位图也 0 Error** (`\imgmissing` 兜底), 本条在 v1.6.5 entry 里记录了复现方式与 HEAD 对照 (Overfull 12 = 新旧同值) |
+| P1-6 | `角色Prompt.md` 引 4 个**不存在的文件** (`chapter-structure.md` / `writing-rules.md` / `eval-checklist.md` / `auto_verify.ps1`) → AI 去读不存在的"单一来源"会**自行编造硬规则**; 且写"每问 5.X.1-5.X.5 五个子节", 与模板实际 2 个子节不符 | 4 个指针改指现有等价源 (paper-spec.md / 合规检查清单.md / 验收清单.md / dryrun.py --mode self); D 段"完整性"整段按当前 4 问模板重写 |
+| P1-7 | 全库 **36 处**裸 `python` 命令 (本机 `python` 是商店占位符, exit 9009) —— skill 自己为这问题建了 P2-1 改进, 自己却留了 36 处 | 全库批量改 `py -3` (16 个文件, 复扫 0 残留) |
+
+### 🔵 P2 修复（10 项 → 摘要）
+
+| # | 问题 | 修法 |
+|---|---|---|
+| P2-1 | CHECKS 表 #0 与 #62 是**同一个函数** → 65 项实为 64 个不同检查 | 删掉重复的 #62 (编号不动), 4 处文档引用改指 **check 0** (它本就在第 0 项) |
+| P2-2/3 | dryrun 文档头写"62 项"; check 65 docstring 写"< 5"而代码是"< 3" | 统一为 **64 项** / **< 3** |
+| P2-4 | `数值台账规范.md` 有**两个 `## 6.`** 标题 | 编号顺延 (check 55 协同 → §6, 引用 → §7) |
+| P2-5 | check 2 只 `py_compile` **10 个**脚本, 包内实际 **15 个** .py (漏 bc_check/fig_sanity/check_meta/number_ledger/agent_audit) → 新增脚本从没被语法验证过 | 改 **rglob 自动枚举** (15/15) |
+| P2-6 | 自检有写副作用: check 2 的 py_compile 在 skill 目录生成 `__pycache__`; check 5 把 2 个 25MB zip 写到 **skill 安装目录** | check 2 改**内存编译** `compile()` 不落文件; check 5 用 `PACK_OUT_DIR` 把 zip 改写到**临时目录** (pack.py 新增该环境变量) |
+| P2-7 | README 版本徽章写 v1.5.7; **12 处失效指针** (目录重构后未跟随); 目录树列了 `CHANGELOG.md`/`CONTRIBUTING.md` (实际被 pack.py 排除); 审计层数写"16 层"实际 32 层 | 徽章改 v1.6.5; 指针批量修 (见下); 目录树标注"不进分发包"; 层数改 32 |
+| P2-8 | 全库大小声明过期 (包 ~22MB/~2.5MB 实为 24.1/5.4; fig_sanity 8.5→10.4 KB; number_ledger 8.3→11.5 KB 等) | 改为实测值, 并注明"以实际输出为准" |
+| P2-9 | v1.6.4 entry 写"改 10"实际 12 个文件; pack.py 的 `EXCLUDE_ROOT_FILES` 里 `'pack_skill.py'` 是失效残留 (实际叫 `pack.py`); `CHANGELOG-archive.md` (709 行内部历史) 进了学生包 | 改 12; 删失效条目; **archive 也排除** (与 CHANGELOG.md 同口径) |
+| P2-10 | `verify_pdf_metrics.py` 无 argparse, `--help` exit 1 (与另外 11 个脚本不一致) | 加 `--help`/`-h` 分支, exit 0 |
+
+### 🔧 失效指针批量修（43 处 / 13 文件）
+
+目录重构 (v1.5.7.14 起) 后, 文档里的旧扁平路径 (`references/绘图规范.md` / `references/读题清单.md` / …)
+全部失效 —— 学生/AI 照着找会**找不到文件**, 严重时 AI 会自行编造内容.
+本轮按"目标必须真实存在"逐条映射修正, 并写了**指针扫描器**复扫:
+
+```
+改动文件数: 13  替换处数: 43
+复扫: 仅剩 CHANGELOG-archive.md 的 20 条历史记录 (故意不改)
+      + 3 处 xxx.md 占位示例 (不是真指针)
+```
+
+### 验证
+
+| 项 | 结果 |
+|---|---|
+| dryrun | **36/64 green + 28 yellow + 0 red** (sign-off 绿) |
+| check 2 自动枚举 | **15/15** Python 脚本语法 OK (原来只查 10) |
+| 12 个脚本 `--help` | 全部 **exit 0** |
+| 指针扫描器 | 活跃文档内 **0 失效指针** (剩归档历史 + 占位示例) |
+| 自检副作用 | skills 目录 **0 个新 zip**; check 2 不再生成 `__pycache__` |
+
+---
 
 ## v1.6.5 — 代理审计修复 (2026-10-28, fresh worker 独立审计 → 3 P0 + 8 P1)
 
@@ -71,7 +123,7 @@ README 12 处失效指针 + 版本徽章 v1.5.7 + 层数 16→32 + 包大小声�
 | **模板无占位图** xelatex ×2 | 0 Error | ✓ ! Error=0 / multiply defined=0 / undefined refs=0 / 12 label 各 1 次 |
 | HEAD 版模板对照编译 | Overfull 12 | ✓ 与新版**同为 12** → 我的改动没引入 overfull（v1.6.2 CHANGELOG 写的"4"本身不实） |
 
-**dryrun**: 64 → **65 项** (新增 check 67)，sign-off 绿 (0 red)
+**dryrun**: 64 → **64 项** (新增 check 67; 同时删掉与 check 0 重复的旧 check 62)，sign-off 绿 (0 red)
 
 ---
 
@@ -1255,15 +1307,15 @@ J.3 接入说明 + ratio 现象对照表 (1 / 223 / 偏离但非整数倍 三种
 
 ```bash
 # v1.5.7.39 默认 = v1.5.7.38 --agent-audit
-python references\scripts\dryrun.py --paper-dir <论文目录>
+py -3 references\scripts\dryrun.py --paper-dir <论文目录>
 # 复制 brief 到 mavis 主对话 → spawn mavis worker fresh 审计
 
 # 跑 47 项 self check (旧 v1.5.7.34-37 行为)
-python references\scripts\dryrun.py --mode self --paper-dir <论文目录>
+py -3 references\scripts\dryrun.py --mode self --paper-dir <论文目录>
 # 30/47 green + 17 yellow + 0 red
 
 # 双重审计 (agent brief + self check)
-python references\scripts\dryrun.py --mode both --paper-dir <论文目录>
+py -3 references\scripts\dryrun.py --mode both --paper-dir <论文目录>
 ```
 
 **为何改默认**: 用户原话 "模型自主审计也调用代理" — self-audit 47 项 hardcode 是 mechanical 防线 (DPI/格式/语法), 抓不到内容级问题 (v15 P0-1 / v17 P0-A / v17 P0-C 都需要上下文推理 + LP 复现 + cross-file 比对). 默认走代理才能每次审计 fresh 抓到真问题.
@@ -1276,7 +1328,7 @@ python references\scripts\dryrun.py --mode both --paper-dir <论文目录>
 
 **设计**:
 - self-audit 47 项保留 (mechanical 防线, 防止明显 syntax/DPI/格式问题)
-- **用户要求审计时**, 跑 `python references/scripts/dryrun.py --agent-audit --paper-dir <论文目录>`, 输出 markdown brief (含 14 类 P0 反例 + 文件清单 + 报告输出格式约定)
+- **用户要求审计时**, 跑 `py -3 references/scripts/dryrun.py --agent-audit --paper-dir <论文目录>`, 输出 markdown brief (含 14 类 P0 反例 + 文件清单 + 报告输出格式约定)
 - 复制 brief 到 mavis 主对话 → mavis spawn mavis worker sub-session (独立 fresh context, **不缓存**)
 - worker 实际读 paper + result + LP 复现 + 比对, 写报告, 返回 mavis 主对话 → 用户
 
@@ -1502,8 +1554,8 @@ self-audit 47 项保留 (mechanical 防线), 用户主动要求审计时走代�
 
 **核心**: 扫描所有 .md 文件找 stale references (引用已删除的旧文件), 修 2 处:
 
-- **SKILL.md line 1130**: 引用 `references/绘图避坑.md` (v1.5.7.19 已合并删除) → 改 `references/plot/绘图规范与避坑.md §2`
-- **绘图规范与避坑.md line 9-12**: 顶部 "与 references/绘图避坑.md 显式分工" (文件已不存在, "显式分工" 不再成立) → 加 "(v1.5.7.23 已废弃 — 两文件合并到本文件, 此段留作版本历史)"
+- **SKILL.md line 1130**: 引用 `references/plot/绘图规范与避坑.md` (v1.5.7.19 已合并删除) → 改 `references/plot/绘图规范与避坑.md §2`
+- **绘图规范与避坑.md line 9-12**: 顶部 "与 references/plot/绘图规范与避坑.md 显式分工" (文件已不存在, "显式分工" 不再成立) → 加 "(v1.5.7.23 已废弃 — 两文件合并到本文件, 此段留作版本历史)"
 
 **未动 stale (归因保留, 非 stale)**:
 - AIGC降重策略.md "来自 受保护片段.md §X" — 这是合并过程的归因 (类似参考文献), 保留说明来源

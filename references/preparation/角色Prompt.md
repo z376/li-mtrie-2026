@@ -246,8 +246,8 @@ scipy/statsmodels,偶尔用 pytorch/transformers。
 
 前置:求解已全部完成,每题 py/图/结果 csv 都齐了。
 
-执行顺序(章节命名按 v3,见 `references/chapter-structure.md` 单一来源):
-按 chapter-structure.md 列出的 11 个 .tex 顺序写,5.x 子节 5 个,附录 1/2/3。
+执行顺序(章节命名见 `references/paper/paper-spec.md` §一 章节结构 —— 单一来源):
+按 paper-spec.md 列出的章节顺序写,5.x 子节 2 个(5.X.1 分析与准备 / 5.X.2 建模与求解),附录 1/2/3。
 
 每章写完后**自检**(对照 paper-spec.md 的硬规则),通过再写下一章。
 
@@ -281,11 +281,10 @@ scipy/statsmodels,偶尔用 pytorch/transformers。
 ```
 请以验收手身份,完成 Stage 5:论文验收(v3 章节结构,跟 2026 Word 模板对齐)。
 
-按 references/eval-checklist.md 逐项检查,每项给 PASS/FAIL:
+按 references/audit/验收清单.md 逐项检查,每项给 PASS/FAIL:
 
 A. 编译层(Stage 4 后才能跑)
-   - 跑 references/scripts/auto_verify.ps1 + build.ps1
-   - xelatex 跑两次(论文.tex + 电子版.tex),Error=0
+   - 跑 py -3 references/scripts/dryrun.py --mode self (自动 check) + xelatex 跑两次(论文.tex + 电子版.tex),Error=0
    - 警告(Overfull/Underfull)数量记录
    - 两份 PDF 存在(论文.pdf + 电子版.pdf)
    - 页数符合预期(纸质版 25-50 页,电子版比纸质版少 2 页)
@@ -295,7 +294,7 @@ B. 数值一致性
    - 正文里写的指标 vs 结果 csv
    - 图表 caption 里的数字 vs 实际图
 
-C. 硬规则(基础 7 条见 `references/writing-rules.md`,以下是检查清单展开)
+C. 硬规则(基础 7 条见 `references/data-usage/合规检查清单.md` §1 + `references/paper/paper-spec.md` §二,以下是检查清单展开)
    - 正文无 ①②③、1.2.3. / 无 \textbf(只允许摘要/假设/优缺点) / 无多余 \newpage / 无 \tableofcontents(2026 第四条)
    - 表格用 longtable 不用 tabular
    - 摘要 ≤1 页(编译后看 abstract:end 标签位置)
@@ -303,15 +302,14 @@ C. 硬规则(基础 7 条见 `references/writing-rules.md`,以下是检查清单
    - 每张图有 \caption + \label
    - 图表全在正文被引用
 
-D. 完整性(v3 章节结构,见 `references/chapter-structure.md`)
-   - 11 个 .tex 全部存在(章节命名见 chapter-structure.md)
-   - 5.模型的建立与求解.tex 含 4 个 \subsection(问题 1/2/3/4)
-   - **每问有 5.X.1-5.X.5 五个子节**(v3 拆分)
-   - 8.章已删除(并入 7.3)
-   - 2.问题分析 含 1.1/1.2/1.3/1.4 \subsection + 整体思路图
-   - 6.模型检验 含 6.1/6.2/6.3 \subsection
-   - 7.模型优缺点评价 含 7.1/7.2/7.3 \subsection
-   - 10.附录 含 附录 1/2/3 \subsection
+D. 完整性(章节结构见 `references/paper/paper-spec.md` §一 + 模板 `references/templates/example-paper/`)
+   - 章级 .tex 全部存在: 0.摘要 / 1.引言 / 2.总体分析 / 3.模型假设 / 4.符号说明 /
+     6.模型检验 / 7.模型评价 / 8.模型改进推广 / 9.参考文献 / 9.0.AI工具使用声明 /
+     10.附录(+10.0.附录固定说明 二选一)
+   - 每问 2 个子节文件: 5.N.1.分析与准备 + 5.N.2.建模与求解 (N = 1..4, 共 8 个)
+   - 主入口 论文.tex / 电子版.tex 的 \input 覆盖全部章级 .tex (漏一个 = 章节不出现)
+   - 2.总体分析 含整体思路图 (fig:overall_route, tikz 画)
+   - 6.模型检验 含灵敏度图 (fig:sensitivity)
    - 每问 ≥4 张图
    - 参考文献 8-15 条,含 AI 工具条目
 

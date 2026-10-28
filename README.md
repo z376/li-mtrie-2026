@@ -5,9 +5,9 @@
 读题 → 建模 → 求解 → 写论文 → 双版编译，一条龙。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Version v1.5.7](https://img.shields.io/badge/version-v1.5.7-blue.svg)](CHANGELOG.md)
+[![Version v1.6.5](https://img.shields.io/badge/version-v1.6.5-blue.svg)](CHANGELOG.md)
 [![Smoke Test](https://github.com/z376/li-mtrie-2026/actions/workflows/smoke-test.yml/badge.svg)](.github/workflows/smoke-test.yml)
-[![2026 Spec](https://img.shields.io/badge/2026%E8%A7%84%E8%8C%83-%E5%AF%B9%E9%BD%90-green.svg)](references/合规检查清单.md)
+[![2026 Spec](https://img.shields.io/badge/2026%E8%A7%84%E8%8C%83-%E5%AF%B9%E9%BD%90-green.svg)](references/data-usage/合规检查清单.md)
 
 按 2026 年全国大学生数学建模竞赛《论文格式规范（2026 年修订稿）》+《人工智能工具
 使用规定（2026 年试行）》做了对齐更新。
@@ -30,7 +30,7 @@
 - **10 章论文结构** — 摘要/引言/总体分析/模型假设/符号说明/建模求解/模型检验/
   模型评价/改进推广/参考文献/附录
 - **赛前学习清单** — 6 大题型映射 + 30+ 算法清单 + 60/30/7 天速成路径 + 跑题红线
-  （`references/赛前学习清单.md`）
+  （`references/preparation/赛前学习清单.md`）
 
 ## v1.5.4 新增（2026-09-06, 防"答非所问"强化, 源自 2025C 真实跑题失败案例）
 
@@ -77,8 +77,8 @@
 - `README.md` (4.3 KB) — 索引 + 借鉴源映射 + 与现有 4 文件关系
 
 **Part B — 2 个借鉴文档** (`references/` 根):
-- **`references/题意翻译.md`** (3.5 KB) — 5 步流程 + 4 类隐含条件 + 7 大常见错误 + checkable `green`/`red` 完成判据. 借鉴 BZD `bzd-problem-translator` v1.0
-- **`references/学校国奖画像.md`** (3.4 KB) — 4 步自查 + 4 类学校画像 (A 强校/B 稳定/C 黑马/D 新人) + checkable `green`/`red` 完成判据. 借鉴 BZD `bzd-cumcm-school-awards` v1.0 **核心理念** (不复制 BZD 累积数据, 走 bzdshumo.com 官网查)
+- **`references/read-checklist/题意翻译.md`** (3.5 KB) — 5 步流程 + 4 类隐含条件 + 7 大常见错误 + checkable `green`/`red` 完成判据. 借鉴 BZD `bzd-problem-translator` v1.0
+- **`references/preparation/学校国奖画像.md`** (3.4 KB) — 4 步自查 + 4 类学校画像 (A 强校/B 稳定/C 黑马/D 新人) + checkable `green`/`red` 完成判据. 借鉴 BZD `bzd-cumcm-school-awards` v1.0 **核心理念** (不复制 BZD 累积数据, 走 bzdshumo.com 官网查)
 
 **Part C — writing-for-agents 二轮审计 7 项整改 (P4 patch commit)**:
 - **P4-1** README.md badge v1.5.2 → v1.5.3 + 目录结构加 板块自查/ + 题意翻译 + 学校国奖画像
@@ -119,9 +119,9 @@
 
 ## v1.5.1 新增（2026-09-03, 借鉴 BZD 数模社 3 个核心 skill, 4 个新文件）
 
-- **`references/模型字典使用指南.md`**（6.9 KB）— 11 维评估 + 4 档判定（合适/有条件合适/不合适/证据不足）+ 6 类指标 routing（分类/回归/时序/聚类/优化/评价/机理）。借鉴 BZD `bzd-model-dictionary` v1.0
-- **`references/格式自查清单.md`**（9.5 KB）— 12 章节 Markdown 报告 + 100+ 原子检查点 + 15 分逐项扣分制 + 国赛特殊规则（无目录/30 页/附录分板块）。借鉴 BZD `bzd-paper-format-checker` v1.0
-- **`references/百分制评审方法.md`**（6.5 KB）— 100 分制（摘要 10 + 格式 10 + 模型/求解/结果 70-75 + 补充 5-10）+ 90% 封顶 + 1/2/3 档扣分 + 格式质量系数（deterministic）+ 位次估计（CUMCM 用 2025 锚点 / 其他用均匀近似）。借鉴 BZD `bzd-review-paper` v1.0
+- **`references/workflow/模型字典使用指南.md`**（6.9 KB）— 11 维评估 + 4 档判定（合适/有条件合适/不合适/证据不足）+ 6 类指标 routing（分类/回归/时序/聚类/优化/评价/机理）。借鉴 BZD `bzd-model-dictionary` v1.0
+- **`references/paper/格式自查清单.md`**（9.5 KB）— 12 章节 Markdown 报告 + 100+ 原子检查点 + 15 分逐项扣分制 + 国赛特殊规则（无目录/30 页/附录分板块）。借鉴 BZD `bzd-paper-format-checker` v1.0
+- **`references/paper/百分制评审方法.md`**（6.5 KB）— 100 分制（摘要 10 + 格式 10 + 模型/求解/结果 70-75 + 补充 5-10）+ 90% 封顶 + 1/2/3 档扣分 + 格式质量系数（deterministic）+ 位次估计（CUMCM 用 2025 锚点 / 其他用均匀近似）。借鉴 BZD `bzd-review-paper` v1.0
 - ⚡ **`llm-prompts/04-百分制评审.md`**（12.4 KB）— 3 模式 LLM 工具：**M1 字典预查**（选模型时）/ **M2 格式自查**（写完后）/ **M3 百分制评审**（终审前）。把 3 个方法论包装成 3 套结构化 prompt，学生 copy-paste 自用
 
 **总览**:
@@ -138,12 +138,12 @@
 - **`论文/figures/` 10 张示例图**（借鉴 数模陪跑独家）+ `论文/figures/README.md` 三件必做警告（整图替换 / 删图题来源 / 检查图例）
 - **`\showteaching` 教学开关宏** — 3 个文件 (论文/电子版/AI详情) 统一
 - **AI 工具使用声明 二者择一模板** — 对齐 2026 官方简洁版 Word
-- **国奖级硬性指标**（`references/国奖级硬性指标.md`）— 6 类数字门槛 + 26 条自查表
-- **去AIGC指南**（`references/去AIGC指南.md`）— 降重 4 层法 + 9 类痕迹 + 6 类代码特征 + **4 铁律 + 3 轮协议**（借鉴 aigc-reduce v1.0）
+- **国奖级硬性指标**（`references/paper/国奖级硬性指标.md`）— 6 类数字门槛 + 26 条自查表
+- **去AIGC指南**（`references/aigc/去AIGC指南.md`）— 降重 4 层法 + 9 类痕迹 + 6 类代码特征 + **4 铁律 + 3 轮协议**（借鉴 aigc-reduce v1.0）
 - **绘图避坑 + 图型选择决策**（借鉴 scipilot-figure-skill）— 18 条可视化陷阱 + 决策三轴（变量数/论证意图/数据规模）
 - **整题建模模式 + 策略输出规范**（借鉴 bzd-modeling-ideas）— 5 跨问题架构 + 7 题型路线 + 每道题 4 段式分析（问题概述/总体思路/模型比选/创新方向）
 - **跨题工具 + 验收清单 + 角色Prompt**（借鉴 mma v3.3）— 3 utility 函数 (GBK 兼容 + utf-8-sig CSV) + 38+ 项验收 + 4 角色 prompt 模板
-- **题意红线**（`references/题意红线.md`）— 4 条最高优先级教训
+- **题意红线**（`references/read-checklist/题意红线.md`）— 4 条最高优先级教训
 - **verify_pdf_metrics.py**（`references/scripts/`）— 终审前 PDF 6 项程序化体检
 - **编号体系 v7**（`paper-spec.md §三.6`）— 章节/列表罗马/公式 三档区分
 - **跨平台代码红线 + 代码完整性铁律** — SKILL.md + 10.附录.tex 双写
@@ -156,8 +156,9 @@
 ## 快速上手
 
 **先选包** (`默认完整包`):
-- **完整包** (~22 MB, 含思源宋体) — 开箱即用, 编译无需装字体 → **推荐** (默认)
-- **轻量包** (~4 MB, 不含字体) — 适合分享/上传, 编译需自装思源宋体
+- **完整包** (~24 MB, 含思源宋体) — 开箱即用, 编译无需装字体 → **推荐** (默认)
+- **轻量包** (~5.4 MB, 不含字体) — 适合分享/上传, 编译需自装思源宋体
+  (体积随版本浮动, 以 `tools/pack.py` 实际输出为准)
 
 1. 把赛题 PDF 放到 `题目/`，数据放到 `数据/`
 2. 跟 skill 说"开始求解"
@@ -175,9 +176,9 @@
 li-mtrie-2026/
 ├── SKILL.md                  # 入口（被 skill 系统加载）
 ├── README.md                 # 本文件（项目说明 + 目录结构权威源）
-├── CHANGELOG.md              # 版本变更（单主文件，倒序）
-├── CHANGELOG-archive.md      # 历史变更归档
-├── CONTRIBUTING.md           # 贡献指南
+├── CHANGELOG.md              # 版本变更（单主文件，倒序）⚠️ 不进分发包（pack.py 排除）
+├── CHANGELOG-archive.md      # 历史变更归档 ⚠️ 不进分发包（pack.py 排除）
+├── CONTRIBUTING.md           # 贡献指南 ⚠️ 不进分发包（pack.py 排除）
 ├── LICENSE                   # MIT
 ├── tags.txt                  # git tag 清单
 ├── references/                # 复用层（按需查阅）
@@ -207,7 +208,7 @@ li-mtrie-2026/
 │   │   ├── 验收清单.md        #   A-I 段 + §J 验收标准打钩区
 │   │   ├── 验收标准.md        #   ⚡ v1.6.3 验收标准 6 条 → check 号 / 判据 / 兜底
 │   │   ├── auto-check-list.md #   跑题后自动检查各 check 段
-│   │   ├── post-solution-audit-list.md  # 16 层审计清单 L1-L16
+│   │   ├── post-solution-audit-list.md  # 32 层审计清单 L1-L32 (L17 之后含 L18-L32 扩展层)
 │   │   ├── post-solution-audit.md       # 4 必做 + 1 可选 + 状态机
 │   │   ├── manual-checklist.md          # 5 类 manual 兜底清单
 │   │   ├── agent-audit-brief.md         # 代理审计 brief 4 段
@@ -258,7 +259,7 @@ li-mtrie-2026/
 │   │   ├── 08-参考文献附录自查.md # §9 文献 + §10 附录 P0-P3
 │   │   └── 09-AIGC审计.md    #   全文 9+6=15 维 (≥ 80 绿)
 │   └── scripts/              # 程序化自检工具 (12 个)
-│       ├── dryrun.py         #   ⚡ 赛前 1 天必做 62 项 checkable sign-off（0 red 才放行）
+│       ├── dryrun.py         #   ⚡ 赛前 1 天必做 64 项 checkable sign-off（0 red 才放行）
 │       ├── bc_check.py       #   ⚡ v1.6.3 表面行守恒校验器（dE/dt ÷ 边界通量 ≈ 1，P0-1 签名 223）
 │       ├── fig_sanity.py     #   ⚡ v1.5.9 P1-3 图形内容自检（恒定曲线/全NaN/残留 set_title）
 │       ├── check_meta.py     #   ⚡ v1.5.9.4 P1-7 meta.json 3 件套校验
@@ -312,7 +313,7 @@ li-mtrie-2026/
 
 ## 版本
 
-- **v1.5.7**（2026-09-07, 在 v1.5.6 之上 + 2 commit 累计）— 细化读题环节. SKILL.md §Step 0 加 15 项读题清单 (防 2025C 3 P0 错位), 新增 references/读题清单.md (15 项空表模板) + references/llm-prompts/05-读题提取.md (LLM 工具自动从 PDF 提取), dryrun.py check 19 验证 15 项全覆盖. 包大小 23.91 MB (+0.01), 增量几乎无. 审计 8.0/10 不变.
+- **v1.5.7**（2026-09-07, 在 v1.5.6 之上 + 2 commit 累计）— 细化读题环节. SKILL.md §Step 0 加 15 项读题清单 (防 2025C 3 P0 错位), 新增 references/read-checklist/读题清单.md (15 项空表模板) + references/llm-prompts/05-读题提取.md (LLM 工具自动从 PDF 提取), dryrun.py check 19 验证 15 项全覆盖. 包大小 23.91 MB (+0.01), 增量几乎无. 审计 8.0/10 不变.
 - **v1.5.6**（2026-09-07, 在 v1.5.5 之上 + 1 commit 累计）— 借鉴 BZD 数模社 12 个论文板块模板 (4 色教学法). 14 个 .tex 全部按 BZD 2026 规范重写: 0.摘要 (4 段+关键词) / 1.引言 (3 子节) / 2.总体分析 (5 段+框架图) / 3.模型假设 (9 类) / 4.符号说明 (三线表) / 5.1.1+5.1.2 (建模+求解) / 6.模型检验 (4 类) / 7.模型评价 (4 子节) / 8.改进推广 (4 层面) / 9.参考文献 / 9.0.AI 声明 / 10.0 附录固定说明 / 10.附录 (核心源代码). dryrun.py check 16/17 加 template 状态 yellow 跳过. 包大小 5.12 MB, 增量 < 0.1 MB. 审计 8.0/10 不变.
 - **v1.5.4**（2026-09-06, 在 v1.5.3 之上 + 1 commit 累计）— 防"答非所问"强化. 借 2025C 跑题
   失败案例 (other agent 踩 3 P0: 问题 4 选错 sheet / 问题 2-3 自创 BMI 分组 / 10.附录.tex
@@ -324,7 +325,7 @@ li-mtrie-2026/
 - **v1.5.3**（2026-09-06, 在 v1.5.2 之上 + 3 commits 累计）— 借鉴 BZD 数模社 12 个论文
   自查类子 skill + bzd-problem-translator + bzd-cumcm-school-awards 核心理念.
   产出 11 新文件: `references/板块自查/` (10 文件, 9 板块级自查 + 1 README 索引)
-  + `references/题意翻译.md` (3.5 KB) + `references/学校国奖画像.md` (3.4 KB).
+  + `references/read-checklist/题意翻译.md` (3.5 KB) + `references/preparation/学校国奖画像.md` (3.4 KB).
   借鉴源扩到 18 个外部 skill. 审计 7.7/10 (中) → 8.0/10 (P4 patch 整改后恢复 6 维度上限).
 - **v1.5.2**（2026-09-03, 在 v1.5.1 之上 + 1 commit 累计）— `fix(scripts)` 兼容 PyMuPDF ≥1.24
   的 fitz deprecate. verify_pdf_metrics.py + visual_qa.py 改 try/except 双 import
@@ -333,8 +334,8 @@ li-mtrie-2026/
 - **v1.5.1**（2026-09-03, 在 v1.5.0 之上 + 4 commits 累计）— 借鉴 BZD 数模社 3 个核心
   skill: `bzd-model-dictionary` (11 维评估+4档判定) + `bzd-paper-format-checker`
   (12 章节报告+15 分制) + `bzd-review-paper` (100 分+90% 封顶+格式系数+位次估计).
-  产出 4 新文件: `references/模型字典使用指南.md` (6.9KB) + `references/格式自查清单.md`
-  (9.5KB) + `references/百分制评审方法.md` (6.5KB) + `llm-prompts/04-百分制评审.md`
+  产出 4 新文件: `references/workflow/模型字典使用指南.md` (6.9KB) + `references/paper/格式自查清单.md`
+  (9.5KB) + `references/paper/百分制评审方法.md` (6.5KB) + `llm-prompts/04-百分制评审.md`
   (12.4KB, 3 模式 M1/M2/M3 合并). 借鉴源扩到 7 个外部 skill.
 - **v1.5.0**（15 commits 累计, 2026-08-27 → 08-31, 在 v1.4.4 13 commits 之上新增 2 commits）—
   ⚡ LLM 工具集成（`references/llm-prompts/` 3 工具 + README, 学生 copy-paste 自用,

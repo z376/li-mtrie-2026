@@ -62,7 +62,7 @@ Select-String -Path 论文.log, 电子版.log -Pattern 'Overfull|Underfull|Float
 
 ## 4. 打包 + 一键合规
 
-- **打包支撑材料** (Step 4.4) → `references/scripts/pack.py` + dryrun check 5
+- **打包支撑材料** (Step 4.4) → `tools/pack.py` + dryrun check 5
 - **一键合规验证** (Step 4.3) → `references/data-usage/合规检查清单.md §2 一键验证命令`
 - **最终提交物检查** (Step 4.5) → 详 SKILL.md §Step 4.5
 

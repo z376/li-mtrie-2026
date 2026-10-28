@@ -13,7 +13,7 @@ LICENSE / pack exclude / fitz compat / 全文件存在性), 凑齐 14 项覆盖 
 
 用法:
     python references/scripts/dryrun.py            # v1.5.7.39 默认: agent-audit (输出 brief, 调 mavis 代理)
-    python references/scripts/dryrun.py --mode self   # self-audit 62 项 hardcode check
+    python references/scripts/dryrun.py --mode self   # self-audit 64 项 hardcode check
     python references/scripts/dryrun.py --mode both  # 两种都跑 (self check + agent brief)
     python references/scripts/dryrun.py --json       # 输出 JSON 报告 (可管道)
     python references/scripts/dryrun.py --ci         # CI 模式, 输出 GitHub Actions 友好格式
@@ -63,33 +63,43 @@ def check_pkg():
 
 
 def check_python_scripts():
-    """checkable 2: 10 Python 脚本 py_compile + import 验证."""
-    scripts = [
-        ("references/code-template.py", "code-template"),
-        ("references/mechanism-template.py", "mechanism-template"),
-        ("tools/pack.py", "pack"),
-        ("references/scripts/dryrun.py", "dryrun"),
-        ("references/scripts/profile_data.py", "profile_data"),
-        ("references/scripts/visual_qa.py", "visual_qa"),
-        ("references/scripts/check_figure.py", "check_figure"),
-        ("references/scripts/verify_pdf_metrics.py", "verify_pdf_metrics"),
-        ("references/scripts/aigc_scan.py", "aigc_scan"),
-        ("references/scripts/data_utils.py", "data_utils"),
-    ]
-    failed = []
-    for rel, name in scripts:
-        path = SKILL_ROOT / rel
-        if not path.exists():
-            failed.append(f"缺 {rel}")
+    r"""checkable 2: 全部 Python 脚本语法编译验证 (auto, v1.6.6 改为自动枚举).
+
+    v1.6.6 改 (代理审计 P2-5): 原版硬编码 10 个脚本, 包内实际已有 **15 个** .py
+    (漏 bc_check / fig_sanity / check_meta / number_ledger / agent_audit) →
+    新增脚本从没被语法验证过. 现改为 rglob 自动枚举.
+
+    副作用修复 (P2-6): 原来用 `py_compile` 会在 skill 目录生成 `__pycache__/`
+    (污染工作区). 现改为内存编译 (`compile()`), 不落任何文件.
+    """
+    scripts = []
+    for rel_dir in ("references/scripts", "references", "tools"):
+        d = SKILL_ROOT / rel_dir
+        if not d.is_dir():
             continue
-        # py_compile
-        r = subprocess.run([sys.executable, "-m", "py_compile", str(path)],
-                           capture_output=True, text=True, timeout=15)
-        if r.returncode != 0:
-            failed.append(f"{name} py_compile 失败: {r.stderr[:100]}")
+        for p in sorted(d.glob("*.py")):
+            if p.name.startswith("_"):
+                continue
+            scripts.append(p)
+    if not scripts:
+        return ("red", "找不到任何 Python 脚本", "检查 references/scripts/ 目录")
+
+    failed = []
+    for path in scripts:
+        # 内存编译, 不落 __pycache__ (v1.6.6 副作用修复)
+        try:
+            src = path.read_text(encoding="utf-8", errors="replace")
+            compile(src, str(path), "exec")
+        except SyntaxError as e:
+            failed.append(f"{path.name} 语法错误: {e.msg} (L{e.lineno})")
+        except Exception as e:
+            failed.append(f"{path.name} 读取失败: {e}")
     if failed:
-        return ("red", f"{len(failed)}/10 脚本失败", "; ".join(failed[:3]))
-    return ("green", f"10/10 Python 脚本 py_compile OK (含 v1.5.0 data_utils + v1.5.2 dryrun + v1.5.7 5 项 checkable)", None)
+        return ("red", f"{len(failed)}/{len(scripts)} 脚本语法验证失败",
+                "; ".join(failed[:3]))
+    return ("green",
+            f"{len(scripts)}/{len(scripts)} Python 脚本语法 OK (自动枚举, 内存编译不落 __pycache__)",
+            None)
 
 
 def check_tex_compile():
@@ -162,6 +172,11 @@ def check_pack():
         env = os.environ.copy()
         env["PYTHONIOENCODING"] = "utf-8"
         env["PYTHONUTF8"] = "1"
+        # v1.6.6 副作用修复 (P2-6): pack.py 默认把 zip 写到 skill **同级目录**,
+        # 自检时不该在用户环境里留 2 个 25MB 文件 → 改写到临时目录
+        import tempfile
+        pack_out = tempfile.mkdtemp(prefix="li_mtrie_pack_")
+        env["PACK_OUT_DIR"] = pack_out
         try:
             r = subprocess.run([sys.executable, "-u", str(pack_py)],
                                stdout=sout, stderr=serr, timeout=120,
@@ -183,7 +198,7 @@ def check_pack():
         return ("red", f"pack.py 失败 (exit {r.returncode})",
                 f"stdout 末 {len(out_tail)}/{len(stdout_txt)} 字符: {out_tail} || "
                 f"STDERR 末 {len(err_tail)}/{len(stderr_txt)} 字符: {err_tail}")
-    zips = list(SKILL_ROOT.parent.glob("li-mtrie-2026-*.zip"))
+    zips = list(Path(pack_out).glob("li-mtrie-2026-*.zip"))
     if len(zips) != 2:
         stdout_txt = stdout_log.read_text(encoding="utf-8", errors="replace")
         return ("red", f"zip 数 = {len(zips)} (期望 2: 完整包 + 轻量包)",
@@ -3643,7 +3658,7 @@ def check_number_ledger_coverage():
       - 扫论文正文 .tex 提候选数字 (排除年份 1900-2100 + 0-9 整数计数 + 注释 + 数学环境 + label/ref)
       - 覆盖率 = 台账命中的唯一数字 / 论文候选唯一数字
 
-    阈值: 台账不存在 yellow / 台账有效数字 < 5 yellow (基本没建) /
+    阈值: 台账不存在 yellow / 台账有效数字 < 3 yellow (基本没建) /
           覆盖率 >= 70% green / 40-70% yellow / < 40% red.
     """
     paper_dir = get_paper_dir()
@@ -3906,7 +3921,7 @@ def check_figure_name_matches_question():
 
 
 CHECKS = [
-    ("0. Python 解释器探测 (v1.6.0 P2-1, py -3 → python → python3, 商店占位符 exit 49)", check_python_probe),
+    ("0. Python 解释器探测 (v1.6.0 P2-1, py -3 → python → python3, 商店占位符 exit 49; 放第 0 项 = 装包失败时先看解释器, v1.6.6 删掉与本项重复的旧 check 62)", check_python_probe),
     ("1. 装包 (核心包)", check_pkg),
     ("2. 10 Python 脚本", check_python_scripts),
     ("3. LaTeX 编译", check_tex_compile),
@@ -3965,7 +3980,6 @@ CHECKS = [
     ("59. v1.5.9 图形内容自检 L26 (np.ptp=0 曲线恒为常数 red / U+2080 下标 C₀ 乱码 yellow / 顶部暗像素 > 0.06 残留 set_title red, 2026A 复盘 §P1-3 防御, 与 check_figure.py 格式自检互补)", check_fig_content_sanity),
     ("60. v1.5.9.4 meta.json 3 件套 L27 (code-template 必落 7 字段 / 缺字段 red / 全填 green / meta.json 不存在 red, 2026A 复盘 §P1-7 防御, 评阅关注点 2 强调'高效' 必填实测耗时+O(复杂度)+步长依据)", check_meta_3pcs),
     ("61. v1.5.9.5 论文表格两行表头 L28 (\\multicolumn + \\multirow 配对 green / 缺 \\multirow yellow / 全无配对 red / 无 longtable yellow, 2026A 复盘 §P1-8 防御, 题面表 '到药材中心的距离/cm' 跨列组表头格式)", check_paper_two_row_header),
-    ("62. v1.6.0 Python 解释器探测 (第 0 项, py -3 → python → python3 依次试, exit 49 = 商店占位符跳过, 全不可用 red, 2026A 复盘 §P2-1 防御)", check_python_probe),
     ("63. v1.6.0 LaTeX 波浪号后接中文 L29 (\\textasciitilde/~ 后接中文 red, 波浪号后仅接数字空格, 接中文用'至', 2026A 复盘 §P2-4 防御, 编译报错 ×2)", check_tilde_chinese),
     ("64. v1.6.3 表面行能量守恒校验 L30 (bc_check.py 自测 对组 ratio=1 / 错组 ratio=223 + 模板接入 + 项目 守恒记录*.csv 判 |ratio-1|<=0.05, 2026A 复盘 §验收标准 第 1/2 条, P0-1 决定性证据)", check_bc_energy_conservation),
     ("65. v1.6.4 论文数字台账覆盖 L31 (论文正文候选数字 vs 求解/数值台账.csv, >=70% green / 40-70% yellow / <40% red, 验收标准第 3 条, P0-3 目测数字防御)", check_number_ledger_coverage),

@@ -133,9 +133,15 @@ def verify(path, key_numbers=()):
 
 
 if __name__ == '__main__':
+    if '--help' in sys.argv or '-h' in sys.argv:
+        # v1.6.6: 原来 --help 被当成 PDF 路径 → exit 1 (与其他 11 个脚本行为不一致)
+        print('用法: py -3 verify_pdf_metrics.py <论文.pdf> [关键数字1 关键数字2 ...]')
+        print('示例: py -3 verify_pdf_metrics.py 论文/论文.pdf 0.4503 412.47')
+        print('依赖: pip install PyMuPDF')
+        sys.exit(0)
     if len(sys.argv) < 2:
-        print('用法: python verify_pdf_metrics.py <论文.pdf> [关键数字1 关键数字2 ...]')
-        print('示例: python verify_pdf_metrics.py 论文/论文.pdf 0.4503 412.47')
+        print('用法: py -3 verify_pdf_metrics.py <论文.pdf> [关键数字1 关键数字2 ...]')
+        print('示例: py -3 verify_pdf_metrics.py 论文/论文.pdf 0.4503 412.47')
         print('依赖: pip install PyMuPDF')
         sys.exit(1)
     sys.exit(verify(sys.argv[1], sys.argv[2:]))

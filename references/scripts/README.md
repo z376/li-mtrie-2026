@@ -149,7 +149,7 @@ Step 5.6 终审前 PDF 体检（verify_pdf_metrics 检）  ← NEW（脚本，�
 
 ## 4. `verify_pdf_metrics.py` — 终审前 PDF 成品结构体检
 
-> 借鉴自 cumcm-live-workflow-skill v5.0 `references/verify_pdf_metrics.py`，适配 li-mtrie 2026 规范 + CUMCMthesis 格式（页边距 2.5 cm）。
+> 借鉴自 cumcm-live-workflow-skill v5.0 `references/scripts/verify_pdf_metrics.py`，适配 li-mtrie 2026 规范 + CUMCMthesis 格式（页边距 2.5 cm）。
 
 **目的**：交付前 10 秒出 4 项体检结果：
 - **结构**：每页首行 + 字数 → 摘要是否单页
