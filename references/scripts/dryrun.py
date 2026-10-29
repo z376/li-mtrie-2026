@@ -4192,6 +4192,367 @@ def check_script_utf8_contract():
             "dryrun 的 subprocess 调用全带 errors= 容错 (v1.7.2 P0 防御)",
             None)
 
+def _iter_project_tex(project_root: Path):
+    """项目里所有 .tex (论文目录 + 附录等), 跳过模板自带."""
+    out = []
+    for sub in ("论文", "paper", "Paper"):
+        d = project_root / sub
+        if d.is_dir():
+            out += sorted(d.rglob("*.tex"))
+    if not out:
+        out = sorted(project_root.rglob("*.tex"))
+    return out
+
+
+def check_derived_numbers():
+    r"""checkable 70: v1.8.0 派生量对账 (N-P0-1 防御, 终审复验轮).
+
+    背景 (2026A 终审/复验轮 N-P0-1):
+        修边界重跑后, 脚本生成的表**自动正确**, 但手写内容必然过期. 终审逐条抓出:
+          - 附录 E 文件表仍写 `result3=3190 行` / `result4=2956 行`
+            (这俩是**旧烘干时长的函数**: 191330/60+1 / 177290/60+1)
+          - 附录 E verbatim 注释仍 `t_dry=191330 s` (最新 = 205906 s)
+          - 附录 E 变量名 `recs_t` 而 Q3 源码是 `records_t`
+        "看起来是元信息、实则由结果派生"的数字/名字, 最容易漏.
+
+    本 check 做**能静态对账的那一半**:
+      R1 行数对账 : 论文/附录里 "resultN ... NNNN 行" 的声明行数
+                    vs 求解/问题N/结果/resultN.xlsx 的实际数据行数 -> 不符 red
+      R2 变量名对账: 附录 verbatim 代码块里的变量名 vs 求解源码里是否真实存在
+                    (附录写 `recs_t` 源码是 `records_t` -> red)
+
+    判据: 任一命中 red / 全过 green / 无 result 文件 yellow (跑前 skip).
+    """
+    project_root = get_paper_dir().parent
+    if not project_root.is_dir():
+        return ("yellow", f"项目根不存在 ({project_root}), 跳过派生量对账", "用 --paper-dir 指定")
+
+    # --- 收集 result 文件的真实行数 ---
+    actual = {}   # resultN.xlsx -> 数据行数
+    for x in sorted(project_root.rglob("result*.xlsx")):
+        m = re.match(r"result(\d+)", x.stem)
+        if not m:
+            continue
+        try:
+            import openpyxl
+            wb = openpyxl.load_workbook(x, read_only=True, data_only=True)
+            rows = 0
+            for ws in wb.worksheets:
+                n = ws.max_row or 0
+                rows = max(rows, n - 1)     # 首行是表头
+            wb.close()
+            actual[int(m.group(1))] = rows
+        except Exception:
+            continue
+
+    tex_files = _iter_project_tex(project_root)
+    if not tex_files:
+        return ("yellow", "项目里没有 .tex, 跳过派生量对账", "跑题后必有 论文/*.tex")
+
+    # --- R1 声明行数 vs 实际行数 ---
+    problems = []
+    checked = 0
+    for tf in tex_files:
+        try:
+            content = tf.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            continue
+        for m in re.finditer(r"result\s*(\d+)[^\n]{0,60}?(\d{2,6})\s*行", content, re.I):
+            idx = int(m.group(1))
+            claimed = int(m.group(2))
+            if idx not in actual:
+                continue
+            checked += 1
+            if actual[idx] != claimed:
+                problems.append(
+                    f"{tf.name}: 声明 result{idx} = {claimed} 行, 实际 {actual[idx]} 行")
+
+    # --- R2 附录 verbatim 变量名 vs 源码 ---
+    src_text = ""
+    for py in sorted(project_root.rglob("*.py")):
+        if "共享" in str(py) or "shared" in str(py).lower():
+            continue
+        try:
+            src_text += py.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            continue
+    var_re = re.compile(r"\b(recs?_\w+)\b")
+    vchecked = 0
+    if src_text:
+        for tf in tex_files:
+            if "附录" not in tf.name:
+                continue
+            try:
+                content = tf.read_text(encoding="utf-8", errors="replace")
+            except Exception:
+                continue
+            for m in var_re.finditer(content):
+                v = m.group(1)
+                if v.startswith("records_"):
+                    continue
+                vchecked += 1
+                if v not in src_text:
+                    problems.append(f"{tf.name}: 变量名 `{v}` 在求解源码里不存在 (逐字不一致)")
+
+    if problems:
+        return ("red",
+                f"派生量对账 {len(problems)} 处不符 (N-P0-1: 重跑后派生量过期): "
+                + "; ".join(problems[:4]),
+                "行数 = 时长/步长+1, 重跑必变; 附录 verbatim 的变量名必须与源码逐字一致. "
+                "见 references/audit/验收清单.md §H (H7/H8)")
+    if not actual:
+        return ("yellow", "项目里没有 result*.xlsx, 跳过派生量对账 (跑前 skip)",
+                "跑完求解后重跑本 check")
+    return ("green",
+            f"派生量对账通过: 核对 {checked} 处行数声明 + {vchecked} 处变量名 (N-P0-1 防御)",
+            None)
+
+
+def check_scale_selfcheck():
+    r"""checkable 71: v1.8.0 同文量级自洽 (N-P0-3 防御, 终审复验轮).
+
+    背景 (2026A 终审 N-P0-3):
+        `2.总体分析` 难点2 写 "浓度边界层厚度 D/h_m ~ 1e-2 mm, 远小于 0.1 cm"
+        —— 实际 D/h_m = 4.94e-9/8e-7 = 6.2 mm, **错约 620 倍**,
+        且与本文自己 5.1.2 (sqrt(4Dt) ≈ 6 mm) / 6.模型检验 直接矛盾. 终审判 FAIL.
+
+    本 check 只抓**确定的矛盾** (不猜哪个对):
+      R1 同文同量级量多值 : 同一"量级类量名"在正文多处给出**不同数值** -> red
+                             (同名同量在文内打架 = 自相矛盾信号, 不止是数字错)
+      R2 量级陈述无来源   : 量级类断言附近无来源标记 -> yellow (提示补复算, 不误杀)
+
+    判据: R1 命中 red / 否则 green.
+    """
+    project_root = get_paper_dir().parent
+    tex_files = _iter_project_tex(project_root)
+    if not tex_files:
+        return ("yellow", "项目里没有 .tex, 跳过同文量级自洽", "跑题后必有 论文/*.tex")
+
+    # 量级类量名 (只收"量"语义明确的, 避免温度/浓度这类逐点不同的量误报)
+    SCALE_NOUNS = ["边界层厚度", "扩散深度", "穿透深度", "特征扩散时间", "扩散时间",
+                   "特征时间", "扩散系数", "穿透量", "边界层尺度"]
+    # "量名 ≈ 数值"  —— 允许 LaTeX (\approx / \sim) **与中文措辞**
+    # (v1.8.0 修: 反向验证发现中文论文写 "约为 / 约 / 达" 而非 ≈, 原正则抓不到矛盾)
+    approx = (r"(?:\\approx|\\sim|≈|~|约(?:为|是)?|达到|等于|不足|不小于|大于|小于|超过)"
+              r"\s*\$?\\?\(?\s*([\d.]+(?:[eE][-+]?\d+)?)")
+
+    values = {}      # 量名 -> {值: [出现位置]}
+    for tf in tex_files:
+        try:
+            content = tf.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            continue
+        flat = re.sub(r"\s+", " ", content)
+        for noun in SCALE_NOUNS:
+            for m in re.finditer(re.escape(noun) + r"[^\n]{0,40}?" + approx, flat):
+                try:
+                    v = float(m.group(1))
+                except ValueError:
+                    continue
+                values.setdefault(noun, {}).setdefault(v, []).append(tf.name)
+
+    conflicts = []
+    for noun, vals in values.items():
+        if len(vals) > 1:
+            detail = "; ".join(f"{v} @ {files[0]}" for v, files in sorted(vals.items()))
+            conflicts.append(f"{noun}: {len(vals)} 个不同值 ({detail})")
+
+    if conflicts:
+        return ("red",
+                f"同文量级自相矛盾 {len(conflicts)} 处 (N-P0-3: 量级陈述必须当场复算且全文一致): "
+                + "; ".join(conflicts[:3]),
+                "同一物理量的量级估计在难点/分析/检验里必须一致; 不一致 = 至少一处错, "
+                "当场代入数字复算. 见 references/read-checklist/红线与失败模式.md §红线 8")
+    return ("green",
+            f"同文量级自洽通过: 扫 {len(SCALE_NOUNS)} 类量级量名, "
+            f"{sum(len(v) for v in values.values())} 处断言无互斥",
+            None)
+
+
+def check_abstract_zero_formula():
+    r"""checkable 72: v1.8.0 摘要零公式 + 题目出现次数 (F-P0-1 防御).
+
+    背景 (2026A 格式轮 F-P0-1):
+        格式审计 A17/A18 一次扣 2 分 —— 摘要含 `D=7×10⁻⁹e⁻⁰·⁸⁹/C`、`ξ=r/R(t)`、
+        `Bi_m≈3`、`D=0`、`h/h_m`、`≈`、`≤`、`±`, 违反摘要"零公式"明确要求.
+        另: 题目在摘要里重复出现 (应 = 1 次).
+
+    4 类禁项 (计量单位与专有名词如 Robin / 毕渥数 除外):
+      R1 数学环境 : $...$ / \\(...\\) / \\[...\\] / equation / align
+      R2 希腊字母 : \\alpha ... \\omega + 变体
+      R3 关系符号 : ≈ ≤ ≥ ± ≠ ∝ ≡ (含 \\approx \\leq \\geq \\pm \\neq \\propto \\equiv)
+      R4 上下标   : _{...} / ^{...}
+    另: 题目在摘要里出现次数必须 = 1.
+
+    判据: 任一命中 red / 全过 green / 无摘要文件 yellow.
+    """
+    paper_dir = get_paper_dir()
+    abs_files = sorted(paper_dir.glob("*摘要*.tex"))
+    if not abs_files:
+        return ("yellow", "没找到摘要 .tex, 跳过零公式检查", "摘要文件名含『摘要』")
+
+    # example-paper 模板状态: 摘要是占位符示例 (含 ≥ 等教学写法), yellow 跳过
+    is_template = "templates" in str(paper_dir) or "example" in str(paper_dir)
+    if is_template:
+        return ("yellow",
+                f"example 模板状态 (paper_dir={paper_dir.name}, 摘要是教学示例 = 设计意图, 不算 red)",
+                "跑题用户复制 example-paper 到 跑题目录/论文/ 后, 本检查会真跑")
+
+    GREEK = (r"\\alpha|\\beta|\\gamma|\\delta|\\epsilon|\\varepsilon|\\zeta|\\eta|"
+             r"\\theta|\\vartheta|\\iota|\\kappa|\\lambda|\\mu|\\nu|\\xi|\\pi|\\rho|"
+             r"\\sigma|\\tau|\\upsilon|\\phi|\\varphi|\\chi|\\psi|\\omega|"
+             r"\\Gamma|\\Delta|\\Theta|\\Lambda|\\Xi|\\Pi|\\Sigma|\\Phi|\\Psi|\\Omega")
+    REL = (r"\\approx|\\leq|\\geq|\\le\b|\\ge\b|\\pm|\\neq|\\ne\b|\\propto|\\equiv|"
+           r"≈|≤|≥|±|≠|∝|≡")
+    hits = []
+    for f in abs_files:
+        try:
+            c = f.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            continue
+        # 去掉 LaTeX 注释行再扫
+        body = "\n".join(l for l in c.split("\n") if not l.strip().startswith("%"))
+        if re.search(r"\$[^$]+\$|\\\(|\\\)|\\\[|\\begin\{(equation|align|gather|multline)\}", body):
+            hits.append(f"{f.name}: 含数学环境 (公式/数学符号)")
+        g = re.findall(GREEK, body)
+        if g:
+            hits.append(f"{f.name}: 含希腊字母 {sorted(set(g))[:4]}")
+        r_ = re.findall(REL, body)
+        if r_:
+            hits.append(f"{f.name}: 含关系符号 {sorted(set(r_))[:4]}")
+        if re.search(r"_\{[^}]*\}|\^\{[^}]*\}", body):
+            hits.append(f"{f.name}: 含上下标 _{{}}/^{{}}")
+
+    # 题目出现次数: 从主入口提 \title{}
+    title = ""
+    for entry in sorted(paper_dir.glob("*.tex")):
+        try:
+            c = entry.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            continue
+        m = re.search(r"\\title\{(.+?)\}", c, re.S)
+        if m:
+            title = re.sub(r"\\[a-zA-Z]+\{([^}]*)\}", r"\1", m.group(1))
+            title = re.sub(r"[{}\\$]", "", title).strip()
+            break
+    if title:
+        key = re.sub(r"\s+", "", title)[:12]
+        for f in abs_files:
+            try:
+                c = f.read_text(encoding="utf-8", errors="replace")
+            except Exception:
+                continue
+            n = len(re.findall(re.escape(key), re.sub(r"\s+", "", c)))
+            # 只抓"重复出现"(>1); 出现 0 次 = 摘要还没写题面, 不是错
+            if n > 1:
+                hits.append(f"{f.name}: 题目出现 {n} 次 (应 = 1)")
+
+    if hits:
+        return ("red",
+                f"摘要零公式检查 {len(hits)} 处不通过 (F-P0-1): " + "; ".join(hits[:4]),
+                "摘要用自然语言 + 计量单位, 不写公式/希腊字母/关系符/上下标; "
+                "题目在摘要里只出现 1 次. 见 references/paper/paper-spec.md §0 摘要零公式清单")
+    return ("green",
+            f"摘要零公式通过: 扫 {len(abs_files)} 个摘要文件, 无公式/希腊字母/关系符/上下标, "
+            "题目出现 1 次 (F-P0-1 防御)",
+            None)
+
+
+def check_support_package_rules():
+    r"""checkable 73: v1.8.0 支撑包红线 (F-P0-2 RA08 优先 + P2-1 + P1-3 同名多副本).
+
+    背景 (2026A 格式轮 F-P0-2, 对 N-P1-3 的**上位修正**):
+        N-P1-3 为"输入自含"把题面原始 `附件2.xlsx` 收进包 -> 格式审计 **RA08 直接判违规**
+        (不得重复提交赛题原始数据). 两条规则冲突时 **RA08 优先**.
+
+    3 条规则 (顺序即优先级):
+      R1 RA08 优先 : 支撑材料/ 里不得有题面原始附件 (附件N.xlsx / 附件N.xls / 附件N.docx)
+                     -> red (清洗后的 CSV 不受限)
+      R2 无日志残留 : 支撑材料/ 里不得有 *.log -> red (N-P2-1)
+      R3 同名多副本 : 同名文件在多个目录下 md5 不一致 -> yellow (F-P1-3/H21)
+
+    判据: R1/R2 命中 red / R3 命中 yellow / 全过 green / 无目录 yellow.
+    """
+    project_root = get_paper_dir().parent
+    sup = None
+    for name in ("支撑材料", "支撑材料包", "support"):
+        d = project_root / name
+        if d.is_dir():
+            sup = d
+            break
+    if sup is None:
+        return ("yellow", "项目里没有 支撑材料/ 目录, 跳过包红线检查 (跑前 skip)",
+                "打包后重跑本 check")
+
+    import hashlib
+    red = []
+    logs = []
+    by_name = {}
+
+    for f in sorted(sup.rglob("*")):
+        if not f.is_file():
+            continue
+        rel = f.relative_to(sup).as_posix()
+        # R1 题面原始附件
+        if re.search(r"附件\s*\d+\s*\.(xlsx|xls|csv|docx|doc)$", f.name, re.I):
+            red.append(f"{rel} (RA08: 题面原始数据不得随包, 用说明文件给复现路径)")
+        # R2 日志
+        if f.suffix.lower() == ".log":
+            logs.append(rel)
+        # R3 同名多副本 —— **必须跨目录** (论文侧 / 求解侧 / 包内 三方),
+        # 只扫包内抓不到"改了论文侧、求解侧还是旧版"这类不一致 (v1.8.0 反向验证补)
+        try:
+            h = hashlib.md5(f.read_bytes()).hexdigest()
+        except Exception:
+            continue
+        by_name.setdefault(f.name, []).append((rel, h))
+
+    # 跨目录补扫: 论文侧 / 求解侧 / 其他目录里的同名文件
+    for g in sorted(project_root.rglob("*")):
+        if not g.is_file():
+            continue
+        if g.parent == sup or sup in g.parents:
+            continue          # 包内文件已单独扫过
+        if g.suffix.lower() not in (".py", ".tex", ".csv", ".json"):
+            continue
+        try:
+            h = hashlib.md5(g.read_bytes()).hexdigest()
+        except Exception:
+            continue
+        try:
+            rel2 = g.relative_to(project_root).as_posix()
+        except Exception:
+            continue
+        by_name.setdefault(g.name, []).append((rel2, h))
+
+    multi = []
+    for name, items in by_name.items():
+        if len(items) > 1:
+            hs = {h for _, h in items}
+            if len(hs) > 1:
+                multi.append(f"{name}: {len(items)} 份副本 md5 不一致 "
+                             f"({', '.join(r for r, _ in items[:3])})")
+
+    if red or logs:
+        msgs = []
+        if red:
+            msgs.append("RA08 违规 " + str(len(red)) + " 处: " + "; ".join(red[:3]))
+        if logs:
+            msgs.append("日志残留 " + str(len(logs)) + " 处: " + "; ".join(logs[:3]))
+        return ("red",
+                "支撑包红线不通过: " + "; ".join(msgs),
+                "RA08 优先于输入自含: 题面附件一律不随包, 改在说明文件写『复现时置于 数据/附件/』; "
+                "删掉 *.log")
+    if multi:
+        return ("yellow",
+                f"支撑包有 {len(multi)} 个同名多副本 md5 不一致 (F-P1-3/H21): "
+                + "; ".join(multi[:3]),
+                "论文侧 / 求解侧 / 包内 三方副本必须同步 (改一处要同步全部)")
+    return ("green",
+            "支撑包红线通过: 无题面原始附件 (RA08) + 无 *.log + 同名副本 md5 一致 "
+            "(F-P0-2 / N-P2-1 / F-P1-3 防御)",
+            None)
+
 CHECKS = [
     ("0. Python 解释器探测 (v1.6.0 P2-1, py -3 → python → python3, 商店占位符 exit 49; 放第 0 项 = 装包失败时先看解释器, v1.6.6 删掉与本项重复的旧 check 62)", check_python_probe),
     ("1. 装包 (核心包)", check_pkg),
@@ -4259,6 +4620,10 @@ CHECKS = [
     ("67. v1.6.5 章节图名 vs 问题号 L33 (5.N.*.tex 引用 q<M>_*.png 且 M≠N red / 同一图被多问共用 red, P0-2 防御: v1.6.2 模板 4 章共用 q1 图)", check_figure_name_matches_question),
     ("68. v1.7.0 SKILL.md 自洽性 L34 (必读 3 文件 description↔正文一致 / 状态机 5 框都有判据门 / .tex 数量声明=模板实际 / 判据用词统一 green-red / 无坏字符串与错指针, writing-for-agents 第 2 轮审计 3 个 P0 防御)", check_skill_self_consistency),
     ("69. v1.7.2 子进程编码契约 L35 (所有脚本 stdout UTF-8 reconfigure + dryrun 的 subprocess 全带 errors= 容错, 防 --mode agent 管道解码崩溃)", check_script_utf8_contract),
+    ("70. v1.8.0 派生量对账 L36 (result 行数声明 vs 实际 xlsx 行数 / 附录 verbatim 变量名 vs 源码逐字一致, 终审复验轮 N-P0-1 防御)", check_derived_numbers),
+    ("71. v1.8.0 同文量级自洽 L37 (同名量级量多个不同值 = 自相矛盾 red, 终审复验轮 N-P0-3 防御)", check_scale_selfcheck),
+    ("72. v1.8.0 摘要零公式 L38 (数学环境/希腊字母/关系符/上下标全禁 + 题目出现 1 次, 格式轮 F-P0-1 防御)", check_abstract_zero_formula),
+    ("73. v1.8.0 支撑包红线 L39 (RA08 题面原始附件不随包优先 / 无 *.log / 同名多副本 md5 一致, 格式轮 F-P0-2+N-P2-1+F-P1-3 防御)", check_support_package_rules),
 ]
 
 
