@@ -1,6 +1,58 @@
-# CHANGELOG (v1.7.1 — D2 拆 in-line 复述 + D3 层级 + D6 版本号沉积)
+# CHANGELOG (v1.7.2 — P0: --mode agent 管道解码崩溃 + check 69 子进程编码契约)
 
-## v1.7.1 — writing-for-agents 第 2 轮审计 D2/D3/D6 落地 (2026-10-29)
+## v1.7.2 — 子进程编码契约 P0 (2026-10-29)
+
+**核心**: 代理审计第 2 轮标"未验证项: `agent_audit.py` → `dryrun --mode agent` 端到端未跑" —— **实测一跑就崩**.
+`dryrun --mode agent` 是**默认模式**, 赛前自检命令直接失败, 且 agent 模式失败会 `exit(1)` **连 self check 都跑不到**.
+
+### 根因链 (4 步)
+
+1. `dryrun.py` 用 `subprocess.run(..., capture_output=True, text=True, encoding='utf-8')` 读 `agent_audit.py` 的 stdout
+2. `agent_audit.py` **缺** `sys.stdout.reconfigure(encoding='utf-8')` → 管道下 Python 按 locale 编码 (本机 cp936/GBK) 写中文 → GBK 字节
+3. dryrun 按 UTF-8 解码 → `UnicodeDecodeError: 'utf-8' codec can't decode byte 0xa3` → rc=1
+4. dryrun `exit(1)` → agent brief 拿不到 + **65 项 self check 一项都没跑**
+
+**实测影响面**: 11 个脚本里 **5 个**在管道下实测抛 UnicodeDecodeError
+(`agent_audit` / `check_figure` / `check_meta` / `fig_sanity` / `number_ledger`) —— 根因是 P2-2 GBK 修复当时只改了 5 个脚本, 漏了 7 个.
+
+### 修法 (3 层)
+
+| 层 | 内容 |
+|----|------|
+| A 源头 | **8 个脚本**补 `sys.stdout.reconfigure(encoding='utf-8', errors='replace')` + stderr 同款 (`agent_audit` / `check_figure` / `check_meta` / `fig_sanity` / `number_ledger` / `profile_data` / `dryrun` / `tools/pack.py`) |
+| B 防御 | dryrun.py 里**唯一没带** `errors=` 的那处 subprocess 调用补 `errors='replace'` (其余 6 处早有) |
+| C 防回归 | **新增 check 69** (L35): R1 每个脚本有 stdout UTF-8 契约 + R2 dryrun 的 subprocess 全带 `errors=` 容错 |
+
+### 自指假绿 (本轮自战)
+
+check 69 第一版用 `"sys.stdout.reconfigure" in t` 判定 → **check 自己的源码里就有这个字面量** →
+扫 `dryrun.py` 时自己通过自己 = 假绿.
+改用**行首 + 括号 + utf-8 参数**的正则 (`^[ \t]*sys\.stdout\.reconfigure\s*\([^)]*encoding\s*=\s*['\"]utf-8['\"]`) →
+源码里的字符串/文档提及都不会命中.
+
+### 反向验证 (绿不算数)
+
+| 用例 | 期望 | 结果 |
+|------|------|------|
+| R1 dryrun.py 删真契约 (字面量仍在 = 自指回归) | red | ✅ red |
+| R1b 另一个脚本 fig_sanity.py 删契约 | red | ✅ red |
+| R2 subprocess 调用去掉 `errors=` | red | ✅ red |
+| 端到端 `dryrun --mode agent` | rc=0 + brief 出中文 | ✅ rc=0 / 4675 字符 |
+
+### 顺带修
+
+- `agent_audit.py` 的 brief 增 **`skill 根目录` 绝对路径** (审计目标段) —— 修 `代理审计prompt.md` 里 `<SKILL_ROOT>` 占位符全库无定义的坏指针 (worker 标"未验证项"的另一处)
+- `references/代理审计prompt.md` A1 段的命令改指 brief 里的实际路径
+
+### 验证
+
+- **dryrun 66 项**: 37 green + 29 yellow + **0 red** (sign-off 绿)
+- 13 个脚本 + tools 全部 py_compile 通过
+- SKILL.md 1294 行 (未变)
+
+---
+
+## v1.7.1 — D2 拆 in-line 复述 + D3 层级 + D6 版本号沉积 (2026-10-29)
 
 **核心**: v1.7.0 修完 3 个 P0 后, 继续清第 2 轮审计的 **D2 (two loads)** / **D3 (hierarchy)** / **D6 (pruning 版本号)**.
 **SKILL.md 1441 → 1294 行** (省 147 行), 真实负载下降, 且**判据一条没丢**.

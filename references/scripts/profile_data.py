@@ -38,6 +38,16 @@ import sys
 import warnings
 from typing import Any
 
+# Windows GBK console 兼容 (v1.7.2 新增: 子进程管道输出必须是 UTF-8)
+# 背景: dryrun.py 用 subprocess + encoding='utf-8' 读本脚本 stdout,
+#       本脚本若按 cp936(GBK) 写中文 -> UnicodeDecodeError -> 调用方 exit 1.
+# Python 3.7+
+try:
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+except Exception:
+    pass  # 旧 Python / 非 stdout 对象, 跳过
+
 import numpy as np
 import pandas as pd
 

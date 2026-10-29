@@ -23,6 +23,13 @@ import json
 import sys
 import os
 import atexit
+
+# Windows GBK console 兼容 (v1.7.2 新增: 子进程管道输出必须是 UTF-8)
+try:
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+except Exception:
+    pass  # 旧 Python / 非 stdout 对象, 跳过
 import subprocess
 import shutil
 import re
@@ -4106,6 +4113,85 @@ def check_skill_self_consistency():
             None)
 
 
+# v1.7.2: stdout UTF-8 契约判定正则 (行首 + 括号 + utf-8 参数).
+# 行首锚定 = 只认**真调用**, 不认文档/字符串里的字面量 (防自指假绿).
+_UTF8_STDOUT_RE = re.compile(
+    r"^[ \t]*sys\.stdout\.reconfigure\s*\([^)]*encoding\s*=\s*['\"]utf-8['\"]",
+    re.M)
+
+
+def check_script_utf8_contract():
+    r"""checkable 69: v1.7.2 子进程编码契约 (auto).
+
+    背景 (v1.7.2 发现的 P0, 代理审计标"agent 模式端到端未跑"处):
+        `dryrun.py --mode agent` (默认模式) **崩溃**:
+          1) dryrun 用 subprocess + capture_output=True + text=True + encoding='utf-8'
+             读 agent_audit.py 的 stdout
+          2) agent_audit.py 缺 `sys.stdout.reconfigure(encoding='utf-8')`,
+             管道下 Python 按 locale 编码 (本机 cp936/GBK) 写中文 -> GBK 字节
+          3) dryrun 按 UTF-8 解码 -> UnicodeDecodeError -> rc!=0 -> dryrun exit 1
+          4) agent 模式失败会 **exit(1) 连 self check 都跑不到** = 赛前自检直接失败
+
+        实测: 11 个脚本里 5 个 (agent_audit / check_figure / check_meta /
+              fig_sanity / number_ledger) 在管道下实测抛 UnicodeDecodeError.
+
+    2 条规则 (全静态):
+      R1 脚本 stdout 契约 : references/scripts/*.py + tools/*.py 每个都必须有
+                           `sys.stdout.reconfigure` 且带 encoding='utf-8'
+      R2 调用方容错      : dryrun.py 里所有 capture_output=True 的 subprocess.run
+                           必须带 errors= 参数 (其余 6 处已有, 缺的 1 处是 P0 现场)
+
+    判据: 任一命中 red / 全过 green.
+    """
+    py_files = sorted(list((REFS_DIR / "scripts").glob("*.py"))
+                      + list((SKILL_ROOT / "tools").glob("*.py")))
+    if not py_files:
+        return ("red", "找不到任何 .py 脚本", "检查 references/scripts/ 与 tools/")
+
+    # R1 每个脚本必须有 stdout UTF-8 契约
+    missing = []
+    # v1.7.2 修自指假绿: 用"行首 + 括号 + utf-8 参数"正则判定.
+    # 不能用 `"sys.stdout.reconfigure" in t` —— 本函数自己的源码里就有这个字面量,
+    # 扫 dryrun.py 时会**自己通过自己** = 假绿.
+    for p in py_files:
+        try:
+            t = p.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            missing.append(p.name + " (读不了)")
+            continue
+        if not _UTF8_STDOUT_RE.search(t):
+            missing.append(p.name)
+    problems = []
+    if missing:
+        problems.append(f"{len(missing)} 个脚本缺 stdout UTF-8 契约: {missing[:4]}")
+
+    # R2 dryrun 的 subprocess 调用必须带 errors=
+    dry = SCRIPTS_DIR / "dryrun.py"
+    if dry.exists():
+        dt = dry.read_text(encoding="utf-8", errors="replace")
+        bad = []
+        for m in re.finditer(r"subprocess\.run\((.*?)\)\s*\n", dt, re.S):
+            call = m.group(1)
+            if "capture_output=True" not in call and "stdout=subprocess.PIPE" not in call:
+                continue
+            if "text=True" not in call and "universal_newlines=True" not in call:
+                continue
+            if "errors=" not in call:
+                ln = dt[:m.start()].count("\n") + 1
+                bad.append(f"L{ln}")
+        if bad:
+            problems.append(f"dryrun.py 的 subprocess 调用缺 errors= 容错: {bad[:4]}")
+
+    if problems:
+        return ("red",
+                f"子进程编码契约 {len(problems)} 项不通过: " + "; ".join(problems),
+                "每个脚本 import 后加: sys.stdout.reconfigure(encoding='utf-8', errors='replace'); "
+                "dryrun 的 subprocess.run 补 errors='replace'")
+    return ("green",
+            f"子进程编码契约 2 条全过: {len(py_files)} 个脚本都有 stdout UTF-8 契约 + "
+            "dryrun 的 subprocess 调用全带 errors= 容错 (v1.7.2 P0 防御)",
+            None)
+
 CHECKS = [
     ("0. Python 解释器探测 (v1.6.0 P2-1, py -3 → python → python3, 商店占位符 exit 49; 放第 0 项 = 装包失败时先看解释器, v1.6.6 删掉与本项重复的旧 check 62)", check_python_probe),
     ("1. 装包 (核心包)", check_pkg),
@@ -4172,6 +4258,7 @@ CHECKS = [
     ("66. v1.6.4 表/图编号一致性 L32 (重复 label red / 悬空 ref red / 越界表图号 red / 附录 result↔表号矛盾 red, 验收标准第 1 条 check_pkg 的表号部分, P0-6 表号错位防御)", check_label_numbering),
     ("67. v1.6.5 章节图名 vs 问题号 L33 (5.N.*.tex 引用 q<M>_*.png 且 M≠N red / 同一图被多问共用 red, P0-2 防御: v1.6.2 模板 4 章共用 q1 图)", check_figure_name_matches_question),
     ("68. v1.7.0 SKILL.md 自洽性 L34 (必读 3 文件 description↔正文一致 / 状态机 5 框都有判据门 / .tex 数量声明=模板实际 / 判据用词统一 green-red / 无坏字符串与错指针, writing-for-agents 第 2 轮审计 3 个 P0 防御)", check_skill_self_consistency),
+    ("69. v1.7.2 子进程编码契约 L35 (所有脚本 stdout UTF-8 reconfigure + dryrun 的 subprocess 全带 errors= 容错, 防 --mode agent 管道解码崩溃)", check_script_utf8_contract),
 ]
 
 
@@ -4202,7 +4289,8 @@ def main():
         paper_dir = get_paper_dir()
         cmd = [sys.executable, str(SCRIPTS_DIR / "agent_audit.py"),
                "--paper-dir", str(paper_dir)]
-        r = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8')
+        r = subprocess.run(cmd, capture_output=True, text=True,
+                           encoding='utf-8', errors='replace')
         if r.returncode != 0:
             print(f"[ERROR] agent_audit.py 失败 (rc={r.returncode})", file=sys.stderr)
             print(r.stderr, file=sys.stderr)

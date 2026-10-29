@@ -42,7 +42,7 @@
 - 重点抓: 边界条件类型 (Robin/Dirichlet/Neumann) 与题面是否一致
 - 重点抓: 半控制体 FVM Robin 离散式 γ=2·h·Δt/Δr 是否含 Δt (无 Δt = h→∞ 极限, 表面钉死)
 - **决定性证据**: 跑 dE/dt ÷ [h(T∞−Ts)·A] 守恒校验, |比值−1| 应 < 0.05
-  - **用工具跑, 别手推**: `py -3 <SKILL_ROOT>/references/scripts/bc_check.py --project .` (v1.6.3 新增)
+  - **用工具跑, 别手推**: `py -3 <brief『审计目标』段的 skill 根目录>/references/scripts/bc_check.py --project .` (v1.6.3 新增; v1.7.2 补: brief 现在直接给出该绝对路径, 不要再猜 `<SKILL_ROOT>`)
   - 求解时没埋点 (无 `求解/问题N/结果/守恒记录.csv`) → **直接判 FAIL**, 报告里写"未提供守恒记录, 无法排除 P0-1 型离散式错误"
   - P0-1 签名: 比值 ≈ **223** (表面被钉死成 h→∞ 极限); 正确实现 ≈ **0.995**
 

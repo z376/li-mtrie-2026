@@ -28,6 +28,16 @@ import os
 import sys
 from pathlib import Path
 
+# Windows GBK console 兼容 (v1.7.2 新增: 子进程管道输出必须是 UTF-8)
+# 背景: dryrun.py 用 subprocess + encoding='utf-8' 读本脚本 stdout,
+#       本脚本若按 cp936(GBK) 写中文 -> UnicodeDecodeError -> 调用方 exit 1.
+# Python 3.7+
+try:
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+except Exception:
+    pass  # 旧 Python / 非 stdout 对象, 跳过
+
 # 与 dryrun.get_paper_dir 同步
 SKILL_ROOT = Path(__file__).parent.parent.parent
 TEX_DIR = SKILL_ROOT / "论文"
@@ -106,6 +116,7 @@ def generate_brief(paper_dir: Path) -> str:
 
 - **论文目录**: `{paper_dir}`
 - **项目根**: `{paper_dir.parent}` (含 论文/ + 求解/ + 数据/)
+- **skill 根目录**: `{SKILL_ROOT}` (skill 自带脚本在此, 如 `references/scripts/bc_check.py`; 审计工具请用这里的绝对路径)
 - **审计时间**: 当前 (fresh, 不复用历史)
 - **审计模式**: 跑题后内容审计 (P0 一票否决 + P1 严重 + P2 推荐) {template_note}
 
