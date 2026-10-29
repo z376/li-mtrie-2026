@@ -218,6 +218,19 @@ A1 物理定律引用 / A2 守恒律验证 (v1.5.8 §红线 5) / A3 网格收敛
 
 **配套文档**: `references/workflow/Python环境.md` (6.1 KB, 8 节权威源: 探测式 + 3 步绿验证 + GBK 兼容 + venv + 装包/预下载 + 踩坑库 7 项)
 
+## SKILL.md 自洽性 (v1.7.0, check 68 L34)
+
+writing-for-agents 第 2 轮代理审计 (2026-10-29) 抓出 3 个 P0, 全是"文档自己和自己对不上"型 ——
+任何单文件阅读都发现不了, 但一改就错. check 68 把这类自洽性变成可执行锚点.
+
+| check | 防御反例 | 阈值 |
+|---|---|---|
+| **68** SKILL.md 自洽性 L34 | 5 条规则: **R1** 必读 3 文件 description↔正文一致 (审计原 P0-1: description 指 5道防线自检清单, 正文指 读题清单.md → always-loaded 指针漏掉 check 19 依赖的 读题清单.md) / **R2** 状态机 Step 0/1/2/3/4 每框都有 green/red 判据门 (原 P0-2: Step 0 无门 + 两套互不引用的判据) / **R3** .tex 数量声明 = 模板实际 (11 章节 / 20 章节 .tex / 模板 25 个 .tex, 原口径 5 处不一致: 11/14/18/25) / **R4** 判据用词统一 green-red (原声明"用 green/red 不用绿/红", 实际中文用了 65 次) / **R5** 无坏字符串 ("干 run") 且 8 项自检指针不得写 §2 (真位置 = paper-spec.md §4.0) | 任一规则命中 red / 全过 green |
+
+**反向验证**: 7 条注入用例 (R1/R2/R3/R3b/R4/R5a/R5b) 逐条造错 → 必须 red, 已全过.
+
+**配套文档**: `references/audit/验收清单.md` §J (打钩区) + `references/audit/验收标准.md` (§1 表 6 项 + §0 对照表)
+
 ## 验收标准复核 (v1.6.3-4, check 64 L30 + check 65 L31 + check 66 L32)
 
 2026A 复盘 §验收标准 6 条 → 可执行锚点 (权威源: `references/audit/验收标准.md`)

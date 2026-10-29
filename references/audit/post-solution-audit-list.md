@@ -1,8 +1,9 @@
-# 跑题后 16 层审计清单 (v1.5.7.41 拆段自 SKILL.md)
+# 跑题后 34 层审计清单 (v1.5.7.41 拆段自 SKILL.md, v1.7.0 校准层数)
 
 > **拆段原因**: v1.5.7.41 SKILL.md 1500 行临界缓解, 把 v1.5.7.35 加的 32 行表格段拆到本文件. SKILL.md 留 1 行指针 → 本文件.
+> **层数口径 (v1.7.0)**: 本表 = **L1-L34**, 33 条 (L17 在 `references/audit/auto-check-list.md` = check 50 连接词密度, 不在本表). 类型分布 **25 auto + 8 manual**. 声明层数时以本行为准, 别再写"16 层 / 32 层".
 
-## 16 层审计清单 (L1-L16)
+## 34 层审计清单 (L1-L34)
 
 | 层 | 检查内容 | 类型 | dryrun check | 跑题后必做 |
 |---|---|---|---|---|
@@ -34,6 +35,8 @@
 | L30 | 表面行能量守恒 (dE/dt ÷ 边界通量 ≈ 1) | auto (bc_check.py) + manual 独立复算 | check 64 (v1.6.3 新增) | dryrun (10 min) |
 | L31 | 论文数字台账覆盖率 (全部可溯源) | auto | check 65 (v1.6.4 新增) | dryrun (5 min) |
 | L32 | 表/图编号一致性 (重复 label / 悬空 ref / 越界表图号 / 附录表号矛盾) | auto | check 66 (v1.6.4 新增) | dryrun (3 min) |
+| L33 | 章节图名 vs 问题号 (问题 N 的章节配了问题 M 的图) | auto | check 67 (v1.6.5 新增) | dryrun (2 min) |
+| L34 | SKILL.md 自洽性 (必读 3 文件一致 / 状态机 5 框有门 / .tex 数量一致 / 判据用词统一 / 无坏指针) | auto | check 68 (v1.7.0 新增) | dryrun (1 min) |
 | L14 | 幻觉文献 | manual (L4 步骤 2-7 覆盖) | — | (L4 内) |
 | L15 | 双向题 vs 4h 窗口 | manual | — | 5 min |
 | L16 | Q1 表1/表2 格式 | manual | — | 10 min |

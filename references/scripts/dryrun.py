@@ -13,7 +13,7 @@ LICENSE / pack exclude / fitz compat / 全文件存在性), 凑齐 14 项覆盖 
 
 用法:
     python references/scripts/dryrun.py            # v1.5.7.39 默认: agent-audit (输出 brief, 调 mavis 代理)
-    python references/scripts/dryrun.py --mode self   # self-audit 64 项 hardcode check
+    python references/scripts/dryrun.py --mode self   # self-audit 65 项 hardcode check
     python references/scripts/dryrun.py --mode both  # 两种都跑 (self check + agent brief)
     python references/scripts/dryrun.py --json       # 输出 JSON 报告 (可管道)
     python references/scripts/dryrun.py --ci         # CI 模式, 输出 GitHub Actions 友好格式
@@ -1172,6 +1172,37 @@ def check_v15715_more_category_references():
     return ("green", "by-category/ 经济金融/生物医疗/交通运筹 3 类目 references 全在 + 类目专属术语齐 (v1.5.7.25 移到 sub-directory)", None)
 
 
+def _parse_yaml_block_scalar(text, key):
+    r"""解析 YAML block scalar (`key: |` / `key: >`) 的全部内容行.
+
+    v1.7.0 修 (假绿): 旧实现用正则 `description:\s*\|\n((?:[ \t]+.+\n)+)`,
+    **遇到第一个空行就停** —— 而本 SKILL.md 的 description 是 3 段 (段间有空行),
+    于是正则只量到第 1 行 => check 32 永远报 "1 行 <= 6" = **恒 green = 假绿**.
+    现在按 YAML 语义解析: 缩进块内的空行也算块内, 直到出现"非空且非缩进"的行才结束.
+    """
+    lines = text.split("\n")
+    pat = re.compile(r"^\s*" + re.escape(key) + r"\s*:\s*[|>]\s*$")
+    start = None
+    for i, l in enumerate(lines):
+        if pat.match(l):
+            start = i
+            break
+    if start is None:
+        return []
+    block = []
+    for l in lines[start + 1:]:
+        if l.strip() == "":
+            block.append(l)
+            continue
+        if l[:1] in (" ", "\t"):
+            block.append(l)
+            continue
+        break
+    while block and not block[-1].strip():
+        block.pop()
+    return [l for l in block if l.strip()]
+
+
 def check_v15728_description_six_lines():
     """checkable 32: v1.5.7.28 writing-for-agents 约束 — SKILL.md description ≤ 6 行
     description 是 always-loaded, 行数过多 = context load 失控
@@ -1186,10 +1217,9 @@ def check_v15728_description_six_lines():
     if end == -1:
         return ("red", "SKILL.md frontmatter 缺结尾 ---", "修 SKILL.md")
     fm = content[4:end]
-    desc_match = re.search(r'description:\s*\|\n((?:[ \t]+.+\n)+)', fm)
-    if not desc_match:
+    desc_lines = _parse_yaml_block_scalar(fm, "description")
+    if not desc_lines:
         return ("red", "SKILL.md frontmatter 缺 description", "修 SKILL.md")
-    desc_lines = [l for l in desc_match.group(1).split("\n") if l.strip()]
     n = len(desc_lines)
     if n > 6:
         return ("red", f"SKILL.md description {n} 行 (writing-for-agents 硬约束 ≤ 6 行, v1.5.7.28 加)",
@@ -3952,6 +3982,130 @@ def check_figure_name_matches_question():
             None)
 
 
+def check_skill_self_consistency():
+    r"""checkable 68: v1.7.0 SKILL.md 自洽性 (writing-for-agents 第 2 轮代理审计 P0 级防御).
+
+    背景 (2026-10-29 writing-for-agents 6 维度代理审计, VERDICT: FAIL):
+        审计抓出 3 个 P0, 全是"文档自己和自己对不上"型 —— 任何单文件阅读都发现不了:
+          P0-1 description 与正文各写一份「必读 3 文件」, **第三项不同**
+               (description 指 5道防线自检清单, 正文指 读题清单.md)
+               => always-loaded 指针漏掉 check 19 依赖的 读题清单.md
+          P0-2 状态机 Step 0 框内**无 green 门** (Step 1/2/3/4 都有),
+               且 Step 0 有两套互不引用的判据 (≥200 字 vs 15 项全填)
+          P0-3 验收标准.md §1 表头写"以下 5 项"但表体 6 行, check 67 未进 §0 与 §J
+        本 check 把这 3 类"自洽性"变成**可执行锚点**: 改了 A 忘了改 B, 立刻 red.
+
+    5 条规则 (全静态, 只读 SKILL.md + 模板目录):
+      R1 必读 3 文件一致 : description 列的 .md 集合 == 正文 §Step 0 列的 .md 集合
+      R2 状态机 5 框有门 : §Procedure 代码块内 Step 0/1/2/3/4 每个框都有 green/red 判据行
+      R3 .tex 数量一致   : SKILL.md 声明的"章节 .tex 数" == 模板实际章节 .tex 数 (文件名首字符是数字)
+      R4 判据用词统一   : 作为判据的中文"绿/红"残留 == 0 ("红线" 是独立概念, 排除)
+      R5 坏字符串 / 错指针: "干 run" 类坏串 == 0; 8 项自检指针不得写 §2 (真位置 §4.0)
+
+    判据: 任一命中 red / 全过 green.
+    """
+    skill_md = SKILL_ROOT / "SKILL.md"
+    if not skill_md.exists():
+        return ("red", "SKILL.md 不存在", "修 SKILL.md")
+    content = skill_md.read_text(encoding="utf-8", errors="replace")
+    if not content.startswith("---\n"):
+        return ("red", "SKILL.md 缺 frontmatter (--- 开头)", "修 SKILL.md")
+    end = content.find("\n---\n", 4)
+    if end == -1:
+        return ("red", "SKILL.md frontmatter 缺结尾 ---", "修 SKILL.md")
+    fm = content[4:end]
+    body = content[end + 5:]
+
+    problems = []
+
+    # ---- R1 必读 3 文件: description vs 正文 ----
+    desc_lines = _parse_yaml_block_scalar(fm, "description")
+    desc_must = [l for l in desc_lines if "必读 3" in l]
+    desc_files = set()
+    if desc_must:
+        desc_files = set(re.findall(r"([^\s`+/\\]+\.md)", desc_must[0]))
+    else:
+        problems.append("description 里找不到『必读 3 references』行")
+    # v1.7.0 修 (自身假阳性): 原用 `必读 3 文件(.*?)(?=建议执行顺序)` 取正文段,
+    # 但 5 道防线速查表里也出现过一次 "必读 3 文件" 字样 => 贪婪匹配从表那里起,
+    # 把中间整段"类目适配"文件列表全吃进来 = 13 个文件 vs 3 个 = 假 red.
+    # 现在锚到唯一的小节标题 "AI 跑题前必读 3 文件", 再只取编号列表项.
+    m_head = re.search(r"AI 跑题前必读 3 文件", body)
+    body_files = set()
+    if m_head:
+        chunk = body[m_head.end(): m_head.end() + 2000]
+        items = re.findall(r"^\s*[123]\.\s+\*\*`([^`]+\.md)`\*\*", chunk, re.M)
+        body_files = {Path(x).name for x in items}
+        if len(body_files) != 3:
+            problems.append("正文『必读 3 文件』实际解析到 %d 个 (期望 3): %s"
+                            % (len(body_files), sorted(body_files)))
+    else:
+        problems.append("正文里找不到『AI 跑题前必读 3 文件』段")
+    if desc_files and body_files and desc_files != body_files:
+        problems.append("必读 3 文件不一致: description=%s vs 正文=%s"
+                        % (sorted(desc_files), sorted(body_files)))
+    elif desc_files and len(desc_files) != 3:
+        problems.append("description 的必读文件数 = %d (期望 3)" % len(desc_files))
+
+    # ---- R2 状态机 5 框都有判据门 ----
+    pidx = body.find("## Procedure")
+    if pidx == -1:
+        problems.append("找不到 §Procedure 段")
+    else:
+        rest = body[pidx:]
+        fo = rest.find("```")
+        fc = rest.find("```", fo + 3) if fo != -1 else -1
+        fence = rest[fo + 3:fc] if fo != -1 and fc != -1 else ""
+        for step in range(0, 5):
+            m_box = re.search(r"┌─ Step %d\b(.*?)(?=┌─ Step |└)" % step, fence, re.S)
+            if not m_box:
+                problems.append("状态机框 Step %d 不存在" % step)
+            elif not re.search(r"\bgreen\b|\bred\b", m_box.group(1)):
+                problems.append("状态机框 Step %d 没有 green/red 判据门" % step)
+
+    # ---- R3 .tex 数量声明 vs 模板实际 ----
+    tpl_dir = REFS_DIR / "templates" / "example-paper"
+    if tpl_dir.is_dir():
+        all_tex = sorted(tpl_dir.glob("*.tex"))
+        chap_tex = [p for p in all_tex if p.name[:1].isdigit()]
+        m_decl = re.search(r"(\d+)\s*个章节\s*\.tex", body)
+        if not m_decl:
+            problems.append("SKILL.md 没有声明『N 个章节 .tex』")
+        elif int(m_decl.group(1)) != len(chap_tex):
+            problems.append("章节 .tex 数量声明 %s != 模板实际 %d"
+                            % (m_decl.group(1), len(chap_tex)))
+        m_total = re.search(r"模板目录共\s*(\d+)\s*个\s*\.tex", body)
+        if m_total and int(m_total.group(1)) != len(all_tex):
+            problems.append("模板 .tex 总数声明 %s != 实际 %d"
+                            % (m_total.group(1), len(all_tex)))
+    else:
+        problems.append("模板目录不存在, 无法核对 .tex 数量")
+
+    # ---- R4 判据用词统一 (排除 '红线' 这个独立概念) ----
+    stripped = content.replace("红线", "")
+    n_cn_green = stripped.count("绿")
+    n_cn_red = stripped.count("红")
+    if n_cn_green or n_cn_red:
+        problems.append("SKILL.md 仍有中文判据词: 绿 %d 处 / 红 %d 处 (应统一 green/red)"
+                        % (n_cn_green, n_cn_red))
+
+    # ---- R5 坏字符串 + 错指针 ----
+    for bad in ("干 run", "干run"):
+        if bad in content:
+            problems.append("SKILL.md 含坏字符串 %r" % bad)
+    if re.search(r"paper-spec\.md\s*§2\s*8\s*项自检", content):
+        problems.append("8 项自检指针写成 §2 (真位置 = paper-spec.md §4.0)")
+
+    if problems:
+        return ("red",
+                "SKILL.md 自洽性 %d 项不通过: %s" % (len(problems), "; ".join(problems[:4])),
+                "同一含义改了 A 处必须同步改 B 处; 详见 references/audit/验收清单.md §J")
+    return ("green",
+            "SKILL.md 自洽 5 条全过 (必读 3 文件一致 / 状态机 5 框有门 / .tex 数量一致 / "
+            "判据用词统一 / 无坏字符串与错指针)",
+            None)
+
+
 CHECKS = [
     ("0. Python 解释器探测 (v1.6.0 P2-1, py -3 → python → python3, 商店占位符 exit 49; 放第 0 项 = 装包失败时先看解释器, v1.6.6 删掉与本项重复的旧 check 62)", check_python_probe),
     ("1. 装包 (核心包)", check_pkg),
@@ -4017,6 +4171,7 @@ CHECKS = [
     ("65. v1.6.4 论文数字台账覆盖 L31 (论文正文候选数字 vs 求解/数值台账.csv, >=70% green / 40-70% yellow / <40% red, 验收标准第 3 条, P0-3 目测数字防御)", check_number_ledger_coverage),
     ("66. v1.6.4 表/图编号一致性 L32 (重复 label red / 悬空 ref red / 越界表图号 red / 附录 result↔表号矛盾 red, 验收标准第 1 条 check_pkg 的表号部分, P0-6 表号错位防御)", check_label_numbering),
     ("67. v1.6.5 章节图名 vs 问题号 L33 (5.N.*.tex 引用 q<M>_*.png 且 M≠N red / 同一图被多问共用 red, P0-2 防御: v1.6.2 模板 4 章共用 q1 图)", check_figure_name_matches_question),
+    ("68. v1.7.0 SKILL.md 自洽性 L34 (必读 3 文件 description↔正文一致 / 状态机 5 框都有判据门 / .tex 数量声明=模板实际 / 判据用词统一 green-red / 无坏字符串与错指针, writing-for-agents 第 2 轮审计 3 个 P0 防御)", check_skill_self_consistency),
 ]
 
 

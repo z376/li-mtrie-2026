@@ -3,8 +3,37 @@
 > 借鉴自 `scipilot-figure-skill`（MIT 风格脚本）+ cumcm-live-workflow-skill v5.0 `verify_pdf_metrics.py`，改写为数学建模国赛工作流。
 > 原作者：[scipilot-figure-skill](https://github.com/scipilot/scipilot-figure-skill)
 
-7 个 Python 脚本（5 自检 + 1 AIGC + 1 跨题工具），覆盖「画图前数据剖析 → 出图后程序自检 → 提交前格式检查 → 终审前 PDF 体检 → AIGC 9 维度扫描 → 跨题 GBK 兼容 → **19 项 check 一体化 sign-off**」。
+12 个 Python 脚本 + 2 个 .md，覆盖「画图前数据剖析 → 出图后程序自检 → 提交前格式检查 → 终审前 PDF 体检 → AIGC 9 维度扫描 → 数值台账 → 代理审计 → **65 项 check 一体化 sign-off**」。
 **不依赖** skill 系统本身——独立可执行，`pip install pandas matplotlib Pillow numpy PyMuPDF` 后即用。
+
+---
+
+## 0. 脚本速查表 (12 个 .py)
+
+> **权威源**：本表是 `references/scripts/` 的完整索引（v1.7.0 起，SKILL.md 指向本表）。
+> 下文 §1-§8 保留 5 个主力脚本的详细用法，其余脚本见本表 + 各脚本 `--help`。
+
+| # | 脚本 | 一句话用途 | 什么时候跑 |
+|---|------|-----------|-----------|
+| 1 | `dryrun.py` | **65 项 check 一体化 sign-off**（赛前 1 天必跑，0 red 才放行） | 赛前 1 天 + 跑题后 |
+| 2 | `bc_check.py` | 表面行能量守恒校验（`dE/dt ÷ 边界通量 ≈ 1`，P0-1 签名 ratio=223） | 机理题求解埋点后 + 跑完出报告 |
+| 3 | `fig_sanity.py` | 图形**内容**自检（曲线恒定 / 全 NaN / 残留 `set_title` / U+2080 乱码） | 出图后、编译前 |
+| 4 | `check_figure.py` | 提交前图片**格式**合规（DPI ≥ 200 / 禁 JPEG / 字体嵌入） | 打包支撑材料前 |
+| 5 | `visual_qa.py` | 出图后版面自检（缺字乱码 / 文字越界 / 刻度重叠） | 每张图 `savefig` 后 |
+| 6 | `verify_pdf_metrics.py` | 终审前 PDF 6 项体检（结构 / 越界 / 匿名 / 关键数字 / `??` 引用 / 摘要页） | Step 4 编译完、打包前 |
+| 7 | `aigc_scan.py` | AIGC 9 维度自动扫描（段首重复率 / 连接词密度 / n-gram TTR） | 论文写完、降重前 |
+| 8 | `number_ledger.py` | 数值台账生成与核对（4 子命令 `init`/`add`/`check`/`show`） | Step 3 写论文时 |
+| 9 | `check_meta.py` | `meta.json` 3 件套校验（实测耗时 / 复杂度 / 步长依据） | 求解完、写论文前 |
+| 10 | `profile_data.py` | 画图前 EDA（列类型 / 分布 / 相关性 / 初步图型建议） | Step 1.5 探路弹 |
+| 11 | `agent_audit.py` | 代理审计 brief 生成（A-H 板块 prompt） | Step 4.6 代理审计 |
+| 12 | `data_utils.py` | 3 个跨题 utility（GBK stdout / utf-8-sig CSV 读写） | 任意脚本里 import |
+
+| .md | 用途 |
+|-----|------|
+| `check_tex_compile.md` | xelatex 编译命令 + 临时文件清理 + 5GB 工作空间清单 |
+| `README.md` | 本文件（脚本索引 + 主力脚本详细用法） |
+
+> ⚠️ **格式 vs 内容**：3 与 4 互补不重叠——`check_figure.py` 管**格式**（DPI/格式/字体），`fig_sanity.py` 管**内容**（曲线恒定/全 NaN/双标题）。
 
 ---
 
@@ -213,11 +242,13 @@ pip install PyMuPDF
 
 ---
 
-## 8. `dryrun.py` — 19 项 check 清单 (v1.5.7+)
+## 5. `dryrun.py` — 65 项 check 清单 (v1.7.0)
 
-`dryrun.py` 跑 `py dryrun.py` 一键验 19 项, sign-off 绿 = 赛前可安心参赛. 跟 CI `smoke-test.yml` 等价, 但本地手动跑.
+`dryrun.py` 跑 `py -3 dryrun.py --mode self` 一键验 **65 项**, sign-off = 赛前可安心参赛. 跟 CI `smoke-test.yml` 等价, 但本地手动跑.
 
-**19 项 check (按 sign-off 顺序)**:
+**完整 65 项清单**（每项判据 + 修复提示）见 `dryrun.py` 的 `CHECKS` 表—— 那里是唯一权威源, 本文件只列前 20 项基础层（复制必 stale）.
+
+**前 20 项 (基础层, 按 sign-off 顺序)**:
 
 | # | check | v1.5.x | 触发 red 的常见原因 |
 |---|-------|--------|---------------------|
@@ -243,9 +274,9 @@ pip install PyMuPDF
 | 20 | v1.5.7.5 writing-for-agents 修剪 (description/红线/CHANGELOG/4 完成判据) | v1.5.7.5+ | 验证 4 项: description ≤ 6 行 + references/read-checklist/红线与失败模式.md + CHANGELOG.md + 4 个 🟢 Step X 完成判据 |
 
 **常见 sign-off 状态**:
-- 🟢 **绿** (11-19 green, 0 red): 赛前 1 天跑一次安心参赛
-- 🟡 **黄** (有 yellow, 0 red): 设计意图跳过, 不用管
-- 🔴 **红** (有 red): 必须修, 看每项的"修复:"提示
+- 🟢 **`green`** (全部 green, 0 red): 赛前 1 天跑一次安心参赛
+- 🟡 **`yellow`** (有 yellow, 0 red): 设计意图跳过, 不用管
+- 🔴 **`red`** (有 red): 必须修, 看每项的"修复:"提示
 
 ---
 

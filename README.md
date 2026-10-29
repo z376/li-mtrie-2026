@@ -5,7 +5,7 @@
 读题 → 建模 → 求解 → 写论文 → 双版编译，一条龙。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Version v1.6.5](https://img.shields.io/badge/version-v1.6.5-blue.svg)](CHANGELOG.md)
+[![Version v1.7.0](https://img.shields.io/badge/version-v1.7.0-blue.svg)](CHANGELOG.md)
 [![Smoke Test](https://github.com/z376/li-mtrie-2026/actions/workflows/smoke-test.yml/badge.svg)](.github/workflows/smoke-test.yml)
 [![2026 Spec](https://img.shields.io/badge/2026%E8%A7%84%E8%8C%83-%E5%AF%B9%E9%BD%90-green.svg)](references/data-usage/合规检查清单.md)
 
@@ -17,7 +17,7 @@
 - 全国大学生数学建模竞赛（**国赛**，A/B/C/D/E 题）
 - 美赛 / 校赛 / 其它数学建模类竞赛（结构基本通用）
 
-触发词：`开始求解`、`跑题`、`做数模`、`生成论文`、`出论文 PDF` 等。
+触发词：`开始求解`、`跑题`、`做数模`、`生成论文`、`出论文 PDF`、`验本 skill`（前 4 个 + `出论文 PDF` 是 SKILL.md description 里的 always-loaded 核心触发词）。
 
 ## 核心特性
 
@@ -175,7 +175,7 @@
 ```
 li-mtrie-2026/
 ├── SKILL.md                  # 入口（被 skill 系统加载）
-├── README.md                 # 本文件（项目说明 + 目录结构权威源）
+├── README.md                 # 本文件（项目说明 + 目录索引）
 ├── CHANGELOG.md              # 版本变更（单主文件，倒序）⚠️ 不进分发包（pack.py 排除）
 ├── CHANGELOG-archive.md      # 历史变更归档 ⚠️ 不进分发包（pack.py 排除）
 ├── CONTRIBUTING.md           # 贡献指南 ⚠️ 不进分发包（pack.py 排除）
@@ -205,10 +205,10 @@ li-mtrie-2026/
 │   │   ├── 红线与失败模式.md
 │   │   └── 题意翻译.md        #   ⚡ v1.5.3 题意翻译 5 步流程
 │   ├── audit/                 # 审计层
-│   │   ├── 验收清单.md        #   A-I 段 + §J 验收标准打钩区
+│   │   ├── 验收清单.md        #   A-J 段 + §J 验收标准打钩区
 │   │   ├── 验收标准.md        #   ⚡ v1.6.3 验收标准 6 条 → check 号 / 判据 / 兜底
 │   │   ├── auto-check-list.md #   跑题后自动检查各 check 段
-│   │   ├── post-solution-audit-list.md  # 32 层审计清单 L1-L32 (L17 之后含 L18-L32 扩展层)
+│   │   ├── post-solution-audit-list.md  # 34 层审计清单 L1-L34 (L17 在 auto-check-list)
 │   │   ├── post-solution-audit.md       # 4 必做 + 1 可选 + 状态机
 │   │   ├── manual-checklist.md          # 5 类 manual 兜底清单
 │   │   ├── agent-audit-brief.md         # 代理审计 brief 4 段
@@ -227,7 +227,7 @@ li-mtrie-2026/
 │   ├── preparation/           # ⚡ 赛前学习清单 + 角色 Prompt + 学校国奖画像
 │   ├── 技能总结/              # 经验汇总
 │   ├── templates/             # 论文模板
-│   │   └── example-paper/     #   ⚡ v1.6.2 4 问 8 文件模板（figures/ fonts/ .tex）
+│   │   └── example-paper/     #   ⚡ 25 个 .tex = 20 章节 + preamble×2 + 3 入口（figures/ fonts/ format.cls）
 │   ├── 获奖论文/              # 5 篇参考论文分析
 │   │   └── 板凳龙-南科大-2024国一.md  # 极坐标+运动学+碰撞, 国一第5篇
 │   ├── 2026官方答疑/          # 官方 Q&A（2026 试行规范问答）
@@ -258,8 +258,8 @@ li-mtrie-2026/
 │   │   ├── 07-模型求解自查.md #  §5 建模求解 + §6 检验 5 段
 │   │   ├── 08-参考文献附录自查.md # §9 文献 + §10 附录 P0-P3
 │   │   └── 09-AIGC审计.md    #   全文 9+6=15 维 (≥ 80 绿)
-│   └── scripts/              # 程序化自检工具 (12 个)
-│       ├── dryrun.py         #   ⚡ 赛前 1 天必做 64 项 checkable sign-off（0 red 才放行）
+│   └── scripts/              # 程序化自检工具 (12 个 .py + 2 个 .md, 速查表见 README.md)
+│       ├── dryrun.py         #   ⚡ 赛前 1 天必做 65 项 checkable sign-off（0 red 才放行）
 │       ├── bc_check.py       #   ⚡ v1.6.3 表面行守恒校验器（dE/dt ÷ 边界通量 ≈ 1，P0-1 签名 223）
 │       ├── fig_sanity.py     #   ⚡ v1.5.9 P1-3 图形内容自检（恒定曲线/全NaN/残留 set_title）
 │       ├── check_meta.py     #   ⚡ v1.5.9.4 P1-7 meta.json 3 件套校验
@@ -293,7 +293,8 @@ li-mtrie-2026/
     └── 0-10 章.tex            # 摘要/引言/总体分析/模型假设/符号/建模求解/检验/评价/改进推广/参考文献/附录
 ```
 
-> **维护说明**：本目录结构是**单一权威源**，SKILL.md 和其他文档需要时引用本段，不要复制粘贴。
+> **维护说明**：本目录结构是**索引**（**以实际文件为准**），SKILL.md 和其他文档需要时引用本段，不要复制粘贴。
+> 新增/删除文件后请同步本段；dryrun **check 68** 会校验 SKILL.md 声明的模板 .tex 数量与 `references/templates/example-paper/` 实际文件数是否一致（防"目录树与实际漂移"）。
 
 ## 编译
 

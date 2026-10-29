@@ -23,7 +23,7 @@
 
 | 类别 | 文件 |
 |------|------|
-| 论文 14 章 | `0.摘要.tex / 1.引言.tex / 2.总体分析.tex / 3.模型假设.tex / 4.符号说明.tex / 5.X.1.分析与准备.tex / 5.X.2.建模与求解.tex / 6.模型检验.tex / 7.模型评价.tex / 8.模型改进推广.tex / 9.0.AI工具使用声明.tex / 9.参考文献.tex / 10.0.附录固定说明.tex / 10.附录.tex` |
+| 论文 11 章节 / 20 个章节 .tex | `0.摘要.tex / 1.引言.tex / 2.总体分析.tex / 3.模型假设.tex / 4.符号说明.tex / 5.X.1.分析与准备.tex / 5.X.2.建模与求解.tex (4 问 = 8 个文件) / 6.模型检验.tex / 7.模型评价.tex / 8.模型改进推广.tex / 9.0.AI工具使用声明.tex / 9.参考文献.tex / 10.0.附录固定说明.tex / 10.附录.tex` |
 | figures/ | 所有 .png / .pdf / .svg |
 | 求解/ | `求解/问题N/*.py` (含 build_surface_row / bc_row / 数据清洗脚本 / gen_tables.py) + `求解/共享/*.py` + `求解/读题清单.md` + `求解/求解计划.md` |
 | 数据/ | 附件 1-N xlsx + 附件 3 模板 + result1-4 xlsx |
@@ -246,4 +246,4 @@ for k, v in info.items():
 - 每次 fresh 调用, fresh 跑题 fresh 审计
 - 不要省略数字: P0 必须给复现值 (LP 复算 / mtime / 期刊核验)
 - 不要给模糊建议: 修复必须给具体命令 (xelatex / sed / Python 脚本)
-- 不要只看封面: worker 必须读全部 14 章节 + 求解 .py + 附件 3 + result xlsx
+- 不要只看封面: worker 必须读全部 11 章节 / 20 个章节 .tex + 求解 .py + 附件 3 + result xlsx
