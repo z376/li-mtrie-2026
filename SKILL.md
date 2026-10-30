@@ -3,15 +3,15 @@
 name: li-mtrie
 
 description: |
-  数模竞赛 (CUMCM/MCM/ICM/美赛) 端到端 skill。Use when: 用户贴题目 PDF + "开始求解"/"跑题"/求解后"出论文 PDF"/验本 skill.
+  数模竞赛 (CUMCM/MCM/ICM/美赛) 端到端 skill。Use when: 用户贴题目 PDF + "跑题"(=开始求解) / 求解后"出论文 PDF" / "验本 skill".
 
-  **AI 跑题前必读 3 references**: `references/data-usage/信息边界原则.md` (防数据泄露) + `references/design-intent/题目设计意图分析.md` (防按字面跑不解题) + `references/read-checklist/读题清单.md` (15 项模板, Step 0 必填).
+  **跑题前必读 3 文件**: `references/data-usage/信息边界原则.md` (防数据泄露) + `references/design-intent/题目设计意图分析.md` (防按字面跑不解题) + `references/read-checklist/读题清单.md` (15 项模板, Step 0 必填).
 
   Do NOT use: 普通数据分析 / one-off Python / 非论文交付的研究问题 / 只做题意翻译 (转 bzd-problem-translator) / 只问单个模型可行性 (转 bzd-model-dictionary).
 
 metadata:
 
-  version: "1.8.2"
+  version: "1.9.0"
 
   category: competition-workflow
 
@@ -39,7 +39,7 @@ metadata:
 
 
 
-**本 skill 所有 step 完成判据遵循 `checkable` 原则** — 完成状态由 1 行命令或 1 次肉眼扫描验证为 **`green`/`red` 二元** (统一用英文词, 锚定 pretrained 视觉 prior), 不接受"应该差不多了"。**red = 立即停下修, `green` = 跳下一步**。终态: 5 步全 `green` = **`sign-off`** = 可交卷。
+**本 skill 所有 step 完成判据遵循 `checkable` 原则** — 完成状态必须由 **1 行命令** 或 **1 次具名扫描** (指出扫哪个文件 / 哪条 check) 验证为 **`green`/`red` 二元** (统一用英文词, 锚定 pretrained 视觉 prior), 不接受"应该差不多了"。**red = 立即停下修, `green` = 跳下一步**。终态: 5 步全 `green` = **`sign-off`** = 可交卷。
 
 **📌 核心 leading words (全文档统一)**:
 
@@ -51,10 +51,9 @@ metadata:
 | **`探路弹`** (tracer bullet) | 先打一发试路径, 早暴露问题 (借鉴自 *The Practice of Programming*) | 替换"试点/试运行/探路" |
 | **`check N`** | dryrun 第 N 项检查 | 编号做 prior, 跑前看哪些 `red` |
 | **`5 道防线`** | 五道防线总称 (流程修剪/数据隔离/设计意图/指针强化/三口径+物理) | 全文统一, 不展开版本号 |
-| **`反模式`** (anti-pattern) | 技术/BZD 文档, 描述抽象方法错误 | 替换"踩坑/避坑/陷阱"中抽象方法场景 |
-| **`陷阱`** (trap) | 可视化/scipilot, 描述具体可视化错误 | 替换"踩坑/避坑"中绘图场景 |
-| **`踩坑`** | 历史**案例** (e.g. "踩坑案例/教训") | 替代"过去反例/真实失败" |
-| **`避坑`** | 前瞻**体系** (e.g. "避坑体系/规范") | 替代"防错指南" |
+| **`反模式`** (anti-pattern) | 抽象方法错误 (技术/BZD 文档) | 替换"踩坑/避坑/陷阱"等近义词 |
+| **`反模式`** · 历史案例 | 过去真实失败 (e.g. "反模式案例/教训") | 替代"过去反例" |
+| **`反模式`** · 前瞻规范 | 防错体系 (e.g. "反模式体系/规范") | 替代"防错指南" |
 
 
 
@@ -114,7 +113,7 @@ metadata:
 
 
 
-**老赛题（2024 及更早）兼容模式**：用 `v1.0 上一版`（如有归档）或删掉 §1.3 全部 AI 声明 + 详情 PDF。
+**老赛题（2024 及更早）兼容模式**：删掉 §1.3 全部 AI 声明 + 详情 PDF（或从 GitHub 历史 tag 取对应版本）。
 
 
 
@@ -179,9 +178,7 @@ foreach ($cmd in @('py -3', 'python', 'python3')) {
 
 │  输出: 求解/求解计划.md (题组/题号/问题数/数据概况)      │
 
-│  green: 读题清单 15 项全填 + quote 锚定表 4 列齐 +       │
-
-│      头部 table 落盘 + 4 大典型坑自查 0 命中             │
+│  green: 见本节末尾 §Step 0 完成判据 (4 项全 green)      │
 
 │  → 跳到 Step 1 (否则卡死, 不进 Step 1)                   │
 
@@ -225,7 +222,7 @@ foreach ($cmd in @('py -3', 'python', 'python3')) {
 
 │  输入: 求解结果 (问题/图片/CSV)                          │
 
-│  动作: 10 章论文结构 (摘要/引言/总体分析/模型假设/符号/  │
+│  动作: 11 章论文结构 (摘要/引言/总体分析/模型假设/符号/ │
 
 │        建模与求解/模型检验/模型评价/改进推广/文献/附录)  │
 
@@ -245,7 +242,7 @@ foreach ($cmd in @('py -3', 'python', 'python3')) {
 
 ┌─ Step 4: 编译 + 终态（合并自原 Step 5 + Step 5.5）───────┐
 
-│  动作 1: xelatex 编译论文版 × 2 + 电子版 × 2             │
+│  动作 1: xelatex 编译论文版/电子版/AI工具使用详情 各 × 2│
 
 │  动作 2: 跑合规检查命令 (合规检查清单.md §2)             │
 
@@ -253,7 +250,7 @@ foreach ($cmd in @('py -3', 'python', 'python3')) {
 
 │  动作 4: 最终提交物检查 (论文版 + 电子版 + 支撑材料)     │
 
-│  green: 4 份 log 中 `! Error`=0, `Overfull \hbox`<5,     │
+│  green: 3 份 log 中 `! Error`=0, `Overfull \hbox`<5,    │
 
 │      合规检查清单 §2 7 项全过, 3 个交付文件存在且 ≤ 20MB │
 
@@ -270,8 +267,6 @@ foreach ($cmd in @('py -3', 'python', 'python3')) {
 **sign-off 锚定**: Step 4 `green` = 全 skill 5 步状态机可闭环, 学生/团队可交卷. **sign-off 之前 = 仍在开发态**, 任何"差不多"都是 `red`. 详见 `references/audit/验收清单.md` 终审段.
 
 
-
-**详细执行步骤**见下面各小节。
 
 
 
@@ -295,7 +290,7 @@ foreach ($cmd in @('py -3', 'python', 'python3')) {
 
 
 
-**checkable 中段判据 (输入读取 OK, 非 `green` 门)**: 题面文字 ≥ 200 字 + `求解/求解计划.md` 顶部 4 项 (题组/题号/问题数/数据概况) 已填。profile_data.py 跑出报告 = 加分项。**Step 0 的唯一 `green` 门见本节末尾 §Step 0 完成判据**。
+
 
 
 
@@ -347,7 +342,7 @@ foreach ($cmd in @('py -3', 'python', 'python3')) {
 
 
 
-**建议执行顺序**: ① 看 description 触发 → ② 读这 3 文件 (5-10 min) → ③ 进 §Step 0 填 15 项清单 → ④ 进 §Step 1 写求解计划 (含递进关系 + 期望方向) → ⑤ 跑题 → ⑥ 对照期望验证, 不达预期回头改
+**建议执行顺序**: ① 读这 3 文件 (5-10 min) → ② 进 §Step 0 填 15 项清单 → ③ 进 §Step 1 写求解计划 (含递进关系 + 期望方向) → ④ 跑题 → ⑤ 对照期望验证, 不达预期回头改
 
 
 
@@ -427,15 +422,7 @@ foreach ($cmd in @('py -3', 'python', 'python3')) {
 
 
 
-**3 类信息边界** (跑题前必须列清): **历史数据** (昨天/上周/历史平均, 周期起点时已知) = 周期起点预测输入 · **未来预报** (附件 M, 已知) = 预测 + 滚动调整输入 · **当天及以后实际** (附件 N row day_idx, **未知**) = 只能用于执行阶段与紧急购电对比基准.
-
-
-
-**铁律**: 任何周期起点 LP 的预测输入**只能是历史数据或未来预报**, 绝对不能用当天实际 (数据泄露, 评阅"数据使用"条款违规). 紧急购电/调整偏差**只能在**"执行阶段 vs 周期起点计划"的对比中产生, 不是 LP 内部最小化目标.
-
-
-
-**反模式 4 类**: ❌ 用当天实际做 LP · ❌ 缩 g 上界/改 LP 目标凑出紧急购电 (物理造假) · ❌ 用 Q3 的附件 M 预报做 Q2 (越界) · ✅ 前一天实际/历史平均/类别平均 (数据隔离正确).
+**铁律 (信息边界)**: 任何周期起点 LP 的预测输入**只能是历史数据或未来预报**, 不能用当天实际 (数据泄露, 评阅"数据使用"条款违规). 紧急购电/调整偏差**只能在**"执行阶段 vs 周期起点计划"的对比中产生, 不是 LP 内部最小化目标. **3 类边界定义 + 4 类反模式** → `references/data-usage/信息边界原则.md` §1 判定规则. dryrun check 21 扫 .py 检测 "day_idx 当天实际" 误用 → RED.
 
 
 
@@ -447,11 +434,7 @@ foreach ($cmd in @('py -3', 'python', 'python3')) {
 
 
 
-CUMCM 题目是**研究性问题**, 不是"按字面跑 LP". 跑题前必须识别 **3 件事**: **递进关系** (N 问之间的逻辑链) · **每个问题测什么** · **期望方向** (跑完对照, 不达预期 = 方法错, 回头改).
-
-
-
-**4 步法**: 画递进图 → 每问 1-2 句测什么 → 列关键指标期望 (写成可验证的不等式) → 跑完验证.
+CUMCM 题目是**研究性问题**, 不是"按字面跑 LP". 跑题前必须识别 **3 件事**: **递进关系** (N 问之间的逻辑链) · **每个问题测什么** · **期望方向** (跑完对照, 不达预期 = 方法错, 回头改). **4 步法**与逐问对照表见下方 §Step 1 递进关系分析.
 
 
 
@@ -537,9 +520,9 @@ CUMCM 题目是**研究性问题**, 不是"按字面跑 LP". 跑题前必须识�
 | **写论文** | `references/paper/paper-spec.md` (权威源) · `references/paper/国奖级硬性指标.md` · `references/paper/格式自查清单.md` · `references/paper/百分制评审方法.md` |
 | **绘图规范** | `references/plot/绘图规范与避坑.md` (§1 决策三轴 + §2 18 条陷阱 + §3 matplotlib 设置) · `references/plot/图型选择决策.md` |
 | **AIGC 降重** | `references/aigc/AIGC降重策略.md` (§1-2 禁改 + §3-7 实战) · `references/aigc/去AIGC指南.md` |
-| **赛后验收** | `references/audit/验收清单.md` · `references/audit/post-solution-audit.md` (Step 2.Gate 8 项权威源) |
+| **赛后验收** | `references/audit/验收清单.md` · `references/audit/post-solution-audit.md` (Step 4 终审 + §J 打钩) |
 | **赛前 + 角色** | `references/preparation/赛前学习清单.md` · `references/preparation/角色Prompt.md` · `references/preparation/学校国奖画像.md` · `references/preparation/策略输出规范.md` |
-| **模板 + 脚本** | `references/templates/example-paper/` (25 个 .tex = 20 章节 + preamble×2 + 3 入口, + format.cls) · `references/scripts/` (12 个 .py + 2 个 .md, **逐个用途见 `references/scripts/README.md` 速查表**) · `references/llm-prompts/` (5 prompt) |
+| **模板 + 脚本** | `references/templates/example-paper/` (25 个 .tex = 20 章节 + preamble×2 + 3 入口, + format.cls) · `references/scripts/` (**逐个用途见 `references/scripts/README.md` 速查表**) · `references/llm-prompts/` (5 prompt) |
 
 > **9 板块快速自查** (跑题中"还差什么"快速扫) → `references/板块自查/` (9 板块 markdown) + `README.md` 索引.
 
@@ -649,7 +632,7 @@ CUMCM 题目是**研究性问题**, 不是"按字面跑 LP". 跑题前必须识�
 
 
 
-→ 填法 + 2026C 调度类范例 → `references/design-intent/题目设计意图分析.md §1`
+→ 填法 + 2026C 调度类范例 → `references/design-intent/题目设计意图分析.md §4.1`
 
 
 
@@ -765,14 +748,14 @@ CUMCM 题目是**研究性问题**, 不是"按字面跑 LP". 跑题前必须识�
 
 > 8 项整篇一致性自检的**权威源**在 `references/paper/paper-spec.md §4.0`（全文统一符号表段）—— 下面直接列出, 不用翻大文件。
 
-1. 符号 / 坐标 / 时间 / 单位**全篇一致**？
-2. 共享参数**一次性估出**且**复用一致**（问题 1 估的 c 不能在问题 3 里变样）？
-3. 每个后问**明确声明**继承自前问的输出 + 新增的条件？
-4. 硬约束**可验证**（程序能跑出来）？
-5. 不确定性**传递到**后续决策？
-6. 每个最优 / 预测结果**独立验证**？
-7. 每个要求的输出表 / 文件**都能生成**？
-8. 各候选方案**用同一目标 / 同一指标**对比？
+1. 符号 / 坐标 / 时间 / 单位**全篇一致**？（证据: §4 符号表 + §5 各章实际用量）
+2. 共享参数**一次性估出**且**复用一致**（问题 1 估的 c 不能在问题 3 里变样）？（证据: `求解/共享/params.py:行号`）
+3. 每个后问**明确声明**继承自前问的输出 + 新增的条件？（证据: §5.X 章节开头段）
+4. 硬约束**可验证**（程序能跑出来）？（证据: 约束代码行号）
+5. 不确定性**传递到**后续决策？（证据: 置信区间/场景数出现在哪几节）
+6. 每个最优 / 预测结果**独立验证**？（证据: §6 模型检验对应段）
+7. 每个要求的输出表 / 文件**都能生成**？（证据: resultX 实际存在）
+8. 各候选方案**用同一目标 / 同一指标**对比？（证据: 指标名 + 数值表）
 
 > 每写完一个问题的代码，必须在 `求解/求解计划.md` 末尾的"自检"区逐项回填，**不全 `green` = 该问题未完成**。
 
@@ -1006,7 +989,7 @@ CUMCM 题目是**研究性问题**, 不是"按字面跑 LP". 跑题前必须识�
 
 
 
-**🟢 Step 3 完成判据**: **20 个章节 .tex** 全写完 (11 个章节, §5 拆 5.X.1/5.X.2 ×4 问题; 模板目录共 25 个 .tex = 20 章节 + preamble×2 + 论文.tex/电子版.tex/AI工具使用详情.tex) + 体检 4 项 `green` (结构/越界/匿名/关键数字) + dryrun check 15/16/17/19 全 `green`。
+**🟢 Step 3 完成判据**: **20 个章节 .tex** 全写完且**每个 ≥ 30 行** (11 个章节, §5 拆 5.X.1/5.X.2 ×4 问题; 模板目录共 25 个 .tex = 20 章节 + preamble×2 + 论文.tex/电子版.tex/AI工具使用详情.tex) + 体检 4 项 `green` (结构/越界/匿名/关键数字) + dryrun check 15/16/17/19 全 `green`。
 
 
 
@@ -1194,7 +1177,7 @@ if ($sizeMB -gt 20) { Write-Error "超过 20MB 限制！" }
 
 
 
-**🟢 Step 4 完成判据**: xelatex 论文.tex/电子版.tex/AI工具使用详情.tex 各 2 遍编译 `green` + 全文 25-40 页且**正文 ≤ 30 页** (2026 规范第四条) + 支撑材料 .rar ≤ 20MB + dryrun 19 项全 `green` = sign-off。
+**🟢 Step 4 完成判据**: xelatex 论文.tex/电子版.tex/AI工具使用详情.tex 各 2 遍编译 `green` + 全文 25-40 页且**正文 ≤ 30 页** (2026 规范第四条) + 支撑材料 .rar ≤ 20MB + dryrun **全量 0 red** = sign-off (别按 check 编号数项数)。
 
 
 

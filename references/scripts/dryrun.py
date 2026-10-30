@@ -878,10 +878,12 @@ def check_v1575_polish():
     if end == -1:
         return ("red", "SKILL.md frontmatter 缺结尾 ---", "修 SKILL.md")
     fm = content[4:end]
-    desc_match = re.search(r'description:\s*\|\n((?:[ \t]+.+\n)+)', fm)
-    if not desc_match:
+    # v1.9.0 修 (P1-10 漏改): 原来这里用的是 `re.search(r'description:\s*\|\n((?:[ \t]+.+\n)+)')`,
+    # **遇第一个空行就停** —— 而 description 是 3 段 (段间有空行) -> 只量到第 1 行
+    # -> 恒 green = 假绿. check 32 已修 (v1.7.0), 这里漏改, 现在统一走同一个解析器.
+    desc_lines = _parse_yaml_block_scalar(fm, "description")
+    if not desc_lines:
         return ("red", "SKILL.md frontmatter 缺 description", "修 SKILL.md")
-    desc_lines = [l for l in desc_match.group(1).split("\n") if l.strip()]
     if len(desc_lines) > 6:
         return ("red", f"SKILL.md description {len(desc_lines)} 行 (v1.5.7.5 修剪应 ≤ 6 行)",
                 "合并触发词 (开始求解/跑题/做数模 → 跑题)")
@@ -1179,6 +1181,10 @@ def check_v15715_more_category_references():
     return ("green", "by-category/ 经济金融/生物医疗/交通运筹 3 类目 references 全在 + 类目专属术语齐 (v1.5.7.25 移到 sub-directory)", None)
 
 
+# v1.9.0: 控制字节判定 (BEL/NUL 等, 允许 \t \n \r) —— 让 ripgrep 判二进制的元凶
+_CTRL_RE = re.compile(rb"[\x00-\x08\x0b\x0c\x0e-\x1f]")
+
+
 def _parse_yaml_block_scalar(text, key):
     r"""解析 YAML block scalar (`key: |` / `key: >`) 的全部内容行.
 
@@ -1242,17 +1248,36 @@ def check_v15728_leading_words_table():
     if not skill_md.exists():
         return ("red", "SKILL.md 不存在", "修 SKILL.md")
     content = skill_md.read_text(encoding="utf-8", errors="replace")
+    # v1.9.0 修假绿: 判定范围从"全文出现"改成"**锚定表区段内出现**" ——
+    # 旧判定下, 已收敛掉的近义词 (陷阱/踩坑/避坑) 仍以**普通名词**出现
+    # ("踩坑库" / "18 条陷阱" / "绘图避坑" / 文件名) -> 恒 green = 假绿.
+    m_tbl = re.search(r"核心 leading words.*?\n\n(.*?)(?=\n## |\n\*\*)", content, re.S)
+    table = m_tbl.group(1) if m_tbl else ""
+    if not table:
+        return ("red", "SKILL.md 找不到 leading words 锚定表 (核心 leading words 段)",
+                "修 SKILL.md 顶部锚定表")
     required_words = [
         # v1.5.7.22 加
         "green", "red", "sign-off", "checkable", "探路弹", "check N", "5 道防线",
-        # v1.5.7.27 加
-        "反模式", "陷阱", "踩坑", "避坑",
+        # v1.5.7.27 加; v1.9.0 P2-9: 陷阱/踩坑/避坑 三个近义词收敛进 反模式
+        "反模式",
     ]
-    missing = [w for w in required_words if w not in content]
+    missing = [w for w in required_words if w not in table]
     if missing:
-        return ("red", f"SKILL.md leading words 锚定段缺 {len(missing)} 个 ({', '.join(missing)})",
-                f"在 SKILL.md §Step 0 顶部 '📌 核心 leading words' 表加这 {len(missing)} 个词")
-    return ("green", f"SKILL.md leading words 锚定 {len(required_words)} 个全在 (green/red/sign-off/checkable/探路弹/check N/5 道防线/反模式/陷阱/踩坑/避坑)", None)
+        return ("red", f"SKILL.md leading words 锚定表缺 {len(missing)} 个 ({', '.join(missing)})",
+                f"在 SKILL.md 顶部 '📌 核心 leading words' 表加这 {len(missing)} 个词")
+    # v1.9.0: 已收敛的近义词不许再作为独立锚定行回来
+    # v1.9.0 修假绿: 表里实际形态是 **`陷阱`** (星号**里夹着反引号**),
+    # 原来写 `\|\s*\*\*陷阱\*\*` 永远匹配不上 -> retired 检查从未生效.
+    retired = [w for w in ("陷阱", "踩坑", "避坑")
+               if re.search(r"\*\*`?" + w + r"`?\*\*", table)]
+    if retired:
+        return ("red", f"leading words 表里近义词又被当独立锚定词加回来了: {', '.join(retired)}",
+                "统一用 `反模式` (可加 · 历史案例 / · 前瞻规范 标注), 别再拆成多个锚定词")
+    return ("green",
+            f"SKILL.md leading words 锚定表 {len(required_words)} 个全在 "
+            "(green/red/sign-off/checkable/探路弹/check N/5 道防线/反模式)",
+            None)
 
 
 def check_v15728_nine_subdirs():
@@ -4103,6 +4128,43 @@ def check_skill_self_consistency():
     if re.search(r"paper-spec\.md\s*§2\s*8\s*项自检", content):
         problems.append("8 项自检指针写成 §2 (真位置 = paper-spec.md §4.0)")
 
+    # ---- R6 状态机框 vs §Step N 完成判据: 项集一致 ----
+    # v1.9.0 新增 (审计 P1-2): 旧 R2 只验"框内有没有 green 字样", 不验框里写的项集
+    # 与完成判据的项集是否一致 -> 实际出现过 3 套并存且互相否定的判据.
+    m_pro = body.find("## Procedure")
+    if m_pro != -1:
+        rest = body[m_pro:]
+        fo = rest.find("```")
+        fc = rest.find("```", fo + 3) if fo != -1 else -1
+        fence = rest[fo + 3:fc] if fo != -1 and fc != -1 else ""
+        # v1.9.0 修: **逐 Step 比对** —— 旧实现把 5 个框的 green 行拼成一坨,
+        # 只要**任一**框含"见/→"就整体跳过 => R6 形同虚设 (实测注入不一致项仍 green).
+        KEYS = ["读题清单", "quote", "典型坑", "30 行", "8 项"]
+        box_by_step = {}
+        for mb in re.finditer(r"\u250c\u2500 Step (\d)[^\n]*\n(.*?)(?=\u250c\u2500 Step |\u2514)", fence, re.S):
+            gl = [l.strip("\u2502 ").strip() for l in mb.group(2).split("\n")
+                  if re.search(r"\bgreen\b", l) and l.strip().startswith("\u2502")]
+            box_by_step[mb.group(1)] = " ".join(gl)
+        crit_by_step = {}
+        for mc in re.finditer(r"Step (\d(?:\.\d)?) 完成判据", body):
+            crit_by_step.setdefault(mc.group(1), body[mc.start(): mc.start() + 600])
+        for sn, box_txt in box_by_step.items():
+            crit_txt = crit_by_step.get(sn, "")
+            if not crit_txt:
+                continue
+            # 指针式 green 行 ("见 ... 完成判据") = 单一判据源, 不展开项 -> 跳过该 Step
+            if re.search(r"(见|\u2192)[^\n]{0,24}完成判据", box_txt):
+                continue
+            in_box = {k for k in KEYS if k in box_txt}
+            in_crit = {k for k in KEYS if k in crit_txt}
+            # 框是判据的**摘要** -> 框里出现的判据项, 判据里必须有 (框 ⊆ 判据).
+            # 反向不查: 判据有而框没展开是正常的.
+            missing_in_crit = sorted(in_box - in_crit)
+            if missing_in_crit:
+                problems.append(
+                    "Step %s 状态机框写了判据项 %s, 但 §Step %s 完成判据里没有"
+                    % (sn, missing_in_crit, sn))
+
     if problems:
         return ("red",
                 "SKILL.md 自洽性 %d 项不通过: %s" % (len(problems), "; ".join(problems[:4])),
@@ -4876,6 +4938,49 @@ def check_grid_sensitivity():
             "项目里没检出难格式特征 (动边界/单侧取值/坐标变换), 无需网格收敛脚本 (N-P1-1)",
             None)
 
+def check_text_files_no_control_bytes():
+    r"""checkable 79: v1.9.0 文本文件控制字节扫描 (auto).
+
+    背景 (v1.9.0 代理审计 P0-1):
+        `references/audit/验收清单.md` 3 行含控制字节 (BEL 0x07 / NUL 0x00) ——
+        **ripgrep 判定为二进制, 整份终审清单对所有搜索工具隐形**:
+        `rg 'J-1' 验收清单.md` 返回 0 行, agent 会合理推断"没命中 = 没问题",
+        于是**整份终审清单被静默跳过** = 典型假绿.
+        根因: 用**非 raw 字符串**写 `\abstract:end` -> `\a` 被解释成 BEL, 吃掉字符.
+
+    规则: references/ + tools/ 下所有 .md / .py / .tex / .cls 文本文件
+          不得含控制字节 (允许 \t \n \r) —— 有则 red, 指出文件 + 行号.
+
+    判据: 任一文件命中 red / 全过 green.
+    """
+    bad = []
+    for sub in ("references", "tools"):
+        base = SKILL_ROOT / sub
+        if not base.is_dir():
+            continue
+        for p in sorted(base.rglob("*")):
+            if not p.is_file() or p.suffix.lower() not in (".md", ".py", ".tex", ".cls"):
+                continue
+            try:
+                raw = p.read_bytes()
+            except Exception:
+                continue
+            hits = [i for i, line in enumerate(raw.split(b"\n"), 1)
+                    if _CTRL_RE.search(line)]
+            if hits:
+                bad.append("%s L%s" % (p.relative_to(SKILL_ROOT).as_posix(), hits[:4]))
+
+    if bad:
+        return ("red",
+                "%d 个文本文件含控制字节 (会让 ripgrep 判二进制 = 搜索隐形 = 假绿): %s"
+                % (len(bad), "; ".join(bad[:4])),
+                "写文件时用 **raw 字符串** (r'\\abstract:end'), 别让 '\\a' '\\0' 被解释成控制字节; "
+                "改完用 rg 验一下该文件能被搜到")
+    return ("green",
+            "文本文件控制字节扫描通过: references/ + tools/ 下全部 .md/.py/.tex/.cls 无控制字节 "
+            "(搜索隐形假绿防御)",
+            None)
+
 CHECKS = [
     ("0. Python 解释器探测 (v1.6.0 P2-1, py -3 → python → python3, 商店占位符 exit 49; 放第 0 项 = 装包失败时先看解释器, v1.6.6 删掉与本项重复的旧 check 62)", check_python_probe),
     ("1. 装包 (核心包)", check_pkg),
@@ -4952,6 +5057,7 @@ CHECKS = [
     ("76. v1.8.2 摘要页断言 L42 (摘要+关键词同页 + 无近空白页, 格式轮 F-P1-3 防御)", check_abstract_page),
     ("77. v1.8.2 引用编号集合 + 章名≠节名 L43 (每条文献都被引 / 同级标题不重名, 格式轮 F-P2-2 防御)", check_refs_and_names),
     ("78. v1.8.2 难格式配网格收敛脚本 L44 (动边界/单侧取值/坐标变换 须有 Richardson 外推, 终审 N-P1-1 提醒)", check_grid_sensitivity),
+    ("79. v1.9.0 文本文件控制字节扫描 L45 (references/ + tools/ 下 .md/.py/.tex 无控制字节, 防 ripgrep 判二进制=搜索隐形=假绿, 审计 P0-1)", check_text_files_no_control_bytes),
 ]
 
 
