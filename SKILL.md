@@ -11,7 +11,7 @@ description: |
 
 metadata:
 
-  version: "1.8.1"
+  version: "1.8.2"
 
   category: competition-workflow
 
@@ -1012,6 +1012,11 @@ CUMCM 题目是**研究性问题**, 不是"按字面跑 LP". 跑题前必须识�
 
 ### Step 4：编译 + 终态（合并自原 Step 5 + Step 5.5）
 
+> **📌 格式/摘要审计左移到定稿编译前 (v1.8.2, 格式轮落地顺序第 4 条)** ——
+> 2026A 实证: 本轮 **7 项扣分全部是定稿后才发现的**, 改摘要/表格又牵动版面回归 (页数 +1、关键词溢出), 代价高.
+> **正确顺序**: Step 3 写完 → **先跑格式/摘要自检 (check 72/74/75/76)** → 改干净 → 再进 Step 4 编译 → 终审数值审计.
+> 别把格式问题留到交卷前 —— 越晚发现, 牵动的版面越多. 判据 → `references/paper/paper-spec.md` §0.0 摘要零公式清单 + 表格规范.
+
 > **编译命令 (xelatex 论文版/电子版/AI 详情) + 清理临时文件命令 + 5GB 工作空间清单** → `references/scripts/check_tex_compile.md` . 本节只留 why + `red`/`green` 判据.
 
 
@@ -1279,7 +1284,7 @@ if ($sizeMB -gt 20) { Write-Error "超过 20MB 限制！" }
 - **5 类 manual 兜底清单 (L8/L9/L10/L15/L16)** → `references/audit/manual-checklist.md` (详细步骤 + PowerShell 命令 + 实战反例)
 - **跑题后自动检查 (check 45/47/48/49/50/51/52)** → `references/audit/auto-check-list.md` (绘图自检 + AIGC 扫描 + 2-gram TTR + 3-gram 重复率, Sep 13 AIGC 报告阈值映射)
 - **跑题后 mavis 代理审计 (默认 agent)** → `references/audit/agent-audit-brief.md` (self vs 代理分层, brief 4 段结构, 14 类 P0 反例)
-- **验收标准 6 条打钩 ** → `references/audit/验收标准.md` (权威源, 每条→check 号/判据/兜底) + `references/audit/验收清单.md` §J (打钩区 + 4 条命令); dryrun check **64** (表面行守恒, `references/scripts/bc_check.py`) / **65** (数字台账覆盖) / **66** (表号与重复 label) / **67** (章节图名 vs 问题号) / **68** (SKILL.md 自洽性)
+- **验收标准 6 条打钩 ** → `references/audit/验收标准.md` (权威源, 每条→check 号/判据/兜底) + `references/audit/验收清单.md` §J (打钩区 + 4 条命令); dryrun check **64** (表面行守恒, `references/scripts/bc_check.py`) / **65** (数字台账覆盖) / **66** (表号与重复 label) / **67** (章节图名 vs 问题号) / **68** (SKILL.md 自洽性) / **69** (子进程编码契约) / **70** (派生量对账) / **71** (同文量级自洽) / **72** (摘要零公式) / **73** (支撑包红线) / **74** (表格宽度量测) / **75** (Overfull vbox) / **76** (摘要页断言) / **77** (引用编号+章名) / **78** (网格收敛脚本)
 
 
 

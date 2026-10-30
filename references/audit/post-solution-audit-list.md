@@ -37,6 +37,11 @@
 | L32 | 表/图编号一致性 (重复 label / 悬空 ref / 越界表图号 / 附录表号矛盾) | auto | check 66 (v1.6.4 新增) | dryrun (3 min) |
 | L33 | 章节图名 vs 问题号 (问题 N 的章节配了问题 M 的图) | auto | check 67 (v1.6.5 新增) | dryrun (2 min) |
 | L34 | SKILL.md 自洽性 (必读 3 文件一致 / 状态机 5 框有门 / .tex 数量一致 / 判据用词统一 / 无坏指针) | auto | check 68 (v1.7.0 新增) | dryrun (1 min) |
+| L40 | 表格宽度量测 (横线跨度 == 版心宽 453.5pt) | auto | check 74 (v1.8.2 新增) | 编译后 (5 min) |
+| L41 | Overfull vbox 定位 (高表 [H] 优先怀疑) | auto | check 75 (v1.8.2 新增) | 编译后 (2 min) |
+| L42 | 摘要页断言 (摘要+关键词同页 / 无近空白页) | auto | check 76 (v1.8.2 新增) | 编译后 (2 min) |
+| L43 | 引用编号集合 == 1..N + 章名≠节名 | auto | check 77 (v1.8.2 新增) | 扫描 (2 min) |
+| L44 | 难格式问题必须配网格收敛脚本 | auto (提醒级) | check 78 (v1.8.2 新增) | 扫描 (1 min) |
 | L14 | 幻觉文献 | manual (L4 步骤 2-7 覆盖) | — | (L4 内) |
 | L15 | 双向题 vs 4h 窗口 | manual | — | 5 min |
 | L16 | Q1 表1/表2 格式 | manual | — | 10 min |

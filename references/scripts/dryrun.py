@@ -4553,6 +4553,329 @@ def check_support_package_rules():
             "(F-P0-2 / N-P2-1 / F-P1-3 防御)",
             None)
 
+def _page_texts(pdf_path: Path):
+    """返回 [(page_no, text)]; 无 PyMuPDF 返回 None."""
+    try:
+        import fitz
+    except Exception:
+        try:
+            import pymupdf as fitz
+        except Exception:
+            return None
+    try:
+        doc = fitz.open(str(pdf_path))
+        pages = [(i + 1, doc[i].get_text()) for i in range(doc.page_count)]
+        doc.close()
+        return pages
+    except Exception:
+        return None
+
+
+def check_table_width():
+    r"""checkable 74: v1.8.2 表格宽度量测 (F-P1-2 防御, 格式轮).
+
+    背景 (2026A 格式轮 F-P1-2):
+        13 张表宽度/风格各自为政 (自然宽三线 + \resizebox 混用) —— 用户要求
+        "宽度一致、可换网格、一个元素一格别混在一起". 落地口径 = 全篇
+        `tabularx{\textwidth}` 满宽, 用 PyMuPDF **逐页量横线跨度**, 应恒等于版心宽.
+
+    版心宽: A4 210mm - 2×2.5cm 边距 = 16 cm = **453.5 pt** (实测值).
+
+    判据: 任一表格横线跨度偏离版心宽 > 2 pt -> red / 全过 green / 无 PDF yellow.
+    """
+    paper_dir = get_paper_dir()
+    pdf = None
+    for name in ("论文.pdf", "电子版.pdf"):
+        cand = paper_dir / name
+        if cand.exists():
+            pdf = cand
+            break
+    if pdf is None:
+        return ("yellow", "论文/ 目录里没有 论文.pdf (未编译), 跳过表格宽度量测",
+                "编译后再跑 (check 3/4 之后)")
+
+    TARGET = 453.5
+    TOL = 2.0
+    try:
+        import fitz
+    except Exception:
+        try:
+            import pymupdf as fitz
+        except Exception:
+            return ("yellow", "没装 PyMuPDF, 跳过表格宽度量测", "pip install PyMuPDF")
+    try:
+        doc = fitz.open(str(pdf))
+    except Exception as e:
+        return ("yellow", f"PDF 打不开 ({e}), 跳过", "重新编译")
+
+    spans = []
+    for pno in range(doc.page_count):
+        page = doc[pno]
+        try:
+            drawings = page.get_drawings()
+        except Exception:
+            continue
+        for d in drawings:
+            for item in d.get("items", []):
+                if item[0] == "re":                       # 矩形 (表线/框线)
+                    r = item[1]
+                    w = r.width
+                    h = r.height
+                    # 横线: 宽而扁; 竖线: 高而窄
+                    if w > 120 and h < 3 and w > TARGET * 0.35:
+                        spans.append((pno + 1, round(w, 1)))
+                elif item[0] == "l":                     # 线段
+                    p1, p2 = item[1], item[2]
+                    if abs(p1.y - p2.y) < 1.2:
+                        w = abs(p2.x - p1.x)
+                        if w > 120 and w > TARGET * 0.35:
+                            spans.append((pno + 1, round(w, 1)))
+    doc.close()
+
+    if not spans:
+        return ("yellow", "PDF 里没量到表格横线 (可能没表格或全是竖线), 跳过",
+                "有表格的题应量到横线跨度")
+
+    bad = []
+    for pno, w in spans:
+        if abs(w - TARGET) > TOL:
+            bad.append(f"p{pno} 横线 {w} pt (版心 {TARGET}, 偏差 {w-TARGET:+.1f})")
+    if bad:
+        return ("red",
+                f"表格宽度不一致 {len(bad)}/{len(spans)} 处 (F-P1-2: 全篇应满宽 == 版心宽 "
+                f"{TARGET} pt, 容差 {TOL} pt): " + "; ".join(bad[:4]),
+                "全篇统一 \\begin{tabularx}{\\textwidth}; 量测横线跨度须 == 版心宽. "
+                "见 references/paper/paper-spec.md 表格规范")
+    return ("green",
+            f"表格宽度一致: 量 {len(spans)} 条横线, 全部 == 版心宽 {TARGET} pt (容差 {TOL}) "
+            "(F-P1-2 防御)",
+            None)
+
+
+def check_overfull_vbox():
+    r"""checkable 75: v1.8.2 Overfull vbox 定位 (F-P1-1 防御, 格式轮).
+
+    背景 (2026A 格式轮 F-P1-1):
+        附录A 用 `{|l|c|L|}`, `l` 列自然宽度 299 pt 吃掉大半版心, 28 行表高逾版心
+        一倍 -> **Overfull vbox 602 pt**. 附录A 原用 `\resize\boxed{\textwidth}`
+        掩盖了宽度问题, 转 tabularx 后才暴露.
+        另: tabularx 规格写成 `|C|×n` (漏了行表头列) -> 编译错
+        `Extra alignment tab has been changed to \cr`.
+
+    判据: 论文 .log 里有 `Overfull \vbox` -> red (并定位到 .tex 行号);
+          无 .log -> yellow (未编译).
+    """
+    paper_dir = get_paper_dir()
+    # 注意: 排除 xelatex 自己产出的论文.log 会被 check 3 覆盖 -> 只看其它 log
+    # (xelatex 写的文件名固定是 论文.log / 电子版.log, 我们扫全部但跳过被覆盖的同名)
+    logs = sorted(paper_dir.glob("*.log"))
+    if not logs:
+        return ("yellow", "论文/ 目录里没有 .log (未编译), 跳过 Overfull vbox 检查",
+                "编译后再跑")
+
+    hits = []
+    for lg in logs:
+        try:
+            text = lg.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            continue
+        for m in re.finditer(r"Overfull \\vbox \(([\d.]+) pt too wide\)[^\n]*", text):
+            after = text[m.end(): m.end() + 300]
+            loc = ""
+            lm = re.search(r"in (?:paragraph|box) at lines? (\d+)", after)
+            if lm:
+                loc = f" 行 {lm.group(1)}"
+            hits.append(f"{lg.name}: {m.group(1)} pt too wide{loc}")
+        for m in re.finditer(r"Extra alignment tab has been changed to \\cr", text):
+            hits.append(f"{lg.name}: 列规格与表头列数不符 (Extra alignment tab)")
+
+    if hits:
+        return ("red",
+                f"Overfull vbox / 列数不符 {len(hits)} 处 (F-P1-1): " + "; ".join(hits[:4]),
+                "优先怀疑高表 [H]: 固定列宽 + \\scriptsize, 或改 longtable 允许跨页; "
+                "文本表只放 1 个弹性列 L. 见 references/paper/paper-spec.md 表格规格模板")
+    return ("green",
+            f"Overfull vbox 检查通过: 扫 {len(logs)} 个 .log, 无 vbox 溢出 / 列数不符 "
+            "(F-P1-1 防御)",
+            None)
+
+
+def check_abstract_page():
+    r"""checkable 76: v1.8.2 摘要页断言 (F-P1-3 防御, 格式轮).
+
+    背景 (2026A 格式轮 F-P1-3):
+        ① 摘要为塞回"零公式"改写后总长变化, **关键词单独溢到下一页** (近空白页
+           + 页数 +1), 靠二次压缩措辞才收回;
+        ② 改完摘要只看重编译 0 Error 不够 —— 还要**渲染该页目检**.
+
+    2 条规则 (需已编译 PDF):
+      R1 摘要+关键词同页 : 摘要所在页必须同时含"关键词"; 关键词跑到下一页 -> red
+      R2 无近空白页       : 某页正文字符数极少 (< 40) 而非封面/末页 -> yellow
+
+    判据: R1 red / R2 yellow / 全过 green / 无 PDF yellow.
+    """
+    paper_dir = get_paper_dir()
+    pdf = paper_dir / "论文.pdf"
+    if not pdf.exists():
+        return ("yellow", "论文/论文.pdf 不存在 (未编译), 跳过摘要页断言",
+                "编译后再跑 (改摘要后必跑)")
+    pages = _page_texts(pdf)
+    if not pages:
+        return ("yellow", "PyMuPDF 不可用或 PDF 读不出, 跳过摘要页断言",
+                "pip install PyMuPDF")
+
+    # 找摘要页: 含"摘要"/"Abstract" 且含"关键词"/"Keywords"
+    abs_page = None
+    kw_pages = []
+    for pno, t in pages:
+        flat = re.sub(r"\s+", "", t)
+        if "关键词" in flat or "Keywords" in flat or "keywords" in flat:
+            kw_pages.append(pno)
+        if abs_page is None and ("摘要" in flat or "Abstract" in flat or "abstract" in flat):
+            abs_page = pno
+    if abs_page is None:
+        return ("yellow", "PDF 里没找到摘要页, 跳过", "确认论文.tex 引了 0.摘要.tex")
+
+    problems = []
+    if kw_pages and abs_page not in kw_pages:
+        problems.append(f"关键词在 p{kw_pages[0]}, 摘要在 p{abs_page} —— 不同页 "
+                        "(关键词溢出 = 近空白页 + 页数 +1)")
+    # R2 近空白页
+    blank = []
+    for pno, t in pages:
+        flat = re.sub(r"\s+", "", t)
+        if len(flat) < 40 and pno not in (1, len(pages)):
+            blank.append(pno)
+    if blank:
+        problems.append(f"近空白页 {blank[:4]} (关键词/标题溢出类)")
+
+    if problems:
+        return ("red",
+                "摘要页断言不通过: " + "; ".join(problems),
+                "摘要+关键词必须同页; 改完摘要**重编译并渲染该页目检**, 不只看 0 Error")
+    return ("green",
+            f"摘要页断言通过: 摘要在 p{abs_page}, 关键词同页, 无近空白页 (F-P1-3 防御)",
+            None)
+
+
+def check_refs_and_names():
+    r"""checkable 77: v1.8.2 引用编号集合 + 章名≠节名 (F-P2-2 防御, 格式轮).
+
+    背景 (2026A 格式轮 F-P2-2):
+        ① RA17: 参考文献 [4]《传热学》全文从未被引用 -> 冗余条目
+        ② C03: `一、问题重述` 与其下 `1.2 问题重述` **同名** -> L1 改 `引言`
+
+    2 条规则 (静态扫 .tex):
+      R1 引用编号集合 == 1..N : \\cite 的编号集合必须覆盖全部 \\bibitem 编号
+                                (未被引用的条目 = 冗余 -> red)
+      R2 章名 ≠ 其下节名    : 任一 \\section 的标题与它下面的 \\subsection 标题同名 -> red
+
+    判据: 任一命中 red / 全过 green / 无 .tex yellow.
+    """
+    paper_dir = get_paper_dir()
+    texs = sorted(paper_dir.rglob("*.tex"))
+    if not texs:
+        return ("yellow", "论文目录里没有 .tex, 跳过引用/命名检查", "跑题后必有 .tex")
+
+    cites = set()
+    bibs = set()
+    problems = []
+    for tf in texs:
+        try:
+            content = tf.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            continue
+        body = re.sub(r"(?m)^\s*%.*$", "", content)
+        for m in re.finditer(r"\\cite[a-zA-Z]*\{([^}]*)\}", body):
+            for part in m.group(1).split(","):
+                p = part.strip()
+                if p.isdigit():
+                    cites.add(int(p))
+        for m in re.finditer(r"\\bibitem\{([^}]*)\}", body):
+            key = m.group(1).strip()
+            if key.isdigit():
+                bibs.add(int(key))
+        # R2 章名 vs 其下节名
+        secs = re.findall(r"\\section\*?\{([^}]*)\}", body)
+        subs = re.findall(r"\\subsection\*?\{([^}]*)\}", body)
+        for s in secs:
+            sn = re.sub(r"[\\{}\[\]]", "", s).strip()
+            for sub in subs:
+                sn2 = re.sub(r"[\\{}\[\]]", "", sub).strip()
+                if sn and sn == sn2:
+                    problems.append(f"{tf.name}: 章名与节名同名 -> `{sn}` (L1 改用上位词, 如'引言')")
+
+    if bibs:
+        uncited = sorted(bibs - cites)
+        if uncited:
+            problems.append(f"参考文献有 {len(uncited)} 条从未被正文引用: {uncited[:6]}"
+                            f" (冗余条目, 删掉或补引用)")
+        missing = sorted(cites - bibs)
+        if missing:
+            problems.append(f"正文引用了不存在的条目号: {missing[:6]}")
+
+    if problems:
+        return ("red",
+                f"引用/命名检查 {len(problems)} 处不通过 (F-P2-2): " + "; ".join(problems[:4]),
+                "每条参考文献都要被正文引用; 章名不能与其下节名同名")
+    return ("green",
+            f"引用/命名检查通过: 引用编号集合完整 (cite {len(cites)} / bibitem {len(bibs)}), "
+            "章名≠节名 (F-P2-2 防御)",
+            None)
+
+
+def check_grid_sensitivity():
+    r"""checkable 78: v1.8.2 难格式必须配网格收敛脚本 (N-P1-1 提醒, yellow 级).
+
+    背景 (2026A 终审 N-P1-1):
+        论文原来一句"数值误差 < 0.3%" 盖全局, 终审独立加密发现 **Q4 生产网格误差
+        ≈ 0.6%** (自报上界 2 倍) —— 病因: Q4 表面行取**单侧** `coef_field[-1]`,
+        格式呈**一阶**特性. Q1-Q3 有网格检验, Q4 没有.
+
+    规则: 求解代码里出现"难格式"特征 (动边界 / 单侧取值 / 坐标变换) 时,
+          项目里应有网格收敛脚本 (Δξ 加密 + Richardson 外推).
+
+    判据: 命中难格式 + 无网格脚本 -> **yellow 提醒** (不判 red: 判据靠启发式,
+          误报代价高); 其余 green.
+    """
+    project_root = get_paper_dir().parent
+    pys = sorted(project_root.rglob("*.py"))
+    if not pys:
+        return ("yellow", "项目里没有 .py, 跳过网格收敛检查", "跑题后必有求解代码")
+
+    HARD_PAT = re.compile(
+        r"coef_field\s*\[\s*-1\s*\]"        # 单侧取值
+        r"|R\s*\(\s*t\s*\)"                     # 动边界
+        r"|xi\s*=\s*r\s*/\s*R"                  # 坐标变换
+        r"|移动边界|动边界|坐标变换|单侧", re.I)
+    hard = []
+    for py in pys:
+        try:
+            t = py.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            continue
+        if HARD_PAT.search(t):
+            hard.append(py.name)
+
+    grid_like = [p.name for p in pys
+                 if re.search(r"grid|sensib|Richardson|加密|converg", p.name, re.I)
+                 or re.search(r"Richardson", p.read_text(encoding="utf-8", errors="replace"), re.I)]
+
+    if hard and not grid_like:
+        return ("yellow",
+                f"求解代码有难格式特征 (动边界/单侧取值/坐标变换) 在 {hard[:3]}, "
+                "但项目里没找到网格收敛脚本 (Δξ 加密 + Richardson 外推) —— "
+                "数值误差声明可能是全局一句盖棺, 终审实测会翻 (N-P1-1)",
+                "补一个 grid-sensitivity 脚本 (三点加密 + Richardson 外推 + CSV), "
+                "误差按问题分别给. 见 references/paper/paper-spec.md 数值误差表述模板")
+    if hard:
+        return ("green",
+                f"难格式问题已配网格收敛脚本: {hard[:2]} + {grid_like[:2]} (N-P1-1 防御)",
+                None)
+    return ("green",
+            "项目里没检出难格式特征 (动边界/单侧取值/坐标变换), 无需网格收敛脚本 (N-P1-1)",
+            None)
+
 CHECKS = [
     ("0. Python 解释器探测 (v1.6.0 P2-1, py -3 → python → python3, 商店占位符 exit 49; 放第 0 项 = 装包失败时先看解释器, v1.6.6 删掉与本项重复的旧 check 62)", check_python_probe),
     ("1. 装包 (核心包)", check_pkg),
@@ -4624,6 +4947,11 @@ CHECKS = [
     ("71. v1.8.0 同文量级自洽 L37 (同名量级量多个不同值 = 自相矛盾 red, 终审复验轮 N-P0-3 防御)", check_scale_selfcheck),
     ("72. v1.8.0 摘要零公式 L38 (数学环境/希腊字母/关系符/上下标全禁 + 题目出现 1 次, 格式轮 F-P0-1 防御)", check_abstract_zero_formula),
     ("73. v1.8.0 支撑包红线 L39 (RA08 题面原始附件不随包优先 / 无 *.log / 同名多副本 md5 一致, 格式轮 F-P0-2+N-P2-1+F-P1-3 防御)", check_support_package_rules),
+    ("74. v1.8.2 表格宽度量测 L40 (PDF 横线跨度 == 版心宽 453.5pt, 容差 2pt, 格式轮 F-P1-2 防御)", check_table_width),
+    ("75. v1.8.2 Overfull vbox 定位 L41 (高表 [H] 优先怀疑 + 列数与表头不符, 格式轮 F-P1-1 防御)", check_overfull_vbox),
+    ("76. v1.8.2 摘要页断言 L42 (摘要+关键词同页 + 无近空白页, 格式轮 F-P1-3 防御)", check_abstract_page),
+    ("77. v1.8.2 引用编号集合 + 章名≠节名 L43 (每条文献都被引 / 同级标题不重名, 格式轮 F-P2-2 防御)", check_refs_and_names),
+    ("78. v1.8.2 难格式配网格收敛脚本 L44 (动边界/单侧取值/坐标变换 须有 Richardson 外推, 终审 N-P1-1 提醒)", check_grid_sensitivity),
 ]
 
 
