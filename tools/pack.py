@@ -47,6 +47,7 @@ OUT_BASE = Path(os.environ.get("PACK_OUT_DIR") or (ROOT.parent.parent))
 EXCLUDE_DIRS = {
     '.git', '.vscode', '.idea', '__pycache__', 'node_modules',
     '_archive',   # 历史归档（不参与分发）
+    '归档',       # references/归档/ 开发期过程记录 (v1.8.1 归位; 内部文件, 学生用不到)
     '.github',     # GitHub 模板 + CI（学生用不到, GitHub 网页端用）
 }
 EXCLUDE_EXTS = {

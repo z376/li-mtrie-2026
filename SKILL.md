@@ -11,7 +11,7 @@ description: |
 
 metadata:
 
-  version: "1.8.0"
+  version: "1.8.1"
 
   category: competition-workflow
 
@@ -533,6 +533,7 @@ CUMCM 题目是**研究性问题**, 不是"按字面跑 LP". 跑题前必须识�
 | **7 类题专属** | `references/by-category/{物理机理/数据分析/优化/经济金融/生物医疗/交通运筹}类典型反模式.md` (按本题类型选 1 份) |
 | **跑题前自检** | `references/read-checklist/读题清单.md` (15 项模板) · `references/read-checklist/红线与失败模式.md` (§1 失败 handling 6 类 + §2 跨平台红线) · `references/read-checklist/题意红线.md` · `references/read-checklist/题意翻译.md` |
 | **跑题中参考** | `references/workflow/workflow.md` (工作流) · `references/workflow/模型字典使用指南.md` · `references/workflow/模型决策树.md` · `references/workflow/整题建模模式.md` · `references/workflow/导入规范.md` |
+| **历史留档** | `references/归档/` (开发日志 / 测试报告 / 早期流程审计 — **跑题不用读**, 只在追溯"某规则当初为什么这么定"时翻) · `references/examples/v1.5.2-端到端-demo.md` (v1.5.2 端到端跑题 demo 留档) |
 | **写论文** | `references/paper/paper-spec.md` (权威源) · `references/paper/国奖级硬性指标.md` · `references/paper/格式自查清单.md` · `references/paper/百分制评审方法.md` |
 | **绘图规范** | `references/plot/绘图规范与避坑.md` (§1 决策三轴 + §2 18 条陷阱 + §3 matplotlib 设置) · `references/plot/图型选择决策.md` |
 | **AIGC 降重** | `references/aigc/AIGC降重策略.md` (§1-2 禁改 + §3-7 实战) · `references/aigc/去AIGC指南.md` |
