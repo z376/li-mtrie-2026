@@ -4634,7 +4634,7 @@ def _page_texts(pdf_path: Path):
 
 
 def check_table_width():
-    r"""checkable 74: v1.8.2 表格宽度量测 (F-P1-2 防御, 格式轮).
+    r"""checkable 74: v1.8.2 表格宽度量测 (F-P1-2 防御, 格式轮; v1.10.0 修假阳性).
 
     背景 (2026A 格式轮 F-P1-2):
         13 张表宽度/风格各自为政 (自然宽三线 + \resizebox 混用) —— 用户要求
@@ -4670,6 +4670,13 @@ def check_table_width():
     except Exception as e:
         return ("yellow", f"PDF 打不开 ({e}), 跳过", "重新编译")
 
+    # v1.10.0 修假阳性: 原实现把 PDF 里**所有**水平线都当表格边线, 实测混入
+    #   ① 公式里的长横线 / 分数线 (p9/p12 的 369.6 pt、94~265 pt)
+    #   ② 承诺书签字线 (p1 的 434.8 pt)
+    # 过滤 2 条:
+    #   R-a 与文字 bbox **相交**的线 = 穿过文字 = 公式线/下划线 -> 排除
+    #   R-b 该页上**孤立单条**的线 (无同组伴随线) = 签字线/装饰线 -> 排除
+    # 剩下的成组线 = 表格边线; 每组只取**最上面一条**算表总宽 (避免 top/mid/bottom 重复计数)
     spans = []
     for pno in range(doc.page_count):
         page = doc[pno]
@@ -4677,31 +4684,64 @@ def check_table_width():
             drawings = page.get_drawings()
         except Exception:
             continue
+        text_boxes = []
+        try:
+            for blk in page.get_text("dict").get("blocks", []):
+                for line in blk.get("lines", []):
+                    for sp in line.get("spans", []):
+                        text_boxes.append(sp["bbox"])
+        except Exception:
+            pass
+        left = (page.rect.width - TARGET) / 2.0       # 版心左边界
+        page_lines = []
         for d in drawings:
             for item in d.get("items", []):
                 if item[0] == "re":                       # 矩形 (表线/框线)
                     r = item[1]
-                    w = r.width
-                    h = r.height
-                    # 横线: 宽而扁; 竖线: 高而窄
+                    w, h = r.width, r.height
                     if w > 120 and h < 3 and w > TARGET * 0.35:
-                        spans.append((pno + 1, round(w, 1)))
+                        page_lines.append((r.y0, w, r.x0))
                 elif item[0] == "l":                     # 线段
                     p1, p2 = item[1], item[2]
                     if abs(p1.y - p2.y) < 1.2:
                         w = abs(p2.x - p1.x)
                         if w > 120 and w > TARGET * 0.35:
-                            spans.append((pno + 1, round(w, 1)))
+                            page_lines.append((p1.y, w, min(p1.x, p2.x)))
+        # R-c **x0 对齐版心左边界** -> 才是表边线.
+        #   实测: 真表边线 x0=70.9(=版心左边界); 公式/居中块 x0=112.8/119.9 -> 排除.
+        page_lines = [(y, w) for y, w, x0 in page_lines if abs(x0 - left) <= 3.0]
+        # R-a 排除穿过文字的线 (公式线 / 下划线)
+        keep = []
+        for y, w in page_lines:
+            crosses = False
+            for bb in text_boxes:
+                if (bb[1] - 1.0) <= y <= (bb[3] + 1.0):
+                    crosses = True
+                    break
+            if not crosses:
+                keep.append((y, w))
+        # R-b 排除孤立单条 (该页无同组伴随线 = 签字线/装饰线)
+        if len(keep) == 1:
+            keep = []
+        # 每组 (y 距离 < 120pt) 只取最上面一条
+        keep.sort()
+        groups = []
+        for y, w in keep:
+            if groups and y - groups[-1][0] < 120:
+                continue
+            groups.append((y, w))
+        for y, w in groups:
+            spans.append((pno + 1, round(w, 1)))
     doc.close()
 
     if not spans:
-        return ("yellow", "PDF 里没量到表格横线 (可能没表格或全是竖线), 跳过",
-                "有表格的题应量到横线跨度")
+        return ("yellow", "PDF 里没量到表格边线 (可能没表格或全是竖线), 跳过",
+                "有表格的题应量到表格边线跨度")
 
     bad = []
     for pno, w in spans:
         if abs(w - TARGET) > TOL:
-            bad.append(f"p{pno} 横线 {w} pt (版心 {TARGET}, 偏差 {w-TARGET:+.1f})")
+            bad.append(f"p{pno} 表边线 {w} pt (版心 {TARGET}, 偏差 {w-TARGET:+.1f})")
     if bad:
         return ("red",
                 f"表格宽度不一致 {len(bad)}/{len(spans)} 处 (F-P1-2: 全篇应满宽 == 版心宽 "
@@ -4709,7 +4749,7 @@ def check_table_width():
                 "全篇统一 \\begin{tabularx}{\\textwidth}; 量测横线跨度须 == 版心宽. "
                 "见 references/paper/paper-spec.md 表格规范")
     return ("green",
-            f"表格宽度一致: 量 {len(spans)} 条横线, 全部 == 版心宽 {TARGET} pt (容差 {TOL}) "
+            f"表格宽度一致: 量 {len(spans)} 条表边线, 全部 == 版心宽 {TARGET} pt (容差 {TOL}) "
             "(F-P1-2 防御)",
             None)
 

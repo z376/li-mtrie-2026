@@ -11,7 +11,7 @@ description: |
 
 metadata:
 
-  version: "1.9.0"
+  version: "1.10.0"
 
   category: competition-workflow
 
@@ -19,7 +19,7 @@ metadata:
 
   spec_compliance: "全国大学生数学建模竞赛论文格式规范（2026年修订稿，2026-09-01起试行）+ 全国大学生数学建模竞赛人工智能工具使用规定（2026年试行）"
 
-  last_update: 2026-10-29
+  last_update: 2026-11-05
 
   changelog: CHANGELOG.md
 
@@ -855,13 +855,16 @@ CUMCM 题目是**研究性问题**, 不是"按字面跑 LP". 跑题前必须识�
 
 ```latex
 
-% 5.X.2.建模与求解.tex 内的"结果表" longtable 段
+% 5.X.2.建模与求解.tex 内的"结果表" tabularx 满宽段
 
 % 推荐做法: Python 读 resultX.xlsx → 抽关键行列 → to_latex 生成
 
-%           复制到下面 longtable 的 & 数字 & 段
+%           复制到下面 tabularx 的 & 数字 & 段
+%
+% 表格环境: 全篇统一 \begin{tabularx}{\textwidth}{...} 满宽 (与 §表格规范 一致);
+%           >20 行要跨页才改 longtable + 固定列宽
 
-\begin{longtable}{>{\centering\arraybackslash}p{0.12\textwidth}...}
+\begin{tabularx}{\textwidth}{l|C|C|C}
 
   \caption{问题X 求解结果}
 
@@ -869,7 +872,7 @@ CUMCM 题目是**研究性问题**, 不是"按字面跑 LP". 跑题前必须识�
 
   \toprule
 
-  时刻 & 龙头 x & 龙头 y & 板数 \\
+  时刻 & 龙头 x & 龙头 y & 板数 \
 
   \midrule
 
@@ -877,7 +880,7 @@ CUMCM 题目是**研究性问题**, 不是"按字面跑 LP". 跑题前必须识�
 
   \bottomrule
 
-\end{longtable}
+\end{tabularx}
 
 ```
 
