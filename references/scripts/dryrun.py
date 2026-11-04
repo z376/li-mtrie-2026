@@ -4255,14 +4255,23 @@ def check_script_utf8_contract():
             None)
 
 def _iter_project_tex(project_root: Path):
-    """项目里所有 .tex (论文目录 + 附录等), 跳过模板自带."""
+    """项目里所有 .tex (论文目录 + 附录等), 跳过模板自带.
+
+    v1.10.1 修: fallback 分支原来是 `project_root.rglob("*.tex")` —— **递归整棵树**,
+    实测把 paper_dir 指到 TEMP 下时扫到了 TEMP 里**所有**临时目录的 .tex,
+      报出"扩散系数 4 个不同值"这种跨目录假矛盾 (实际是测试环境污染).
+    现限制 fallback 深度: 只扫 project_root **顶层 + 一级子目录**.
+    """
     out = []
     for sub in ("论文", "paper", "Paper"):
         d = project_root / sub
         if d.is_dir():
             out += sorted(d.rglob("*.tex"))
     if not out:
-        out = sorted(project_root.rglob("*.tex"))
+        out = sorted(project_root.glob("*.tex"))
+        for d in sorted(project_root.iterdir()):
+            if d.is_dir():
+                out += sorted(d.glob("*.tex"))
     return out
 
 
